@@ -14,12 +14,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
@@ -66,6 +67,10 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.onNodeWithText("Earthquake alerts", substring = false).assertDoesNotExist()
         composeRule.onNodeWithText("Notifications shortcut").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Earthquake alerts").performClick()
+        composeRule.onNodeWithText("Notification destination").assertIsDisplayed()
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.runOnIdle {
             assertSame(mapOwner, owners.getValue(Destination.MapRoute))
             assertSame(listOwner, owners.getValue(Destination.ListRoute))
@@ -95,6 +100,11 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
         composeRule.onNodeWithText("Close notifications").performClick()
         composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
+        composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
+        composeRule.onNodeWithText("Map destination").assertIsDisplayed()
+        composeRule.onNodeWithText("Open list").performClick()
+        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
         composeRule.runOnIdle { expanded = false }
         composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.onNodeWithText("Map destination").assertDoesNotExist()
@@ -117,7 +127,7 @@ class EarthquakeNavigationTest {
 
     @Composable
     private fun Content() {
-        val widthPixels = LocalWindowInfo.current.containerSize.width.toFloat()
+        val widthPixels = LocalWindowInfo.current.containerSize.width.coerceAtLeast(1).toFloat()
         CompositionLocalProvider(
             LocalDensity provides Density(widthPixels / if (expanded) 1100f else 400f)
         ) {
@@ -156,7 +166,12 @@ class EarthquakeNavigationTest {
                         ) {
                             Text("Select last earthquake")
                         }
-                        TextButton(onClick = { actions.onViewSelected(EarthquakeView.List) }) {
+                        TextButton(
+                            onClick = {
+                                if (actions.expanded) actions.onListPanelVisibilityChanged(true)
+                                else actions.onViewSelected(EarthquakeView.List)
+                            }
+                        ) {
                             Text("Open list")
                         }
                         TextButton(onClick = actions.onNotificationsClick) {

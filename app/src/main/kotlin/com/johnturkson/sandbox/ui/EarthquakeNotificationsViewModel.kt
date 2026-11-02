@@ -31,7 +31,10 @@ constructor(
     override var notifications by mutableStateOf(EarthquakeNotificationState())
         private set
 
-    override var monitoring by mutableStateOf(EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking))
+    override var monitoring by
+        mutableStateOf(
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking)
+        )
         private set
 
     init {

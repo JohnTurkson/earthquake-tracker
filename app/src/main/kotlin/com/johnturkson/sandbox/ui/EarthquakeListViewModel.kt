@@ -31,7 +31,10 @@ constructor(
     override var mapItems: List<EarthquakeMapItem> by mutableStateOf(emptyList())
         private set
 
-    override var monitoring by mutableStateOf(EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking))
+    override var monitoring by
+        mutableStateOf(
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking)
+        )
         private set
 
     override var selectedMapItemId: String? by
@@ -66,6 +69,7 @@ constructor(
             }
         }
         viewModelScope.launch { monitoringObserver.states.collect { monitoring = it } }
+        workScheduler.refresh()
     }
 
     fun applySelection(result: EarthquakeSelectionResult, scroll: Boolean = true) {

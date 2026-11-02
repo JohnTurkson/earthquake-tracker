@@ -7,6 +7,14 @@ import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -24,6 +33,7 @@ import com.johnturkson.sandbox.data.EarthquakeNotifications
 fun EarthquakeNotificationsScreen(
     navKey: Destination.NotificationsRoute,
     onClose: () -> Unit,
+    expanded: Boolean = false,
     modifier: Modifier = Modifier,
     viewModel: EarthquakeNotificationsViewModel =
         hiltViewModel<EarthquakeNotificationsViewModel, EarthquakeNotificationsViewModel.Factory>(
@@ -73,7 +83,7 @@ fun EarthquakeNotificationsScreen(
             else -> launchNotificationPermission()
         }
     }
-    EarthquakeNotificationPage(
+    EarthquakeNotificationsScreen(
         state = notificationState.copy(requiresSettings = notificationSettingsRequired),
         monitoring = viewModel.monitoring,
         onClose = onClose,
@@ -98,6 +108,7 @@ fun EarthquakeNotificationsScreen(
         },
         onPreviewAlert = viewModel::previewNotification,
         modifier = modifier,
+        expanded = expanded,
     )
     if (notificationRationale) {
         EarthquakeNotificationRationale(
@@ -106,6 +117,50 @@ fun EarthquakeNotificationsScreen(
                 launchNotificationPermission()
             },
             onDismiss = { notificationRationale = false },
+        )
+    }
+}
+
+@Composable
+fun EarthquakeNotificationsScreen(
+    state: EarthquakeNotificationState,
+    monitoring: EarthquakeMonitoringState,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+    expanded: Boolean = false,
+    onEnableNotifications: () -> Unit = {},
+    onAlertsEnabled: (Boolean) -> Unit = {},
+    onMagnitudeSelected: (Int) -> Unit = {},
+    onMonitoringEnabled: (Boolean) -> Unit = {},
+    onChannelSettings: (Boolean) -> Unit = {},
+    onPreviewAlert: () -> Unit = {},
+) {
+    Box(
+        modifier
+            .fillMaxSize()
+            .then(
+                if (expanded) Modifier else Modifier.background(MaterialTheme.colorScheme.surface)
+            )
+    ) {
+        EarthquakeNotificationPage(
+            state = state,
+            monitoring = monitoring,
+            onClose = onClose,
+            onEnableNotifications = onEnableNotifications,
+            onAlertsEnabled = onAlertsEnabled,
+            onMagnitudeSelected = onMagnitudeSelected,
+            onMonitoringEnabled = onMonitoringEnabled,
+            onChannelSettings = onChannelSettings,
+            onPreviewAlert = onPreviewAlert,
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(WindowInsets.safeDrawing.asPaddingValues())
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = if (expanded) 84.dp else 12.dp,
+                        bottom = 16.dp,
+                    ),
         )
     }
 }

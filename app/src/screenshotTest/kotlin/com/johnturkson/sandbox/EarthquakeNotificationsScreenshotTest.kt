@@ -21,8 +21,7 @@ import com.johnturkson.sandbox.ui.EarthquakeMonitoringState
 import com.johnturkson.sandbox.ui.EarthquakeNotificationPage
 import com.johnturkson.sandbox.ui.EarthquakeNotificationRationale
 import com.johnturkson.sandbox.ui.EarthquakeNotificationState
-import com.johnturkson.sandbox.ui.EarthquakePreviewState
-import com.johnturkson.sandbox.ui.EarthquakeScreen
+import com.johnturkson.sandbox.ui.EarthquakeNotificationsScreen
 import com.johnturkson.sandbox.ui.EarthquakeView
 import kotlin.time.Instant
 
@@ -133,10 +132,31 @@ class EarthquakeNotificationsScreenshotTest {
     @Composable
     fun compactNotificationScreen() {
         EarthquakeTheme(dynamicColor = false) {
-            EarthquakeScreen(
-                state = EarthquakePreviewState(mapItems = emptyList(), notificationsVisible = true),
-                onMapItemClick = {},
-                onMapClick = {},
+            EarthquakeNotificationsScreen(
+                state = EarthquakeNotificationState(isChecking = false),
+                monitoring = EarthquakeMonitoringState(),
+                onClose = {},
+            )
+        }
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 392, heightDp = 720, locale = "en-US")
+    @Preview(
+        widthDp = 392,
+        heightDp = 720,
+        locale = "en-US",
+        uiMode = Configuration.UI_MODE_NIGHT_YES,
+    )
+    @Preview(widthDp = 392, heightDp = 720, locale = "en-US", fontScale = 1.5f)
+    @Composable
+    fun expandedNotificationScreen() {
+        EarthquakeTheme(dynamicColor = false) {
+            EarthquakeNotificationsScreen(
+                state = EarthquakeNotificationState(isChecking = false),
+                monitoring = EarthquakeMonitoringState(),
+                onClose = {},
+                expanded = true,
             )
         }
     }

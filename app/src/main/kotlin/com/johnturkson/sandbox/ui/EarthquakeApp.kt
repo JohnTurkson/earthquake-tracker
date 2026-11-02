@@ -1,15 +1,12 @@
 package com.johnturkson.sandbox.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.AdaptStrategy
@@ -85,7 +82,9 @@ fun EarthquakeApp(
         BoxWithConstraints(modifier.fillMaxSize()) {
             val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
             val listVisible = expanded && panelVisible && !notificationsVisible && !clusterVisible
-            val showList = if (expanded) listVisible else compactView == EarthquakeView.List
+            val showList =
+                if (expanded) panelVisible && !clusterVisible
+                else compactView == EarthquakeView.List
             LaunchedEffect(showList, notificationsVisible) {
                 val entries =
                     if (showList) listOf(MapRoute, ListRoute) else listOf(ListRoute, MapRoute)
@@ -188,6 +187,14 @@ fun EarthquakeApp(
                         }
                     },
             )
+            BackHandler(
+                enabled =
+                    !notificationsVisible &&
+                        !clusterVisible &&
+                        (if (expanded) !listVisible else compactView == EarthquakeView.Map)
+            ) {
+                activity?.finish()
+            }
         }
     }
 }
@@ -254,15 +261,7 @@ private fun EarthquakeDestination(
             EarthquakeNotificationsScreen(
                 navKey = NotificationsRoute,
                 onClose = actions.onNotificationsClose,
-                modifier =
-                    Modifier.fillMaxSize()
-                        .padding(WindowInsets.safeDrawing.asPaddingValues())
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = if (actions.expanded) 84.dp else 12.dp,
-                            bottom = 16.dp,
-                        ),
+                expanded = actions.expanded,
             )
         }
     }
