@@ -4,11 +4,10 @@ Build on the concrete patterns already present in this project. These convention
 apply to agents and human contributors. Each section links to the implementation
 that establishes the pattern and explains how to extend it.
 
-The timer sample has been removed. The current implementation still contains
-`Item` data scaffolding pending its replacement with earthquake API operations.
-Use the established responsibility boundaries when developing USGS features. Product
-requirements in [the README](../README.md) describe the intended app; they do not
-mean those features have been implemented.
+The current implementation contains `Item` data scaffolding. Use the established
+responsibility boundaries when developing USGS features. Product requirements in
+[the README](../README.md) describe the intended app; they do not mean those
+features have been implemented.
 
 ## UI and state ownership
 
@@ -79,18 +78,13 @@ behind system bars, and passes safe-drawing padding for Google attribution.
 Map defaults hide optional controls while retaining gestures and do not request
 location access. Keep Google attribution visible when adding overlays.
 
-For this UI integration, the ViewModel uses a fixed, manually downloaded USGS
-snapshot in
-[EarthquakeMapFixtures](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt).
-It contains 16 geographically varied events selected from 212 events generated
-at 2026-11-01 03:02 UTC (2026-10-31 20:02 Pacific). The source is the USGS
-[past-day GeoJSON feed](https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson).
-These are static development fixtures, not a live feed. Only the marker inputs
-needed by the UI are copied: ID, coordinates, title, and event-time snippet.
-This matches the fields exposed by the parallel earthquake-data implementation
-without coupling UI code to its network/database models. Runtime API/storage
-integration remains with that work. Detail navigation, clustering, and heatmaps
-are not implemented here.
+Use fixed development inputs such as
+[EarthquakeMapFixtures](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
+to render deterministic map states without live API or storage access. Pass only
+the presentation values needed by markers: ID, coordinates, title, and an
+optional event-time snippet. Keep these values independent of network and
+database models, and supply runtime feature data through the ViewModel's state
+contract.
 
 `MainPreviewState` is a data class implementing the read-only `MainState`
 contract. It accepts item and selection fixtures, so tests can render a populated
@@ -116,9 +110,9 @@ Maps Compose 9.0.1 returns an empty layout box in inspection mode, omitting
 Google's native surface and marker placement. Host screenshot tests cover our
 marker artwork, not native map tiles, camera projection, or main-screen map
 integration. Do not approve blank or substituted map images as coverage of those
-pixels. Native empty, populated, and selected map integration remains covered by
-device behavior tests and inspected device captures; native-map screenshot
-regression coverage is still missing and must be reported.
+pixels. Use device behavior tests and inspected device captures to check native
+empty, populated, and selected map integration. Native-map screenshot regression
+coverage is still missing and must be reported.
 
 ## Saved state
 
@@ -182,8 +176,7 @@ it is first introduced.
 Inject qualified dispatchers where execution context is needed. The repository
 receives `@IoDispatcher`. `MainModule` also provides `@MainDispatcher` and
 `@DefaultDispatcher`. Keep execution contexts replaceable instead of hardcoding
-dispatchers into feature logic. Timer jobs, timer models, and timer-specific
-clock providers have been removed.
+dispatchers into feature logic.
 
 ## Navigation
 
@@ -199,10 +192,10 @@ and result event bus entry decorators. Preserve these entry scopes when adding
 destinations; pass the entry's route to the screen and its assisted ViewModel
 factory when needed.
 
-Keep back stack changes in `MainContent`. The timer detail screen and its result
-events have been removed. Preserve the event/handler boundary when adding real
-earthquake destinations: screens emit actions and `MainContent` changes the back
-stack. Keep navigation infrastructure out of rendered components and data code.
+Keep back stack changes in `MainContent`. Preserve the event/handler boundary
+when adding earthquake destinations: screens emit actions and `MainContent`
+changes the back stack. Keep navigation infrastructure out of rendered components
+and data code.
 
 ## Networking and data models
 

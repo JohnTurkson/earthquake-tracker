@@ -28,6 +28,12 @@ examples as part of the change. Add sections only for elements the project
 actually introduces. Expand testing guidance with the user as testing patterns
 are established; do not add placeholder sections for future work.
 
+Keep repository documentation focused on reusable project instructions and
+concrete source examples. Report task-specific activity, research, and test or
+verification results in the chat; do not add them as repository files or append
+them to project guides. Follow the [testing guide's reporting instructions](docs/testing.md#report-the-results)
+for results and generated artifacts.
+
 # Android CLI
 
 Before building, deploying, inspecting UI, capturing component images, interacting

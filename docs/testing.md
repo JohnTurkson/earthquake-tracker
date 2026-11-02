@@ -103,7 +103,7 @@ Use Google's Compose Preview Screenshot Testing. The current AGP
 9.1.0 project uses the compatible `com.android.compose.screenshot` plugin and
 `screenshot-validation-api` version 0.0.1-alpha16. Its experimental source-set
 flags are configured in `gradle.properties` and the app module. Newer AGP test-suite
-integration requires a separate build-version change; this task keeps AGP 9.1.0.
+integration requires a separate build-version change.
 
 Mark test previews with `@PreviewTest` and `@Preview` in
 `app/src/screenshotTest/kotlin/`. The working example is
@@ -141,18 +141,22 @@ items, and populated/selected items. Maps Compose 9.0.1 intentionally omits the
 native map surface and marker placement in preview inspection mode. Do not
 substitute a fake renderer or approve blank main-screen/map previews as native
 pixel coverage. Our marker artwork is tested directly with the same composable
-used by the SDK. Device tests and manual captures verify native integration,
-while native-map screenshot regression coverage remains missing.
-
-A temporary device experiment captured and visually verified real SDK snapshots
-for empty, populated, and selected native-pin states with a fixed camera and
-`MapType.NONE`; the images are under ignored `build/map-verification/`. Temporary
-file-writing code was removed. Those exploratory images predate the switch to
-Compose dot markers and are not test baselines. Current manually downloaded
-USGS fixtures are rendered without runtime API/storage calls; API integration
-is owned by the parallel earthquake-data work.
+used by the SDK. Use device tests and manual captures to verify native
+integration; native-map screenshot regression coverage remains missing.
 
 ## Report the results
+
+Report task-specific activity and verification results in the chat. Do not create
+or append repository files containing session journals, dated verification
+reports, research activity, command histories, or results from a particular run.
+Keep project and tool guides focused on reusable prerequisites, commands, usage
+instructions, passing criteria, and troubleshooting, with concrete source
+examples where useful.
+
+Keep generated logs, test reports, exploratory screenshots, and other run
+artifacts in ignored `build/` or a temporary directory. Automated test sources,
+deterministic fixtures, and reviewed screenshot reference baselines remain
+tracked project inputs under their established conventions.
 
 Before finishing, compare the change against the applicable project guides and
 report any unmet requirements, including missing screenshot coverage for UI
@@ -161,16 +165,17 @@ when assessing screenshot coverage.
 
 For exploratory device checks, use the [Android CLI workflow](android-cli.md) to
 inspect live hierarchy, perform selector-based actions, and visually review PNGs.
-Capture the resulting state after meaningful actions. Record the CLI version,
-device/API, scenario, observed result, and artifact paths. Restore temporary
-device configuration. These checks and preview renders supplement automated
-tests; they do not establish screenshot regression baselines or satisfy missing
-coverage by themselves.
+Capture the resulting state after meaningful actions. Include the CLI version,
+device/API, scenario, observed result, and artifact paths in the chat. Restore
+temporary device configuration. These checks and preview renders supplement
+automated tests; they do not establish screenshot regression baselines or satisfy
+missing coverage by themselves.
 
 Report formatting, build, lint, unit tests, device tests, and manual checks
-separately, identifying what passed, failed, or was not run. Include the command
-or scenario, any relevant device/API level, and material limitations. For a
-documentation-only change, reporting link and whitespace checks is sufficient.
+separately in the chat, identifying what passed, failed, or was not run. Include
+the command or scenario, any relevant device/API level, and material limitations.
+For a documentation-only change, reporting link and whitespace checks is
+sufficient.
 
 After running checks, inspect `git status` for generated output and unrelated
 changes before staging. Follow the [source control guide](source-control.md).

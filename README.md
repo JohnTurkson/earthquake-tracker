@@ -18,13 +18,11 @@ using the USGS Earthquake API.
 
 The main screen is a full-screen Google Maps Compose view. Its reusable
 `EarthquakeMap` component accepts immutable item values, selection callbacks,
-map properties/UI settings, padding, and UI-owned camera state. The timer sample,
-its detail screen, timer actions, and timer clock providers have been removed.
+map properties/UI settings, padding, and UI-owned camera state.
 
-For UI integration it currently displays 16 fixed events selected from a manual
-USGS past-day feed download generated on 2026-10-31 at 20:02 Pacific. These are
-static development fixtures, not live earthquake updates. Runtime API/storage
-integration is separate; the UI consumes only marker presentation values.
+The screen uses fixed earthquake fixtures for UI development. Keep UI components
+independent of runtime API and storage access by passing marker presentation
+values through the screen's state contract.
 
 ## Testing
 
