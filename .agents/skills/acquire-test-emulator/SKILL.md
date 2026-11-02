@@ -1,9 +1,9 @@
 ---
-name: test-emulator
+name: acquire-test-emulator
 description: Set up USGS Tracker's shared Earthquake Project emulator, delegate availability waiting, acquire it through ADB, and return it to verified idle home after device tests, mockups, screenshots, or validation.
 ---
 
-# Test Emulator
+# Acquire Test Emulator
 
 Read the [testing guide](../../../docs/testing.md#shared-test-emulator) and
 [Android CLI workflow](../../../docs/android-cli.md). Use the single shared

@@ -45,7 +45,7 @@ Follow the [testing guide](docs/testing.md) for required checks, passing criteri
 and reporting verification.
 
 All device validation shares **Earthquake Project**, a Resizable API 37 Google
-Play emulator. Use [$test-emulator](.agents/skills/test-emulator/SKILL.md) to set
+Play emulator. Use [$acquire-test-emulator](.agents/skills/acquire-test-emulator/SKILL.md) to set
 it up, wait for exclusive access and idle home, and return it to idle home after
 every session.
 

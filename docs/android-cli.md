@@ -51,7 +51,7 @@ adb devices -l
 
 All project device validation uses the single shared **Earthquake Project** AVD
 (`Earthquake_Project`, **Resizable**, **API 37**, **Google Play**). Follow the
-[$test-emulator skill](../.agents/skills/test-emulator/SKILL.md) for setup and the
+[$acquire-test-emulator skill](../.agents/skills/acquire-test-emulator/SKILL.md) for setup and the
 [shared-emulator protocol](testing.md#shared-test-emulator) for reservation,
 waiting, and mandatory idle-home cleanup. Do not create per-agent mockup AVDs or
 select a different running emulator. An AVD name alone does not prove its

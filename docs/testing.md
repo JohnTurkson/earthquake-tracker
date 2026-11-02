@@ -38,7 +38,7 @@ tests, UI design/mockups, screenshots, and other project validation. Do not crea
 per-agent instances or substitute another device while it is busy. Host-only
 unit tests, builds, lint and Compose preview screenshot tests need no reservation.
 
-Use the repository's [$test-emulator skill](../.agents/skills/test-emulator/SKILL.md)
+Use the repository's [$acquire-test-emulator skill](../.agents/skills/acquire-test-emulator/SKILL.md)
 to create it once and verify its configuration. That skill is shared with Claude
 through the existing `.claude/skills` symlink. The workflow is **wait, claim,
 test, clean up, release**, using Android CLI/ADB commands directly; no shell or
