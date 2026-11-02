@@ -359,7 +359,7 @@ fun EarthquakeScreen(
                                 else 0.dp,
                         top =
                             safePadding.calculateTopPadding() +
-                                if (showListPanel) 16.dp
+                                if (showListPanel) 80.dp
                                 else
                                     (if (!expanded && !isLocationGranted) 160.dp else 100.dp) +
                                         monitoringCardHeight,
