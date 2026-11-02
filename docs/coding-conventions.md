@@ -39,3 +39,23 @@ applicable. Serialize instants to ISO-8601 strings at storage boundaries and
 convert automatically; keep entities, queries, state, and navigation arguments
 typed. The dedicated guide describes the required sortable Room format and
 legacy migration.
+
+## String resources
+
+Keep app-authored display text in Android string resources. Use numbered format
+arguments for dynamic values so translations can reorder them. Resolve resources
+with `stringResource` in Compose and `context.getString` in Android components
+that already own a context.
+
+[EarthquakeNotifications](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNotifications.kt)
+uses a nonblank USGS title with the established magnitude-label formatting and
+otherwise formats `alert_fallback_title` with the event's magnitude and place,
+using `unknown_location` when the place is null:
+
+```kotlin
+context.getString(
+    R.string.alert_fallback_title,
+    item.magnitude.toString(),
+    item.place ?: context.getString(R.string.unknown_location),
+)
+```

@@ -125,7 +125,11 @@ constructor(@ApplicationContext private val context: Context) {
             return false
         val title =
             item.title?.takeIf { it.isNotBlank() }?.replaceFirst(Regex("^M\\s+"), "M")
-                ?: "M${item.magnitude} – ${item.place ?: "Unknown location"}"
+                ?: context.getString(
+                    R.string.alert_fallback_title,
+                    item.magnitude.toString(),
+                    item.place ?: context.getString(R.string.unknown_location),
+                )
         val notification =
             NotificationCompat.Builder(context, AlertsChannel)
                 .setSmallIcon(R.drawable.ic_notification_earthquake)
