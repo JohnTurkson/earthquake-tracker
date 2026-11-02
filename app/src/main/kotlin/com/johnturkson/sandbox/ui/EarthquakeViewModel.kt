@@ -91,6 +91,14 @@ constructor(
             .getValue(this, this::selectedView)
         private set
 
+    override var selectedClusterItemIds: List<String> by
+        savedStateHandle
+            .saved(serializer = MutableStateSerializer<List<String>>()) {
+                mutableStateOf(emptyList())
+            }
+            .getValue(this, this::selectedClusterItemIds)
+        private set
+
     override var isListPanelVisible: Boolean by
         savedStateHandle
             .saved(serializer = MutableStateSerializer<Boolean>()) { mutableStateOf(true) }
@@ -203,6 +211,15 @@ constructor(
 
     fun clearMapSelection() {
         selectedMapItemId = null
+        dismissMapCluster()
+    }
+
+    fun selectMapCluster(items: List<EarthquakeMapItem>) {
+        selectedClusterItemIds = items.map { it.id }.distinct()
+    }
+
+    fun dismissMapCluster() {
+        selectedClusterItemIds = emptyList()
     }
 
     fun startLocationUpdates() {

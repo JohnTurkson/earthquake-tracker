@@ -27,6 +27,11 @@ and compact view choice survive layout changes.
 The reusable
 `EarthquakeMap` component accepts immutable item values, selection callbacks,
 map properties/UI settings, padding, and UI-owned camera state.
+Nearby earthquakes group through Maps Utils as the camera zooms out. Cluster
+badges show exact event counts and the maximum reported magnitude when available.
+Tap a cluster to browse all its earthquakes in a scrollable bottom sheet, then
+select an event to highlight it in blue on the map. Events at identical
+coordinates remain accessible through the cluster list.
 
 The screen observes a Room database populated from the USGS all-day GeoJSON feed.
 Manual refresh uses a one-time WorkManager request and preserves stored data on

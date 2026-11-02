@@ -32,7 +32,7 @@ implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
 
 `EarthquakeState` exposes `navKey`, read-only `mapItems`, `selectedMapItemId`,
-`selectedView`, `isListPanelVisible`, `initialMapLocation`, and the latest measured
+`selectedClusterItemIds`, `selectedView`, `isListPanelVisible`, `initialMapLocation`, and the latest measured
 `userLocation`.
 `EarthquakeScreen` has a Hilt entry overload and a rendering overload that accepts
 `EarthquakeState` and callbacks. Extend this read-only contract when expanding screen
@@ -59,12 +59,15 @@ EarthquakeMap(
 ```
 
 `EarthquakeMapItem` is an immutable presentation value with a stable unique ID,
-coordinates, title, optional snippet, and optional event time in epoch
+coordinates, title, optional numeric magnitude, optional snippet, and optional event time in epoch
 milliseconds. The explorer uses the same values for its map and list. Format
 event times in the UI using the device's locale and time preferences; do not
 store formatted time strings as feature state. It has no network or database
-annotations. Map markers are keyed by that ID; `rememberUpdatedMarkerState`
-applies coordinate changes without turning the SDK marker into feature state.
+annotations. Maps Utils owns unselected marker lifetimes through immutable
+[EarthquakeClusterItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterItem.kt)
+wrappers. The separately rendered selected marker is keyed by its event ID;
+`rememberUpdatedMarkerState` applies coordinate changes without turning the SDK
+marker into feature state.
 Marker clicks emit the current item and map-background clicks emit a callback.
 The ViewModel owns selection; the component derives marker color and stacking
 from `selectedItemId` and suppresses the SDK's independent info-window selection.
@@ -73,6 +76,27 @@ from `selectedItemId` and suppresses the SDK's independent info-window selection
 content into the SDK icon. Include selection in its render keys so the bitmap
 updates. Marker artwork consumes only `isSelected` and a `Modifier`; the SDK
 marker owns hit testing, while the ViewModel owns the selected ID.
+
+Use Maps Compose Utils `Clustering` inside `EarthquakeMap`, with Google's default
+distance-based algorithm. It handles item changes and reclustering after camera
+movement; do not replace the map's native listeners manually. Set the renderer's
+minimum cluster size to two so coincident pairs remain accessible even at maximum
+zoom. Render exact counts and available maximum magnitude with
+[EarthquakeClusterMarker](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterMarker.kt).
+Compute magnitude from numeric values, ignoring missing or non-finite values;
+do not parse localized titles. Individual unselected items use the existing red
+marker. Exclude the selected item from clustering and draw it separately in blue
+with a higher z-index, so every earthquake is represented once and selection stays visible.
+Anchor cluster badges above their map point with transparent clearance for the
+blue marker, so coincident selection cannot cover the count or magnitude.
+
+Cluster clicks emit immutable earthquake values, never SDK clusters. Save only
+the member IDs in `EarthquakeViewModel.selectedClusterItemIds` using the existing
+`SavedStateHandle.saved` and `MutableStateSerializer<List<String>>` pattern.
+Resolve those IDs against current items in the UI; keep the original membership
+while the sheet is open even when the camera moves. `selectMapCluster` opens it,
+`dismissMapCluster` closes it without clearing event selection, and
+`clearMapSelection` clears both. Missing members produce the sheet's empty state.
 
 Follow Maps Compose naming: use `cameraPositionState` for the component parameter
 and local variables of type `CameraPositionState`, created by
@@ -248,6 +272,21 @@ bottom-centered component in compact Map and expanded Map with the panel
 minimized, with a maximum width of 480 dp. Measure its rendered height in the UI
 and include that height in map content padding so native attribution remains
 visible at larger font sizes. Never show it alongside the open expanded list.
+
+[EarthquakeClusterSheet](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterSheet.kt)
+uses Material `ModalBottomSheet` with a fixed count heading and Close control, and a bounded `LazyColumn`
+of the existing `EarthquakeListRow` components. Limit content to 60% of the window
+height, or 45% in windows shorter than 600 dp, and allow every member to scroll;
+do not paginate a cluster. Read `LocalWindowInfo` for the actual window bounds. Keep
+the explanation and magnitude summary inside the scrolling content so large
+text in a short window cannot consume the entire list viewport. Sheet
+expansion and list scroll position remain UI-owned. Selecting a member updates
+the shared selected ID and centers its map location while keeping the sheet open.
+Closing, back, or scrim dismissal removes the sheet from composition. Measure
+its content in the UI and reserve bottom map padding for it and the drag handle
+so native attribution and the selected marker remain above the sheet.
+`EarthquakeClusterSheetContent` is the same content used for deterministic host
+screenshots, without substituting for native map or modal-window pixels.
 
 ## Dependency injection and storage
 

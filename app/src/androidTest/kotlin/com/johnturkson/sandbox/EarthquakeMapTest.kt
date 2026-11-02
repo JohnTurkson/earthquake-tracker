@@ -200,6 +200,77 @@ class EarthquakeMapTest {
         composeRule.waitUntil(10_000) { state.selectedMapItemId == item.id }
     }
 
+    @Test
+    fun coincidentPairOpensClusterWithCurrentMembersEvenAtMaximumZoom() {
+        val first = EarthquakeMapItem("first", 0.0, 0.0, "First")
+        val second = first.copy(id = "second", title = "Second")
+        var items by mutableStateOf(listOf(first, second))
+        var clicked: List<EarthquakeMapItem>? = null
+        val camera = CameraPositionState(CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 21f))
+        composeRule.setContent {
+            EarthquakeMap(
+                items = items,
+                onItemClick = {},
+                onClusterClick = { clicked = it },
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = camera,
+                properties = MapProperties(mapType = MapType.NONE),
+            )
+        }
+        val map = awaitMap()
+        tapLocation(map, LatLng(0.0, 0.0), verticalOffsetDp = -40f)
+        composeRule.waitUntil(10_000) { clicked != null }
+        composeRule.runOnIdle {
+            assertEquals(setOf("first", "second"), clicked!!.map { it.id }.toSet())
+            items = listOf(second.copy(title = "Updated second"), first)
+            clicked = null
+        }
+        tapLocation(map, LatLng(0.0, 0.0), verticalOffsetDp = -40f)
+        composeRule.waitUntil(10_000) { clicked?.any { it.title == "Updated second" } == true }
+    }
+
+    @Test
+    fun zoomingSeparatesNearbyEventsAndSelectedEventRemainsClickable() {
+        val first = EarthquakeMapItem("first", 0.0, 0.0, "First")
+        val second = first.copy(id = "second", longitude = 0.02, title = "Second")
+        var selected by mutableStateOf<String?>(null)
+        var cluster: List<EarthquakeMapItem>? = null
+        var itemClicks = 0
+        val camera = CameraPositionState(CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 10f))
+        composeRule.setContent {
+            EarthquakeMap(
+                items = listOf(first, second),
+                onItemClick = {
+                    selected = it.id
+                    itemClicks++
+                },
+                onClusterClick = { cluster = it },
+                selectedItemId = selected,
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = camera,
+                properties = MapProperties(mapType = MapType.NONE),
+            )
+        }
+        val map = awaitMap()
+        tapLocation(map, LatLng(0.0, 0.0), verticalOffsetDp = -40f)
+        composeRule.waitUntil(10_000) { cluster?.size == 2 }
+        composeRule.runOnIdle {
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(0.0, 0.0), 18f))
+        }
+        tapLocation(map, LatLng(0.0, 0.0))
+        composeRule.waitUntil(10_000) { selected == "first" }
+        composeRule.runOnIdle {
+            assertEquals(1, itemClicks)
+            selected = "second"
+            map.moveCamera(
+                CameraUpdateFactory.newLatLngZoom(LatLng(second.latitude, second.longitude), 18f)
+            )
+        }
+        tapLocation(map, LatLng(second.latitude, second.longitude))
+        composeRule.waitUntil(10_000) { itemClicks == 2 }
+        composeRule.runOnIdle { assertEquals("second", selected) }
+    }
+
     private fun awaitMap(): GoogleMap {
         var map: GoogleMap? = null
         composeRule.runOnIdle {
@@ -211,14 +282,16 @@ class EarthquakeMapTest {
         return assertNotNull(map)
     }
 
-    private fun tapLocation(map: GoogleMap, location: LatLng) {
+    private fun tapLocation(map: GoogleMap, location: LatLng, verticalOffsetDp: Float = 0f) {
         composeRule.waitForIdle()
         var frameReady = false
         composeRule.runOnIdle { map.snapshot { frameReady = it != null } }
         composeRule.waitUntil(10_000) { frameReady }
         val point = composeRule.runOnIdle { map.projection.toScreenLocation(location) }
+        val verticalOffset =
+            verticalOffsetDp * composeRule.activity.resources.displayMetrics.density
         composeRule.onRoot().performTouchInput {
-            click(Offset(point.x.toFloat(), point.y.toFloat()))
+            click(Offset(point.x.toFloat(), point.y + verticalOffset))
         }
     }
 

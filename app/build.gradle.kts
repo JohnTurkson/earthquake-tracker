@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.hilt.android)
 
     implementation(libs.maps.compose)
+    implementation(libs.maps.compose.utils)
     implementation(libs.play.services.location)
 
     implementation(libs.room.runtime)

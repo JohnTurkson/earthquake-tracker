@@ -187,6 +187,28 @@ the native SDK checks still require online access on the shared emulator.
 
 ## Compose screenshot tests
 
+[EarthquakeClusterScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterScreenshotTest.kt)
+covers cluster badges with and without magnitude, small and large counts, dark
+mode, and large text. It renders real sheet content for populated, selected,
+empty, unknown-magnitude, dark, narrow large-text, and short large-text states.
+[EarthquakeClusterSheetTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterSheetTest.kt)
+checks the real modal container, scrolling to the last member, retained selection
+after dismissal, back dismissal through the real screen, and disappearing members.
+[EarthquakeClusterStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterStateTest.kt)
+checks serialization and restoration of the ViewModel's cluster member IDs and
+independent event selection. Extend native map behavior tests with
+coincident pairs at maximum zoom, current members after updates, zoom splitting,
+and selected marker interaction. Use deterministic dense fixtures, including
+identical coordinates, from `EarthquakeMapFixtures.denseItems`. These synthetic
+events are test inputs, not reported earthquake activity.
+
+On the dedicated Resizable API 37 emulator, inspect native cluster counts and
+individual markers at multiple zoom levels, open and scroll the actual modal
+sheet, select an event, and verify attribution above the sheet. Include dark and
+large-text configurations and an expanded window. Host sheet-content references
+do not cover the SDK surface, the modal scrim, or its drag handle; inspect those
+in actual device captures and report the native pixel-regression gap.
+
 [EarthquakeLocationScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeLocationScreenshotTest.kt)
 covers the request button, app-settings button, and permission rationale using
 the real stateless components, including dark and large-text fixtures. It also

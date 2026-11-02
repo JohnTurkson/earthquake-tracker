@@ -33,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -161,6 +162,8 @@ fun EarthquakeScreen(
         state = viewModel,
         onMapItemClick = viewModel::selectMapItem,
         onMapClick = viewModel::clearMapSelection,
+        onClusterClick = viewModel::selectMapCluster,
+        onClusterDismiss = viewModel::dismissMapCluster,
         onViewSelected = viewModel::selectView,
         onListPanelVisibilityChanged = viewModel::updateListPanelVisibility,
         onRefresh = viewModel::refresh,
@@ -266,6 +269,8 @@ fun EarthquakeScreen(
     onLocationClick: () -> Unit = {},
     isLocatingUser: Boolean = false,
     onUserLocated: () -> Unit = {},
+    onClusterClick: (List<EarthquakeMapItem>) -> Unit = {},
+    onClusterDismiss: () -> Unit = {},
     onRefresh: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onNotificationsClose: () -> Unit = {},
@@ -333,7 +338,10 @@ fun EarthquakeScreen(
     val layoutDirection = LocalLayoutDirection.current
     var monitoringCardHeight by remember { mutableStateOf(0.dp) }
     var selectedCardHeight by remember { mutableStateOf(0.dp) }
+    var clusterSheetHeight by remember { mutableStateOf(0.dp) }
     val selectedItem = state.mapItems.find { it.id == state.selectedMapItemId }
+    val showCluster = state.selectedClusterItemIds.isNotEmpty()
+    val clusterItems = state.mapItems.filter { it.id in state.selectedClusterItemIds }
 
     BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
@@ -345,6 +353,7 @@ fun EarthquakeScreen(
                 modifier = Modifier.fillMaxSize(),
                 selectedItemId = state.selectedMapItemId,
                 onMapClick = onMapClick,
+                onClusterClick = onClusterClick,
                 cameraPositionState = cameraPositionState,
                 properties =
                     MapProperties(minZoomPreference = 1f, isMyLocationEnabled = isLocationGranted),
@@ -366,7 +375,8 @@ fun EarthquakeScreen(
                                         monitoringCardHeight,
                         bottom =
                             safePadding.calculateBottomPadding() +
-                                if (showListPanel) 16.dp
+                                if (showCluster) clusterSheetHeight + 48.dp
+                                else if (showListPanel) 16.dp
                                 else if (selectedItem != null) selectedCardHeight + 32.dp else 0.dp,
                     ),
             )
@@ -404,5 +414,25 @@ fun EarthquakeScreen(
             notificationContent = notificationContent,
             onMonitoringCardSizeChanged = { monitoringCardHeight = with(density) { it.toDp() } },
         )
+        if (showCluster) {
+            EarthquakeClusterSheet(
+                items = clusterItems,
+                selectedItemId = state.selectedMapItemId,
+                onItemClick = { item ->
+                    onMapItemClick(item)
+                    hasInitializedCamera = true
+                    cameraPositionState.position =
+                        CameraPosition.fromLatLngZoom(
+                            LatLng(item.latitude, item.longitude),
+                            cameraPositionState.position.zoom,
+                        )
+                },
+                onDismiss = onClusterDismiss,
+                modifier =
+                    Modifier.onSizeChanged {
+                        clusterSheetHeight = with(density) { it.height.toDp() }
+                    },
+            )
+        }
     }
 }
