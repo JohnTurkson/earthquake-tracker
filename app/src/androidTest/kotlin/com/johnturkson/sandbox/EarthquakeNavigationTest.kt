@@ -146,6 +146,7 @@ class EarthquakeNavigationTest {
     fun panesFollowWidthAndHeightSizeClassesAcrossResizeBoundaries() {
         composeRule.setContent { Content() }
         composeRule.onNodeWithText("Open list").performClick()
+        composeRule.onNodeWithText("List").assertIsSelected()
         val listOwner = owners.getValue(Destination.EarthquakeListRoute)
         for ((size, showsBothDestinations) in
             listOf(
