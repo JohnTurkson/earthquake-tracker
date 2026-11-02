@@ -156,7 +156,7 @@ location is available; subsequent fixes leave the camera alone.
 Use fixed development inputs such as
 [EarthquakeMapFixtures](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
 to render deterministic map states without live API or storage access. Pass only
-the presentation values needed by markers: ID, coordinates, title, and an
+the presentation values needed by markers: ID, coordinates, title, numeric magnitude, and an
 optional event time or snippet. Keep these values independent of network and
 database models, and supply runtime feature data through the ViewModel's state
 contract.
@@ -164,7 +164,10 @@ contract.
 `EarthquakePreviewState` is a data class implementing the read-only `EarthquakeState`
 contract. It accepts item and selection fixtures, so tests can render a populated
 screen and update selection with `copy` without Hilt, storage, or API calls.
-The ViewModel maps observable database rows to presentation values and owns the restorable selection.
+The ViewModel maps observable database rows to presentation values, preserving
+numeric magnitude for cluster summaries, and owns the restorable selection.
+Opening an event from a notification closes any cluster sheet before focusing
+that event.
 
 Every app UI component must have screenshot tests for all of its supported visual
 states. Add or update coverage with each UI change. Enumerate those states from
@@ -293,7 +296,9 @@ its members remain visible above the sheet after a window or font-size change.
 Keep this camera integration in the UI, including the initialization flag that
 prevents a pending location read from replacing an explicit cluster focus.
 Selecting a member updates the shared selected ID and centers its map location
-while keeping the sheet open.
+while keeping the sheet open. Enable `EarthquakeListRow.showSelectionLabel` in
+the sheet to identify the selected member with text as well as its highlight;
+the main explorer list retains its own presentation.
 Closing, back, or scrim dismissal removes the sheet from composition. Measure
 its content in the UI and reserve bottom map padding for it and the drag handle
 so native attribution and the selected marker remain above the sheet.

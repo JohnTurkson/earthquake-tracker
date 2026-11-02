@@ -365,7 +365,11 @@ fun EarthquakeScreen(
         val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
         val showListPanel =
             expanded && state.isListPanelVisible && !state.notificationsVisible && !showCluster
-        if (showCluster || expanded || state.selectedView == EarthquakeView.Map && !state.notificationsVisible) {
+        if (
+            showCluster ||
+                expanded ||
+                state.selectedView == EarthquakeView.Map && !state.notificationsVisible
+        ) {
             EarthquakeMap(
                 items = state.mapItems,
                 onItemClick = onMapItemClick,
@@ -383,7 +387,7 @@ fun EarthquakeScreen(
                                 if (showListPanel) earthquakeListPaneWidth + 32.dp else 0.dp,
                         end =
                             safePadding.calculateEndPadding(layoutDirection) +
-                                if (expanded && state.notificationsVisible)
+                                if (expanded && state.notificationsVisible && !showCluster)
                                     earthquakeListPaneWidth + 32.dp
                                 else 0.dp,
                         top =
@@ -433,7 +437,9 @@ fun EarthquakeScreen(
                 onNotificationsClick = onNotificationsClick,
                 onNotificationsClose = onNotificationsClose,
                 notificationContent = notificationContent,
-                onMonitoringCardSizeChanged = { monitoringCardHeight = with(density) { it.toDp() } },
+                onMonitoringCardSizeChanged = {
+                    monitoringCardHeight = with(density) { it.toDp() }
+                },
             )
         }
         if (showCluster) {

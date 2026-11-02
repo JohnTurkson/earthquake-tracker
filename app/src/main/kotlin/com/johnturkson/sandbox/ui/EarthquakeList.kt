@@ -130,6 +130,7 @@ fun EarthquakeListRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     showMapAction: Boolean = true,
+    showSelectionLabel: Boolean = false,
 ) {
     Surface(
         onClick = onClick,
@@ -161,6 +162,12 @@ fun EarthquakeListRow(
                         it,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (isSelected && showSelectionLabel) {
+                    Text(
+                        stringResource(R.string.selected_earthquake),
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 }
             }

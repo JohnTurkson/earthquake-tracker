@@ -303,8 +303,11 @@ class EarthquakeMapTest {
             assertEquals(first.latitude, map.cameraPosition.target.latitude, 0.0001)
             assertEquals(first.longitude, map.cameraPosition.target.longitude, 0.0001)
             val point = map.projection.toScreenLocation(LatLng(first.latitude, first.longitude))
+            val origin = IntArray(2)
+            assertNotNull(findMapView(composeRule.activity.window.decorView))
+                .getLocationInWindow(origin)
             assertTrue(point.y > 0)
-            assertTrue(point.y < sheet.top)
+            assertTrue(origin[1] + point.y < sheet.top)
         }
     }
 

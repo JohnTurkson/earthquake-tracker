@@ -127,6 +127,7 @@ constructor(
                         item.longitude,
                         item.title ?: "M $magnitude – ${item.place ?: "Unknown location"}",
                         eventTimeMillis = item.time,
+                        magnitude = item.magnitude,
                     )
                 }
                 monitoring = monitoring.copy(hasStoredData = items.isNotEmpty())
@@ -296,6 +297,7 @@ constructor(
         viewModelScope.launch {
             val item = repository.getEarthquakeFlow(eventId).first()
             if (item != null) {
+                dismissMapCluster()
                 selectedMapItemId = item.id
                 requestedMapFocusId = item.id
                 selectedView = EarthquakeView.Map
