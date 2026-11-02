@@ -26,8 +26,10 @@ it in tracked files. If checking configuration, report only whether the key is
 present.
 
 Use the Gradle wrapper to assemble the debug APK and run local unit tests. When
-asked to run the app, install and launch it on the selected compatible device or
-emulator, then follow [Verify the run](../../../docs/building.md#verify-the-run).
+asked to run the app, reserve the shared emulator through the
+[$test-emulator skill](../test-emulator/SKILL.md), install and launch it in that
+session, then follow [Verify the run](../../../docs/building.md#verify-the-run).
+Finish with the required idle-home cleanup before releasing the emulator.
 
 Assume the app has a map screen. Report build/test results, app launch, and Maps
 rendering separately, stating what was actually observed. A successful build or

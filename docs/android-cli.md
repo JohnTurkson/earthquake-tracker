@@ -49,41 +49,32 @@ android emulator list
 adb devices -l
 ```
 
-Use an **API 37** emulator with the **Resizable** hardware profile for device
-tests, manual UI verification, and device screenshots. Reuse an existing AVD only
-after confirming both its hardware profile and system image. Do not default to
-Medium Phone or another fixed-size profile, even when one is already running.
+All project device validation uses the single shared **Earthquake Project** AVD
+(`Earthquake_Project`, **Resizable**, **API 37**, **Google Play**). Follow the
+[$test-emulator skill](../.agents/skills/test-emulator/SKILL.md) for setup and the
+[shared-emulator protocol](testing.md#shared-test-emulator) for reservation,
+waiting, and mandatory idle-home cleanup. Do not create per-agent mockup AVDs or
+select a different running emulator. An AVD name alone does not prove its
+configuration; verify its hardware/image and resolve the connected serial with
+`adb -s SERIAL emu avd name`.
 
-If no matching AVD exists, create one in Android Studio Device Manager using the
-**Resizable** hardware profile and an **API 37** system image. Use a Google APIs
-or Google Play image for Maps checks. The CLI's predefined phone, tablet, and
-desktop creation profiles do not replace the required Resizable profile.
-
-Check the AVD's hardware profile and system image in Device Manager or its
-`config.ini` (`hw.device.name=resizable` and an API 37 `image.sysdir.1`). An AVD's
-name alone does not establish its configuration. After starting it, confirm the
-running API level with `getprop` as shown below; it must report `37`.
-
-For mockup testing, create a uniquely named dedicated emulator instance and
-leave other active emulators unchanged. Record its AVD name and actual connected
-serial, target that serial for every command, restore temporary settings, and
-stop the instance when finished.
-
-Start an AVD by its listed name, then select its actual connected serial.
-Replace the example name and serial below with those values:
+Reserve it before installation, UI inspection, screenshots, input, configuration
+changes, or device tests. Delegate readiness polling to a read-only subagent
+while continuing implementation. When ready to test, follow the skill's atomic
+ADB reservation and owner-token protocol, then verify idle home through
+`android layout`. Use direct commands, without a local wrapper/polling script.
+After claiming, export its actual serial and run the examples below:
 
 ```sh
-android emulator start Resizable_API_37 --headless
-adb devices -l
-export ANDROID_SERIAL=emulator-5554
+export ANDROID_SERIAL=SERIAL_FROM_DISCOVERY
 adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk
 export ARTIFACT_DIR="$PWD/build/android-cli"
 mkdir -p "$ARTIFACT_DIR"
 ```
 
 Pass `--device="$ANDROID_SERIAL"` on device commands. Keep captures in ignored
-`build/` or a temporary directory. Stop an emulator you started when finished,
-using `android emulator stop` with its AVD name.
+`build/` or a temporary directory. Restore settings, verify unlocked idle home and
+remove only your reservation when done. Leave it running, even if you started it.
 
 ## Build, install, and run
 
@@ -181,7 +172,8 @@ the screenshot tests required by the project.
 
 ## Change device configuration
 
-Use native emulator commands for creation, start, cold boot, and stop. For OS
+Create/start and reserve the shared emulator through its skill. Never
+cold boot or stop it to acquire it from another agent. For OS
 settings without a CLI command, use narrowly scoped ADB operations on the
 selected development device. Read the current values first:
 

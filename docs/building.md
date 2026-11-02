@@ -8,12 +8,11 @@
   separate JDK 21 installation is required.
 - Install Android SDK Platform 37 and the SDK tools requested during Gradle sync.
   Android Studio normally writes the SDK location to the ignored `local.properties`.
-- To run the app, use an Android 8.0 / API 26 or newer device or emulator. Maps
-  requires Google Play services; select a Google APIs or Google Play emulator image.
-- For device tests, manual UI verification, and device screenshots, use an API 37
-  emulator with the **Resizable** hardware profile. Follow the
-  [device-selection workflow](android-cli.md#select-a-device); Medium Phone and
-  other fixed-size profiles do not meet the project's testing requirement.
+- The app supports Android 8.0 / API 26 and newer; Maps requires Google Play
+  services. Project device tests, UI design/mockups, screenshots and validation
+  use the single shared **Earthquake Project** emulator: **Resizable**, **API 37**,
+  **Google Play**. Follow the
+  [shared-emulator workflow](testing.md#shared-test-emulator) and setup skill.
 
 The project uses AGP 9.1.1 with compile and target SDK 37. Google's
 [API-level compatibility table](https://developer.android.com/build/releases/about-agp#api-level-support)
@@ -135,15 +134,17 @@ This is a build and local-test smoke check. Follow the
 [testing guide](testing.md) for the checks required for a change and what counts
 as passing.
 
-The APK is written to `app/build/outputs/apk/debug/app-debug.apk`. To install it
-on a connected device or running emulator:
+The APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Reserve the
+[shared test emulator](testing.md#shared-test-emulator) before installation:
 
 ```sh
-./gradlew :app:installDebug
+android install --device="$ANDROID_SERIAL" app/build/outputs/apk/debug/app-debug.apk
+android run --device="$ANDROID_SERIAL" app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Launch the installed app from the device or select the `app` run configuration
-in Android Studio. Android signs debug builds automatically.
+Run those commands only after acquiring the skill's ADB reservation and exporting
+the verified serial. Keep the reservation through verification, then return to
+idle home and release it. Android signs debug builds automatically.
 
 ## Verify the run
 

@@ -55,7 +55,11 @@ or unstaged state. Do not include unrelated changes just to make a checkout clea
 1. Review `git status` and `git diff` to identify your changes and any existing
    work. Preserve changes outside your task.
 2. Follow the [testing guide](testing.md) to choose checks and assess their
-   results. Use the [build guide](building.md) for environment setup.
+   results. For device checks, wait for and reserve the shared Earthquake Project
+   emulator, then verify idle-home cleanup before releasing it. Report pending
+   device verification or failed cleanup separately; continue independent work
+   while the waiter subagent monitors availability. Use the
+   [build guide](building.md) for environment setup.
 3. Stage the intended files or hunks explicitly and review the exact diff that
    will be committed. Use `git diff --cached` when the index contains only task
    changes. If unrelated changes are already staged, leave them staged and

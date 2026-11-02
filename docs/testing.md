@@ -9,7 +9,7 @@ device, and Maps configuration.
 
 | Change | Required verification |
 | --- | --- |
-| Documentation or instruction files only | Review the text and local links; run `git diff --check`. No Android build is needed. |
+| Documentation or instruction files only | Review the text and local links; run `git diff --check`. No Android build is needed. Prototype new device coordination instructions on the shared emulator. |
 | Kotlin source, resources, manifest, dependencies, or build configuration | Run formatting checks, assemble the debug app, run debug unit tests, and run Android lint. |
 | UI, navigation, lifecycle, Android storage, or platform integration | Also run relevant device tests and manually exercise the changed behavior on the resizable API 37 emulator described below. |
 | Maps configuration or rendering | Also follow the Maps checks in [Verify the run](building.md#verify-the-run). |
@@ -29,23 +29,59 @@ Never format generated files or build/cache directories. The repository-wide
 `ktfmtFormat` task can also rewrite unrelated files; review its scope before
 using it and keep unrelated cleanup in a separate commit.
 
-Use an API 37 emulator with the **Resizable** hardware profile for device tests,
-manual UI verification, and device screenshots. Medium Phone and other fixed-size
-profiles do not meet this requirement. Follow the
-[Android CLI device-selection workflow](android-cli.md#select-a-device) to confirm
-the hardware profile and API level before testing. If the required AVD is missing,
-create it rather than substituting an already-running fixed-size emulator. Other
-devices and API levels may supplement this required test environment.
+## Shared test emulator
 
-For device tests, start and select that emulator, then run:
+All agents and worktrees on this host MUST use the same **Earthquake Project**
+emulator (AVD ID `Earthquake_Project`), with the **Resizable** hardware profile,
+**API 37**, and a **Google Play** system image. Reserve it exclusively for device
+tests, UI design/mockups, screenshots, and other project validation. Do not create
+per-agent instances or substitute another device while it is busy. Host-only
+unit tests, builds, lint and Compose preview screenshot tests need no reservation.
 
-```sh
-./gradlew :app:connectedDebugAndroidTest
-```
+Use the repository's [$test-emulator skill](../.agents/skills/test-emulator/SKILL.md)
+to create it once and verify its configuration. That skill is shared with Claude
+through the existing `.claude/skills` symlink. The workflow is **wait, claim,
+test, clean up, release**, using Android CLI/ADB commands directly; no shell or
+Python helper script is required.
+
+Delegate one read-only waiter subagent per task as device work approaches, and
+continue implementing and running host checks. The waiter checks the shared
+reservation, boot completion, SDK 37, awake/unlocked state and launcher focus,
+using the skill's ADB queries. It reports readiness after two matching observations
+at least three seconds apart. An app's main screen is busy. Never press Home,
+stop an app or change settings while waiting to make it available.
+
+When ready to test, the parent claims the device with the skill's atomic
+`adb shell mkdir /data/local/tmp/earthquake-project-reservation` command and
+labels it with its unique task/attempt token. Only one concurrent claimant can
+succeed. If another agent wins, resume waiting in the subagent and keep working;
+do not create another emulator or block all implementation. If subagents are
+unavailable, check briefly between independent work. A readiness notification is
+only a snapshot, never a reservation.
+
+After claiming, recheck HOME focus and use `android layout`'s default UI-idle
+wait before testing. Keep the reservation throughout device work and gaps between
+tool calls, even when Home is temporarily visible. Do not start detached device
+work that outlives the reservation. Record settings before changing them.
+
+Agents **MUST return the emulator to an unlocked, idle home screen before
+releasing it**, including when tests fail or work is interrupted. Restore
+scenario-specific settings and stop/join all their device work. Follow the skill's
+cleanup commands: restore settings and display configuration, stop the project
+app, wake/unlock, press Home, and verify stable idle home before removing only
+their own reservation. Leave this emulator running for the next agent. If cleanup
+fails, retain the reservation and report incomplete cleanup. Reservations never
+expire automatically; coordinate with an interrupted owner before recovery.
 
 Device tests use `androidx.test.runner.AndroidJUnitRunner`, configured in
-[the app module](../app/build.gradle.kts). Select the device explicitly, for
-example by setting `ANDROID_SERIAL` to its actual serial when running Gradle.
+[the app module](../app/build.gradle.kts). Export the actual `ANDROID_SERIAL`
+confirmed by `adb -s SERIAL emu avd name`, and pass `--device="$ANDROID_SERIAL"`
+or `adb -s "$ANDROID_SERIAL"` on every device action. While reserved, run:
+
+```sh
+ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest
+```
+
 See Android's [instrumented test setup](https://developer.android.com/training/testing/instrumented-tests)
 and [command-line testing guide](https://developer.android.com/studio/test/command-line).
 
@@ -165,8 +201,8 @@ checks selecting an event from List, opening it on Map, retaining its highlight
 when switching back, and clearing the shared selection. It also checks the
 expanded controls' shared selection and absence of a view toggle, plus
 minimize/restore behavior without duplicated selection details or view changes.
-Use a dedicated Resizable API 37 emulator and Android CLI to verify the real
-screen across the 840 dp width breakpoint, including selection retention,
+Reserve the shared Earthquake Project emulator and use Android CLI to verify the
+real screen across the 840 dp width breakpoint, including selection retention,
 the compact view choice, and unobscured native-map attribution in open and
 minimized panel states.
 Exercise activity recreation as well as switching presentations.
@@ -226,7 +262,8 @@ For exploratory device checks, use the [Android CLI workflow](android-cli.md) to
 inspect live hierarchy, perform selector-based actions, and visually review PNGs.
 Capture the resulting state after meaningful actions. Include the CLI version,
 device/API, scenario, observed result, and artifact paths in the chat. Restore
-temporary device configuration. These checks and preview renders supplement
+temporary device configuration and verify idle-home cleanup before release.
+These checks and preview renders supplement
 automated tests; they do not establish screenshot regression baselines or satisfy
 missing coverage by themselves.
 

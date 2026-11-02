@@ -39,6 +39,11 @@ Use automated tests to cover important behavior and relevant failure cases.
 Follow the [testing guide](docs/testing.md) for required checks, passing criteria,
 and reporting verification.
 
+All device validation shares **Earthquake Project**, a Resizable API 37 Google
+Play emulator. Use [$test-emulator](.agents/skills/test-emulator/SKILL.md) to set
+it up, wait for exclusive access and idle home, and return it to idle home after
+every session.
+
 ## Build and run
 
 Google Maps Compose 9.0.1 is configured for this project. Follow the
