@@ -173,3 +173,12 @@ Do not share unredacted logs containing keys.
   billing, enabled Android Maps SDK, key restrictions, and device Google Play
   services. Use Logcat to inspect the Maps authorization error without sharing
   your key.
+- **Launch crash mentioning `org.apache.http.ProtocolVersion`:** Maps SDK 20.0.0
+  removed its Apache HTTP legacy library declaration, which can crash the legacy
+  map renderer with older Google Play services. The app's
+  [manifest](../app/src/main/AndroidManifest.xml) declares
+  `<uses-library android:name="org.apache.http.legacy" android:required="false" />`
+  inside `<application>` as Google's documented compatibility fix. Keep this
+  declaration while supporting affected devices, then rebuild and reinstall.
+  Google reports that Play services 25.50.34 and later avoid this specific crash;
+  see the [Maps SDK release notes](https://developers.google.com/maps/documentation/android-sdk/release-notes#january_31_2026).
