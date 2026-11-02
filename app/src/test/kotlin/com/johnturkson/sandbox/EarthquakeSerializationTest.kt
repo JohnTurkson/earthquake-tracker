@@ -1,6 +1,5 @@
 package com.johnturkson.sandbox
 
-import com.johnturkson.sandbox.data.ItemNetworkModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.mock.MockEngine
@@ -13,16 +12,17 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.Test
 
-class KtorSerializationTest {
+class EarthquakeSerializationTest {
     @Test
     fun decodesNetworkModelWithUnknownFields() = runTest {
         val engine = MockEngine { request ->
-            assertEquals("/items/item-1", request.url.encodedPath)
+            assertEquals("/earthquakes/earthquake-1", request.url.encodedPath)
             respond(
-                content = """{"id":"item-1","extra":"ignored"}""",
+                content = """{"id":"earthquake-1","extra":"ignored"}""",
                 headers =
                     headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
             )
@@ -32,8 +32,13 @@ class KtorSerializationTest {
                 install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
             }
             .use { client ->
-                val item = client.get("https://example.test/items/item-1").body<ItemNetworkModel>()
-                assertEquals(ItemNetworkModel(id = "item-1"), item)
+                val earthquake =
+                    client
+                        .get("https://example.test/earthquakes/earthquake-1")
+                        .body<EarthquakeResponse>()
+                assertEquals(EarthquakeResponse(id = "earthquake-1"), earthquake)
             }
     }
 }
+
+@Serializable private data class EarthquakeResponse(val id: String)

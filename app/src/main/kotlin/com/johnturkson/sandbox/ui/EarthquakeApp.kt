@@ -11,13 +11,13 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.johnturkson.sandbox.theme.SandboxTheme
-import com.johnturkson.sandbox.ui.Destination.MainRoute
+import com.johnturkson.sandbox.theme.EarthquakeTheme
+import com.johnturkson.sandbox.ui.Destination.EarthquakeRoute
 
 @Composable
-fun MainContent(modifier: Modifier = Modifier) {
-    SandboxTheme {
-        val backStack = rememberNavBackStack(MainRoute)
+fun EarthquakeApp(modifier: Modifier = Modifier) {
+    EarthquakeTheme {
+        val backStack = rememberNavBackStack(EarthquakeRoute)
         NavDisplay(
             backStack = backStack,
             modifier = modifier,
@@ -46,7 +46,9 @@ fun MainContent(modifier: Modifier = Modifier) {
                 )
             },
             entryProvider =
-                entryProvider { entry<MainRoute> { navKey -> MainScreen(navKey = navKey) } },
+                entryProvider {
+                    entry<EarthquakeRoute> { navKey -> EarthquakeScreen(navKey = navKey) }
+                },
         )
     }
 }

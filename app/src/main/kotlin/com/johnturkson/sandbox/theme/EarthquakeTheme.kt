@@ -25,7 +25,7 @@ private val LightColorScheme =
     )
 
 @Composable
-fun SandboxTheme(
+fun EarthquakeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,

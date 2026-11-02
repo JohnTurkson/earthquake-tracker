@@ -23,8 +23,8 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.johnturkson.sandbox.ui.EarthquakeMap
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
-import com.johnturkson.sandbox.ui.MainPreviewState
-import com.johnturkson.sandbox.ui.MainScreen
+import com.johnturkson.sandbox.ui.EarthquakePreviewState
+import com.johnturkson.sandbox.ui.EarthquakeScreen
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -102,10 +102,10 @@ class EarthquakeMapTest {
     }
 
     @Test
-    fun mainScreenRendersCapturedStateAndEmitsSelection() {
-        var state by mutableStateOf(MainPreviewState())
+    fun earthquakeScreenRendersCapturedStateAndEmitsSelection() {
+        var state by mutableStateOf(EarthquakePreviewState())
         composeRule.setContent {
-            MainScreen(
+            EarthquakeScreen(
                 state = state,
                 onMapItemClick = { state = state.copy(selectedMapItemId = it.id) },
                 onMapClick = { state = state.copy(selectedMapItemId = null) },

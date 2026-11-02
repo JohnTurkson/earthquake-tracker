@@ -4,10 +4,14 @@ Build on the concrete patterns already present in this project. These convention
 apply to agents and human contributors. Each section links to the implementation
 that establishes the pattern and explains how to extend it.
 
-The current implementation contains `Item` data scaffolding. Use the established
-responsibility boundaries when developing USGS features. Product requirements in
-[the README](../README.md) describe the intended app; they do not mean those
-features have been implemented.
+Name app and feature types with the `Earthquake` prefix, as in `EarthquakeApp`,
+`EarthquakeApplication`, `EarthquakeModule`, and `EarthquakeScreen`. Use the same
+name for a type's Kotlin file. Keep technical names such as `MainDispatcher` tied
+to the platform concept they describe.
+
+The screen currently uses fixed earthquake fixtures. Product requirements in
+[the README](../README.md) describe the intended app; runtime fetching and durable
+storage have not been implemented.
 
 ## UI and state ownership
 
@@ -17,26 +21,26 @@ actions call ViewModel methods or callbacks; rendered components do not access
 repositories, storage, or network clients.
 
 Use read-only interfaces to describe the state consumers can observe.
-[MainState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/MainState.kt)
+[EarthquakeState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeState.kt)
 is annotated `@Stable`, and
-[MainViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/MainViewModel.kt)
+[EarthquakeViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewModel.kt)
 implements it.
-[MainPreviewState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/MainPreviewState.kt)
+[EarthquakePreviewState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
 provides an implementation without a ViewModel. Follow that interface and
 implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
 
-`MainState` exposes `navKey`, read-only `mapItems`, and `selectedMapItemId`.
-`MainScreen` has a Hilt entry overload and a rendering overload that accepts
-`MainState` and callbacks. Extend this read-only contract when expanding screen
-state and provide deterministic preview and test implementations.
+`EarthquakeState` exposes `navKey`, read-only `mapItems`, and `selectedMapItemId`.
+`EarthquakeScreen` has a Hilt entry overload and a rendering overload that accepts
+`EarthquakeState` and callbacks. Extend this read-only contract when expanding
+screen state and provide deterministic preview and test implementations.
 
-`MainViewModel` exposes selection through `MainState` with a private setter and
-owns changes through `selectMapItem` and `clearMapSelection`. UI consumers receive
-read-only state and request changes through callbacks. Do not create a second
-copy of the same feature state inside a composable.
+`EarthquakeViewModel` exposes selection through `EarthquakeState` with a private
+setter and owns changes through `selectMapItem` and `clearMapSelection`. UI
+consumers receive read-only state and request changes through callbacks. Do not
+create a second copy of the same feature state inside a composable.
 
-[MainScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/MainScreen.kt)
+[EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
 keeps Hilt lookup at the screen entry and passes values and actions into
 [EarthquakeMap](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMap.kt).
 Keep lifecycle integration at that entry when a feature needs it. Pass values
@@ -86,7 +90,7 @@ optional event-time snippet. Keep these values independent of network and
 database models, and supply runtime feature data through the ViewModel's state
 contract.
 
-`MainPreviewState` is a data class implementing the read-only `MainState`
+`EarthquakePreviewState` is a data class implementing the read-only `EarthquakeState`
 contract. It accepts item and selection fixtures, so tests can render a populated
 screen and update selection with `copy` without Hilt, storage, or API calls.
 The ViewModel supplies the same fixed items and owns the restorable selection.
@@ -116,7 +120,7 @@ coverage is still missing and must be reported.
 
 ## Saved state
 
-`MainViewModel.selectedMapItemId` uses `SavedStateHandle.saved` with
+`EarthquakeViewModel.selectedMapItemId` uses `SavedStateHandle.saved` with
 `MutableStateSerializer<String?>` and exposes a private setter. Selection actions
 change that single restorable value. The map does not keep a second selection.
 Camera restoration remains UI-owned through `rememberCameraPositionState`.
@@ -140,41 +144,31 @@ durable application data belongs in storage accessed through the repository.
 ## Dependency injection and storage
 
 Use Hilt constructor injection for ViewModels, repositories, and API wrappers.
-[MainApplication](../app/src/main/kotlin/com/johnturkson/sandbox/app/MainApplication.kt)
+[EarthquakeApplication](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeApplication.kt)
 uses `@HiltAndroidApp`, and
-[MainActivity](../app/src/main/kotlin/com/johnturkson/sandbox/app/MainActivity.kt)
+[EarthquakeActivity](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeActivity.kt)
 uses `@AndroidEntryPoint`.
 
-`MainViewModel` uses `@HiltViewModel(assistedFactory = Factory::class)` and
+`EarthquakeViewModel` uses `@HiltViewModel(assistedFactory = Factory::class)` and
 `@AssistedInject`. Its `@Assisted` route is supplied by a nested
-`@AssistedFactory`; `MainScreen` passes `navKey` through the
-`hiltViewModel<MainViewModel, MainViewModel.Factory>` creation callback. Follow
-this pattern when a destination ViewModel needs its route at creation time.
+`@AssistedFactory`; `EarthquakeScreen` passes `navKey` through the
+`hiltViewModel<EarthquakeViewModel, EarthquakeViewModel.Factory>` creation callback.
+Follow this pattern when a destination ViewModel needs its route at creation time.
 
-[MainModule](../app/src/main/kotlin/com/johnturkson/sandbox/app/MainModule.kt)
+[EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeModule.kt)
 is installed in `SingletonComponent`. It provides the shared `Json`, Ktor
-`HttpClient`, Room database and DAO, and qualified coroutine
-dispatchers. Extend this graph when adding shared dependencies. Do not construct
-databases, clients, or repositories in composables or ViewModels.
+`HttpClient`, and qualified coroutine dispatchers. Extend this graph when adding
+shared dependencies. Do not construct databases, clients, or repositories in
+composables or ViewModels.
 
-Hilt supplies storage dependencies; Room stores the data. The existing path is:
+Room and DataStore are declared dependencies with no current database, DAO,
+repository, or storage provider. Hilt should supply storage dependencies; keep
+Room operations in DAOs and coordinate data access through repositories when
+storage is implemented. Discuss conventions for the first concrete storage
+implementation before introducing it.
 
-```text
-MainModule -> MainDatabase -> ItemDao -> MainRepository -> MainViewModel
-```
-
-[MainDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/MainDatabase.kt)
-declares `ItemDatabaseModel` as its entity and exposes `itemDao()`.
-`MainModule` builds the database with the application context and provides its
-DAO to
-[MainRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/MainRepository.kt).
-Keep database operations in DAOs and coordinate data access through repositories.
-The current DAO and repository have no operations yet. DataStore is declared as
-a dependency but has no implementation or provider; discuss its conventions when
-it is first introduced.
-
-Inject qualified dispatchers where execution context is needed. The repository
-receives `@IoDispatcher`. `MainModule` also provides `@MainDispatcher` and
+Inject qualified dispatchers where execution context is needed.
+`EarthquakeModule` provides `@IoDispatcher`, `@MainDispatcher`, and
 `@DefaultDispatcher`. Keep execution contexts replaceable instead of hardcoding
 dispatchers into feature logic.
 
@@ -183,50 +177,38 @@ dispatchers into feature logic.
 Use Navigation 3. Add serializable destination keys to
 [Destination](../app/src/main/kotlin/com/johnturkson/sandbox/ui/Destination.kt),
 which is a sealed `NavKey` interface. Existing destinations are `@Serializable`
-data objects; the current destination is `MainRoute`.
+data objects; the current destination is `EarthquakeRoute`.
 
-[MainContent](../app/src/main/kotlin/com/johnturkson/sandbox/ui/MainContent.kt)
-owns `rememberNavBackStack(MainRoute)`, `NavDisplay`, and the typed
+[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
+owns `rememberNavBackStack(EarthquakeRoute)`, `NavDisplay`, and the typed
 `entryProvider` entries. It installs the saveable state holder, ViewModel store,
 and result event bus entry decorators. Preserve these entry scopes when adding
 destinations; pass the entry's route to the screen and its assisted ViewModel
 factory when needed.
 
-Keep back stack changes in `MainContent`. Preserve the event/handler boundary
-when adding earthquake destinations: screens emit actions and `MainContent`
+Keep back stack changes in `EarthquakeApp`. Preserve the event/handler boundary
+when adding earthquake destinations: screens emit actions and `EarthquakeApp`
 changes the back stack. Keep navigation infrastructure out of rendered components
 and data code.
 
 ## Networking and data models
 
 Use the injected Ktor client for API access.
-[ItemApi](../app/src/main/kotlin/com/johnturkson/sandbox/data/ItemApi.kt)
-receives `HttpClient` through `@Inject`; it currently has no endpoints.
-`MainModule.provideHttpClient` configures CIO, `ContentNegotiation` with the
+`EarthquakeModule.provideHttpClient` configures CIO, `ContentNegotiation` with the
 provided `Json`, `Logging`, and `Resources`. Extend the shared configuration
-rather than creating a new client in each feature.
+rather than creating a new client in each feature. No production API wrapper or
+endpoints are implemented yet.
 
 Keep requests and response decoding in API wrappers, data coordination in
-repositories, and presentation state in ViewModels. The current constructor
-dependencies establish this path:
+repositories, and presentation state in ViewModels. Keep network serialization
+and database annotations on their respective models. Use a shared read-only
+contract and distinct representations where network and database models describe
+the same earthquake. UI components should consume only the values they need.
 
-```text
-HttpClient -> ItemApi -> MainRepository -> MainViewModel -> UI
-```
-
-Keep network serialization and database annotations on their respective models.
-[Item](../app/src/main/kotlin/com/johnturkson/sandbox/data/Item.kt) is a sealed
-interface exposing `id`;
-[ItemNetworkModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/ItemNetworkModel.kt)
-implements it with `@Serializable`, while
-[ItemDatabaseModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/ItemDatabaseModel.kt)
-implements it with `@Entity` and `@PrimaryKey`. Follow this shared contract and
-distinct representation pattern where the models describe the same item. UI
-components should consume only the values they need.
-
-[KtorSerializationTest](../app/src/test/kotlin/com/johnturkson/sandbox/KtorSerializationTest.kt)
-is the working example for decoding a network model with Ktor `MockEngine` and
-`runTest`. It verifies the request path, JSON decoding, and ignored unknown fields
-without a live service. Use that approach when implementing API operations. The
-installed `Resources` plugin has no typed resource endpoints yet; discuss the
-endpoint conventions when implementing the first real requests.
+[EarthquakeSerializationTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeSerializationTest.kt)
+is the working example for decoding a test-local serializable response with Ktor
+`MockEngine` and `runTest`. It verifies the request path, JSON decoding, and ignored
+unknown fields without a live service. Its response and URL are test fixtures,
+not a production USGS schema or endpoint. Use that approach when implementing API
+operations. The installed `Resources` plugin has no typed resource endpoints yet;
+discuss endpoint conventions when implementing the first real requests.

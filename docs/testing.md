@@ -85,11 +85,11 @@ disable tests to obtain a green result.
 Documentation and other reversible, low-impact changes do not need tests that
 merely repeat the implementation.
 
-The current suite includes template checks: an unconditional assertion, an empty
-Flow, a mock HTTP response, empty Compose content, and an activity startup and
-recreation check. The serialization test checks a concrete decoding behavior.
-Passing these tests does not establish USGS fetching, offline behavior, refresh,
-earthquake presentation, or Maps access. Add feature coverage as those behaviors
+The current suite covers response decoding with a test-local fixture, activity
+startup and recreation, map behavior, and marker artwork. Keep tests focused on
+observable behavior rather than unconditional assertions or empty content.
+Passing these tests does not establish runtime earthquake fetching, offline
+behavior, refresh, or Maps authorization. Add feature coverage as those behaviors
 are implemented.
 
 ## Map behavior and screenshot coverage
@@ -99,11 +99,11 @@ uses a plain `ComponentActivity`, immutable item fixtures, and a hoisted
 `CameraPositionState`.
 It checks empty-map configuration, retained gestures, current marker callbacks
 after reordering and coordinate changes, item removal/background clicks, and the
-main screen rendered from a `MainPreviewState` data-class fixture with selection
+screen rendered from an `EarthquakePreviewState` data-class fixture with selection
 callbacks.
 `MapType.NONE` avoids relying on live geographic tiles for these behavior checks;
 it still initializes Google's native SDK and needs a compatible device.
-`MainActivityTest` separately checks real destination startup and recreation.
+`EarthquakeActivityTest` separately checks real destination startup and recreation.
 
 ## Compose screenshot tests
 

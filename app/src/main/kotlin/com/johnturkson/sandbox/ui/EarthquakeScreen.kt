@@ -9,15 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @Composable
-fun MainScreen(
-    navKey: Destination.MainRoute,
+fun EarthquakeScreen(
+    navKey: Destination.EarthquakeRoute,
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel =
-        hiltViewModel<MainViewModel, MainViewModel.Factory>(
+    viewModel: EarthquakeViewModel =
+        hiltViewModel<EarthquakeViewModel, EarthquakeViewModel.Factory>(
             creationCallback = { factory -> factory.create(navKey) }
         ),
 ) {
-    MainScreen(
+    EarthquakeScreen(
         state = viewModel,
         onMapItemClick = viewModel::selectMapItem,
         onMapClick = viewModel::clearMapSelection,
@@ -26,8 +26,8 @@ fun MainScreen(
 }
 
 @Composable
-fun MainScreen(
-    state: MainState,
+fun EarthquakeScreen(
+    state: EarthquakeState,
     onMapItemClick: (EarthquakeMapItem) -> Unit,
     onMapClick: () -> Unit,
     modifier: Modifier = Modifier,
