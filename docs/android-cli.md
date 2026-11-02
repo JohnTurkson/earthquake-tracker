@@ -3,6 +3,8 @@
 Use Google's `android` CLI for builds, deployment, live UI inspection,
 screenshots, and app interaction. Follow the [build guide](building.md) for
 project prerequisites and the [testing guide](testing.md) for required checks.
+Prefer native CLI commands and use the ADB fallbacks below for remaining
+operations.
 
 Keep this guide focused on setup and reusable usage instructions. Report
 task-specific actions, verification results, and limitations in the chat.
@@ -98,7 +100,7 @@ selectors until they identify the intended element uniquely. Replace the
 uppercase selector placeholders below with values from the current UI:
 
 ```sh
-android input --device="$ANDROID_SERIAL" tap 'desc=TARGET_DESCRIPTION' --wait=5000
+android input --device="$ANDROID_SERIAL" tap 'desc=TARGET_DESCRIPTION'
 android input --device="$ANDROID_SERIAL" swipe 'scrollable=true' --dir=up --distance=0.4
 android input --device="$ANDROID_SERIAL" scroll 'scrollable=true' --dir=up --amount=0.5
 android input --device="$ANDROID_SERIAL" text 'example query' 'id=INPUT_ID' --submit
@@ -109,6 +111,15 @@ Scroll requires a visible scrollable container; text input requires an editable
 field. Swipe direction describes finger movement. Inspect the resulting hierarchy
 after each meaningful action and verify the expected state. Use PNGs for map
 surfaces and other content the accessibility hierarchy cannot describe.
+
+Use `--wait=5000` on a tap when the target may appear asynchronously; it waits
+for the element, not work triggered by the action. For the current map, inspect
+the `Earthquake map` description before panning, then capture the result to check
+camera movement and tile rendering:
+
+```sh
+android input --device="$ANDROID_SERIAL" swipe 'desc=/^Earthquake map$/' --dir=left --distance=0.6
+```
 
 ## Capture screens and components
 
@@ -132,14 +143,12 @@ the returned coordinates with `adb -s "$ANDROID_SERIAL" shell input tap X Y`,
 then recapture and verify. Refresh captures after navigation, scrolling, or
 configuration changes before using bounds or coordinates.
 
-For a live component image, capture a plain PNG and the matching full hierarchy.
-Find the enclosing component bounds and crop with macOS `sips`:
-`--cropToHeightWidth HEIGHT WIDTH --cropOffset TOP LEFT`. Calculate height as
-bottom minus top and width as right minus left; use `--out` to preserve the
-full-screen image. Open the crop and check it visually.
+If a PNG cannot be opened, capture verification has failed even if the command
+exited successfully. Report the CLI version and selected device in the chat.
 
-For a component with a deterministic Compose preview, discover its fully
-qualified name and render it without a device:
+Screen capture produces the whole display. For an isolated component image,
+use a deterministic Compose preview, discover its fully qualified name, and
+render it without a device:
 
 ```sh
 android preview list ':app@debug' --format=json
@@ -149,7 +158,11 @@ android preview render ':app@debug' --fqn='actual.package.ActualPreview' \
 
 Choose the name returned by discovery. Inspect the PNG and component-tree JSON.
 Follow the [architecture guide](architecture.md) for state ownership and
-deterministic fixtures. Preview renders and ad hoc device captures supplement
+deterministic fixtures. If discovery finds no previews, add a working fixture
+before rendering; an empty selection does not verify a component. Follow the
+[testing guide](testing.md#compose-screenshot-tests) for marker screenshot
+fixtures and native-map coverage limits. Do not treat a blank map preview as
+native-map pixel coverage. Preview renders and ad hoc device captures supplement
 the screenshot tests required by the project.
 
 ## Change device configuration

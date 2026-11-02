@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.screenshot)
 }
 
 val mapsApiKey =
@@ -18,6 +19,8 @@ kotlin { jvmToolchain(libs.versions.jdk.get().toInt()) }
 room { schemaDirectory("$projectDir/schemas") }
 
 android {
+    experimentalProperties["android.experimental.enableScreenshotTest"] = true
+
     namespace = "com.johnturkson.sandbox"
 
     compileSdk { version = release(37) { minorApiLevel = 0 } }
@@ -28,6 +31,7 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["MAPS_API_KEY"] =
             requireNotNull(mapsApiKey?.takeIf { it.isNotBlank() }) {
                 "Set MAPS_API_KEY in user-level Gradle properties or local.properties."
@@ -50,7 +54,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
@@ -80,6 +83,10 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(libs.slf4j.nop)
+
+    screenshotTestImplementation(libs.screenshot.validation.api)
+    screenshotTestImplementation(libs.androidx.compose.ui.tooling)
+    screenshotTestImplementation(platform(libs.androidx.compose.bom))
 
     testImplementation(libs.bundles.kotlin.test)
     androidTestImplementation(libs.bundles.kotlin.test)

@@ -1,9 +1,6 @@
 package com.johnturkson.sandbox.app
 
 import android.content.Context
-import android.os.SystemClock
-import androidx.compose.runtime.MonotonicFrameClock
-import androidx.compose.ui.platform.AndroidUiDispatcher
 import androidx.room.Room
 import com.johnturkson.sandbox.annotations.DefaultDispatcher
 import com.johnturkson.sandbox.annotations.IoDispatcher
@@ -23,9 +20,6 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.resources.Resources
 import io.ktor.serialization.kotlinx.json.json
 import javax.inject.Singleton
-import kotlin.time.AbstractLongTimeSource
-import kotlin.time.DurationUnit
-import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
@@ -33,20 +27,6 @@ import kotlinx.serialization.json.Json
 @Module
 @InstallIn(SingletonComponent::class)
 object MainModule {
-    @Provides
-    @Singleton
-    fun provideMonotonicFrameClock(): MonotonicFrameClock {
-        return checkNotNull(AndroidUiDispatcher.Main[MonotonicFrameClock])
-    }
-
-    @Provides
-    @Singleton
-    fun provideTimeSource(): TimeSource {
-        return object : AbstractLongTimeSource(DurationUnit.NANOSECONDS) {
-            override fun read() = SystemClock.elapsedRealtimeNanos()
-        }
-    }
-
     @Provides
     @Singleton
     fun provideJson(): Json {

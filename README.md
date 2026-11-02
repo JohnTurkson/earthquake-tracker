@@ -14,6 +14,18 @@ using the USGS Earthquake API.
 - Make data availability and refresh failures clear.
 - Keep information easy to understand and navigation straightforward.
 
+## Current map screen
+
+The main screen is a full-screen Google Maps Compose view. Its reusable
+`EarthquakeMap` component accepts immutable item values, selection callbacks,
+map properties/UI settings, padding, and UI-owned camera state. The timer sample,
+its detail screen, timer actions, and timer clock providers have been removed.
+
+For UI integration it currently displays 16 fixed events selected from a manual
+USGS past-day feed download generated on 2026-10-31 at 20:02 Pacific. These are
+static development fixtures, not live earthquake updates. Runtime API/storage
+integration is separate; the UI consumes only marker presentation values.
+
 ## Testing
 
 Use automated tests to cover important behavior and relevant failure cases.
@@ -51,11 +63,14 @@ Discuss additions as new project patterns are introduced and update the guides
 with the agreed conventions and working examples.
 
 Follow the [source control guide](docs/source-control.md). Agents must commit as
-they go and before ending a turn, then integrate completed changes onto the local
-default branch unless branch-only work was requested or integration is blocked.
-Human contributors are encouraged to keep each commit focused on one coherent
-change.
+they go and before ending a turn, then integrate and verify completed changes on
+the local default branch (`main`) before reporting the task complete. A worktree
+commit is only a checkpoint. Only an explicit request for branch-only work waives
+integration; blocked integration means the task remains incomplete. Human
+contributors are encouraged to keep each commit focused on one coherent change.
+Unrelated tracked changes must be preserved and must not block committing and
+integrating the task's verified files or hunks.
 
-Shared agent rules live in `AGENTS.md`. See the
-[agent instruction guide](docs/agent-instructions.md) for Codex discovery and
-sharing the rules with Claude Code.
+Codex loads [AGENTS.md](AGENTS.md), which directs agents to the project guides
+above. [CLAUDE.md](CLAUDE.md) imports the same file for Claude Code. Keep detailed
+rules in the relevant guide rather than duplicating them in tool-specific files.

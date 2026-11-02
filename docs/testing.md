@@ -35,9 +35,9 @@ For device tests, connect a compatible device or emulator and run:
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-Device tests require a configured instrumentation runner. The current app does
-not explicitly set `testInstrumentationRunner`; configure an appropriate runner,
-such as `androidx.test.runner.AndroidJUnitRunner`, before relying on this suite.
+Device tests use `androidx.test.runner.AndroidJUnitRunner`, configured in
+[the app module](../app/build.gradle.kts). Select the device explicitly, for
+example by setting `ANDROID_SERIAL` to its actual serial when running Gradle.
 See Android's [instrumented test setup](https://developer.android.com/training/testing/instrumented-tests)
 and [command-line testing guide](https://developer.android.com/studio/test/command-line).
 
@@ -84,7 +84,80 @@ Passing these tests does not establish USGS fetching, offline behavior, refresh,
 earthquake presentation, or Maps access. Add feature coverage as those behaviors
 are implemented.
 
+## Map behavior and screenshot coverage
+
+[EarthquakeMapTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMapTest.kt)
+uses a plain `ComponentActivity`, immutable item fixtures, and a hoisted
+`CameraPositionState`.
+It checks empty-map configuration, retained gestures, current marker callbacks
+after reordering and coordinate changes, item removal/background clicks, and the
+main screen rendered from a `MainPreviewState` data-class fixture with selection
+callbacks.
+`MapType.NONE` avoids relying on live geographic tiles for these behavior checks;
+it still initializes Google's native SDK and needs a compatible device.
+`MainActivityTest` separately checks real destination startup and recreation.
+
+## Compose screenshot tests
+
+Use Google's Compose Preview Screenshot Testing. The current AGP
+9.1.0 project uses the compatible `com.android.compose.screenshot` plugin and
+`screenshot-validation-api` version 0.0.1-alpha16. Its experimental source-set
+flags are configured in `gradle.properties` and the app module. Newer AGP test-suite
+integration requires a separate build-version change; this task keeps AGP 9.1.0.
+
+Mark test previews with `@PreviewTest` and `@Preview` in
+`app/src/screenshotTest/kotlin/`. The working example is
+[EarthquakeMapMarkerScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeMapMarkerScreenshotTest.kt).
+It covers every marker artwork state: the small red unselected dot and larger
+blue selected dot, both with a white border. The preview background and 48 dp
+bounds are fixed; no network, database, dynamic color, or clock is involved.
+
+Generate references only for an intentional visual change:
+
+```sh
+./gradlew :app:updateDebugScreenshotTest
+```
+
+Open and visually review every generated PNG under
+`app/src/screenshotTestDebug/reference/` before staging it. Commit reviewed
+references alongside the component and tests. Inspect the diff when replacing
+existing references; do not regenerate merely to hide an unexpected failure.
+Validate without changing references:
+
+```sh
+./gradlew :app:validateDebugScreenshotTest
+```
+
+Check that both preview tests were discovered and passed, rather than accepting
+an empty suite. The HTML report is under
+`app/build/reports/screenshotTest/preview/debug/`. Keep reports, actual renders,
+and diff images in ignored `build/`. Reference PNGs are intentionally tracked
+regression inputs, rather than build artifacts. Matching host/tool versions
+matter for pixel reproducibility; report rendering differences instead of
+silently relaxing comparisons.
+
+The native-map integration state matrix is empty items, populated/unselected
+items, and populated/selected items. Maps Compose 9.0.1 intentionally omits the
+native map surface and marker placement in preview inspection mode. Do not
+substitute a fake renderer or approve blank main-screen/map previews as native
+pixel coverage. Our marker artwork is tested directly with the same composable
+used by the SDK. Device tests and manual captures verify native integration,
+while native-map screenshot regression coverage remains missing.
+
+A temporary device experiment captured and visually verified real SDK snapshots
+for empty, populated, and selected native-pin states with a fixed camera and
+`MapType.NONE`; the images are under ignored `build/map-verification/`. Temporary
+file-writing code was removed. Those exploratory images predate the switch to
+Compose dot markers and are not test baselines. Current manually downloaded
+USGS fixtures are rendered without runtime API/storage calls; API integration
+is owned by the parallel earthquake-data work.
+
 ## Report the results
+
+Before finishing, compare the change against the applicable project guides and
+report any unmet requirements, including missing screenshot coverage for UI
+changes. Follow the [architecture guide's component requirements](architecture.md#ui-and-state-ownership)
+when assessing screenshot coverage.
 
 For exploratory device checks, use the [Android CLI workflow](android-cli.md) to
 inspect live hierarchy, perform selector-based actions, and visually review PNGs.

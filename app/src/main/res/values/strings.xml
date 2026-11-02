@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Sandbox</string>
+    <string name="app_name">USGS Tracker</string>
+    <string name="earthquake_map">Earthquake map</string>
 </resources>

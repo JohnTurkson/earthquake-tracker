@@ -4,10 +4,18 @@ Agents must commit each completed, verified change at a coherent checkpoint and
 before ending a turn. This includes documentation, instruction files, deletions,
 and symlinks. Human contributors are encouraged to follow the same workflow.
 
-Completed changes must also reach the local default branch before the agent
-finishes, unless the user requested branch-only work or integration is blocked.
-A commit in an isolated worktree is a checkpoint; report integration separately.
-Publishing or pushing changes still requires authorization from the user.
+Completed changes must also reach the local default branch (`main` in this
+repository) before the agent reports the task complete. A commit in an isolated
+worktree is only a checkpoint. Committing there, passing checks there, or leaving
+that worktree clean does not finish the task.
+
+Integration is part of the assigned work. Perform and verify it in the same task;
+do not leave it for the user or another session, or merely offer to integrate
+later. A worktree assignment does not imply branch-only work. Only an explicit
+user request for branch-only work waives the integration requirement. If
+integration is blocked, the task remains incomplete; preserve the commits and
+report the blocker and remaining step. Publishing or pushing changes still
+requires authorization from the user.
 
 Use the repository's configured default branch or the user's specified
 integration target. Confirm the target from repository configuration or current
@@ -37,14 +45,25 @@ tests, and documentation together when they are needed to complete the same
 change. A small task may need only one commit; a larger task should have several
 complete, reviewable steps.
 
+Unrelated modified or staged files in the task worktree or on the integration
+target must not stop an agent from committing its own verified changes. Commit
+only the task's files or hunks and preserve the other work, including its staged
+or unstaged state. Do not include unrelated changes just to make a checkout clean.
+
 ## Before committing
 
 1. Review `git status` and `git diff` to identify your changes and any existing
    work. Preserve changes outside your task.
 2. Follow the [testing guide](testing.md) to choose checks and assess their
    results. Use the [build guide](building.md) for environment setup.
-3. Stage the intended files or hunks explicitly, then review `git diff --cached`
-   to confirm the commit contains only the intended change.
+3. Stage the intended files or hunks explicitly and review the exact diff that
+   will be committed. Use `git diff --cached` when the index contains only task
+   changes. If unrelated changes are already staged, leave them staged and
+   isolate the task's commit. For files whose changes all belong to the task,
+   `git commit --only -- <task-files>` commits just those paths while preserving
+   other staged files. Do not use a whole-file commit for files containing
+   unrelated edits; isolate the task's hunks in a separate index or checkout
+   instead.
 4. Write a concise commit message describing what changed, such as
    `Remove unused database schema export`.
 5. Commit the completed change and check `git status` before continuing.
@@ -58,21 +77,48 @@ checkout clean.
 
 ## Integrate onto the default branch
 
-After committing and verifying a completed change, inspect the default branch's
-checkout again. Integrate the focused commits using a fast-forward when possible
-or cherry-pick them onto the latest integration target, resolving conflicts and
-running the appropriate checks on the combined result. Review overlapping
-instruction edits so one session's rewrite does not remove another session's
-rules.
+Run the required checks from the [testing guide](testing.md) in the task worktree
+before integration. Once the task's commits pass those checks, integrate them
+before finishing:
 
-Preserve other contributors' staged, unstaged, and untracked work. If the target
-checkout is dirty or another session is changing it, coordinate the handoff or
-report the blocker; do not reset, clean, stash, or overwrite its files to force
-integration. Do not amend commits another session may already depend on.
+1. Inspect the default branch's checkout and current instructions again. Confirm
+   the target branch and preserve any changes made since the task began.
+2. Integrate the focused commits using a fast-forward when possible or
+   cherry-pick them onto the latest integration target. Resolve conflicts within
+   the task's scope and review overlapping instruction edits so one session's
+   rewrite does not remove another session's rules.
+3. Run the appropriate checks from the [testing guide](testing.md) on the combined
+   result. Resolve failures caused by the integration before claiming completion.
+4. Verify all intended task changes are present on the default branch, record the
+   commit SHA there, and inspect its final status. If the original commits were
+   retained, `git merge-base --is-ancestor <task-commit> <target-branch>` verifies
+   reachability. If cherry-picking changed their SHAs, review the resulting
+   commits and files on the target instead.
 
-Verify the intended changes are present on the default branch and inspect its
-final status. When cherry-picking changes a commit's SHA, report the SHA now on
-the integration target.
+Preserve other contributors' staged, unstaged, and untracked work. Unrelated
+tracked changes on the target are not an integration blocker and do not need to
+be committed first. Inspect whether the task overlaps them, then integrate only
+the verified task changes while preserving the other files and index entries.
+Do not reset, clean, stash, or overwrite someone else's work to force integration.
+Do not amend commits another session may already depend on.
+
+If a merge or cherry-pick would include or disturb unrelated staged changes,
+prepare the integration against the latest target in an isolated checkout or
+index. Apply only the resulting task changes to the target and commit only the
+task paths or hunks. Review the resulting commit and confirm that unrelated work
+retains its staged or unstaged state. A dirty checkout alone is not a reason to
+leave passing task commits in a worktree.
+
+Coordinate overlapping edits and active Git operations before touching the same
+files or index. An unresolved conflict, an integration operation in progress, or
+a check that fails because of the task needs resolution; unrelated files alone
+do not justify stopping. Checks run against a dirty checkout may include other
+work; use an isolated checkout of the combined committed result when needed to
+verify the integration independently.
+
+If integration cannot proceed safely, report the task as incomplete with the
+specific blocker, preserved branch and commit SHAs, and required next step.
+Ending a turn because of a blocker does not satisfy the completion requirement.
 
 ## Before ending a turn
 
@@ -80,10 +126,13 @@ the integration target.
   Inspect untracked files as well as staged and unstaged changes.
 - Verify no completed work from your task remains uncommitted. Preserve unrelated
   work and identify it separately in the report.
-- Report the commit SHA, checks performed, whether the changes reached the local
-  default branch, and any remaining task changes. If integration is blocked or
-  the user requested branch-only work, give the branch and commit plus the exact
-  handoff or next step. Do not leave integration implicit for another session.
+- Finish integration and verification on the local default branch before
+  reporting the task complete, unless the user explicitly requested branch-only
+  work. A worktree commit alone must be reported as incomplete.
+- Report the commit SHA on the integration target, checks performed, integration
+  status, and any remaining task changes. If integration is blocked or the user
+  requested branch-only work, give the branch and commit plus the exact handoff
+  or next step. Do not leave integration implicit for another session.
 
 ## Hooks
 

@@ -1,5 +1,7 @@
 package com.johnturkson.sandbox.ui
 
-object MainPreviewState : MainState {
-    override val navKey = Destination.MainRoute
-}
+data class MainPreviewState(
+    override val navKey: Destination.MainRoute = Destination.MainRoute,
+    override val mapItems: List<EarthquakeMapItem> = EarthquakeMapFixtures.items,
+    override val selectedMapItemId: String? = null,
+) : MainState

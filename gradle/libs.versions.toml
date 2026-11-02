@@ -21,6 +21,7 @@ lifecycle = "2.11.0"
 maps-compose = "9.0.1"
 nav3 = "1.2.0"
 room = "2.8.5"
+screenshot = "0.0.1-alpha16"
 slf4j = "2.0.20"
 turbine = "1.2.1"
 
@@ -41,7 +42,6 @@ androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "d
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
 androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "hilt-lifecycle-viewmodel-compose" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junit-extensions" }
-androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
@@ -69,6 +69,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+screenshot-validation-api = { module = "com.android.tools.screenshot:screenshot-validation-api", version.ref = "screenshot" }
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
@@ -83,3 +84,4 @@ kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", vers
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 room = { id = "androidx.room", version.ref = "room" }
+screenshot = { id = "com.android.compose.screenshot", version.ref = "screenshot" }
