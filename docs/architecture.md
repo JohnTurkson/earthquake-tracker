@@ -347,10 +347,10 @@ end in `Flow`; writes and explicit network refreshes are suspend operations.
 Rendered components remain independent of these dependencies.
 
 `EarthquakeDatabaseModel.id` is the primary key. Refreshes merge new IDs and
-update existing IDs only for newer USGS `updated` revisions, retaining cached
+update existing IDs only for newer USGS `updated` revisions, retaining stored
 events absent from subsequent feeds. Do not clear history on refresh or delete
 an event merely because it aged out of a rolling feed. Empty and failed
-responses preserve cached information. Read the durable cache independently of
+responses preserve stored information. Read the Room database independently of
 network access; an unrestricted `getEarthquakesFlow()` includes historical rows.
 UI time filters must not delete stored history.
 

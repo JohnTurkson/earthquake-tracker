@@ -21,7 +21,7 @@ An earthquake record is mutable. USGS explains that
 [magnitude and location are revised](https://www.usgs.gov/faqs/whywhen-does-usgs-update-magnitude-earthquake)
 as observations arrive and analysts review events, including later catalog
 revisions. Compare each feature's `properties.updated`, not its occurrence time
-or the collection's generation time, when deciding which cached values to keep.
+or the collection's generation time, when deciding which stored values to keep.
 Times are epoch milliseconds. Coordinates are longitude, latitude, and depth in
 kilometers. Missing measurements remain null, not zero.
 
@@ -29,14 +29,14 @@ Do not treat the preferred feature ID as an immutable identifier for a physical
 event. USGS's [indexer documentation](https://usgs.github.io/pdl/indexer.html)
 states that the event ID comes from the preferred origin product. The
 [current PDL documentation](https://ghsc.code-pages.usgs.gov/hazdev/pdl/userguide-2.9.1/receiving.html)
-distinguishes the preferred ID from known associated event IDs. The cache uses
+distinguishes the preferred ID from known associated event IDs. The database uses
 the GeoJSON feature ID and comma-delimited `properties.ids` associations for
 lookup after a preferred-ID change and to avoid duplicate associated rows.
 
 ## Calling the data layer
 
 Inject `EarthquakeRepository`. Refreshes write Room; read operations return only
-cached data as observable `Flow` types and work without network access. Database
+stored data as observable `Flow` types and work without network access. Database
 read method names end in `Flow`; writes and network operations remain suspend
 functions:
 
@@ -59,9 +59,9 @@ val detail = repository.getEarthquakeDetailFlow("us7000example")
 contents, checksums, and inline content are represented; referenced files such
 as ShakeMap images or QuakeML documents are not downloaded. Stored products are
 decoded when observing detail. `isDetailCurrent` is false if a newer summary
-arrived after the stored detail snapshot; cached products remain readable.
+arrived after the stored detail snapshot; stored products remain readable.
 
-Every successful collection refresh merges into the existing cache: unseen IDs
+Every successful collection refresh merges into the existing database: unseen IDs
 are inserted, newer revisions update associated events, and events absent from
 the response remain available. Reading without time filters returns all retained
 history, including after process termination or a device restart. No automatic
@@ -94,9 +94,9 @@ limits a page to 20,000 events. The caller must choose its occurrence-time range
 paginate, and revisit overlapping ranges as needed; the implementation does not
 claim complete incremental synchronization or advance a durable watermark.
 Without `startTime`, the service defaults to the last 30 days, even when
-`updatedAfter` is specified. Catalog HTTP 204 leaves the cache unchanged.
+`updatedAfter` is specified. Catalog HTTP 204 leaves the database unchanged.
 
-The service supports deleted-event options, but this cache does not reconcile
+The service supports deleted-event options, but this database does not reconcile
 deletions or event disassociations. Disappearance from a rolling feed is not
 proof of deletion. Retention limits, background refresh, polling cadence, and
 full-catalog synchronization are not implemented. USGS documents

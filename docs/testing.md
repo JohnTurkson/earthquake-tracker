@@ -126,7 +126,7 @@ startup and recreation, map behavior, and marker artwork. Keep tests focused on
 observable behavior rather than unconditional assertions or empty content.
 Passing UI tests does not establish runtime earthquake fetching, offline screen
 behavior, refresh, or Maps authorization. The separate data-layer coverage below
-checks persistent cache behavior without connecting it to the fixture-based UI.
+checks persistent database behavior without connecting it to the fixture-based UI.
 
 ## Earthquake data tests
 
@@ -140,7 +140,7 @@ uses real Room with active Turbine collectors. Preserve coverage for new IDs,
 duplicate IDs, newer/older revisions, retained history across rolling refreshes,
 alias changes, detail freshness, filters, atomic rollback, and concurrent merges.
 Close the disk-backed database and recreate the repository with a failing network
-client to verify retained summaries and details are readable offline. Cached reads
+client to verify retained summaries and details are readable offline. Database reads
 must not initiate network requests. A database reopen tests persistent storage;
 it does not alone establish offline screen behavior or an actual device reboot.
 

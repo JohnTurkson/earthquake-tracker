@@ -7,11 +7,18 @@ migrations, DAO queries, or repository database access. Follow the
 Ask about conventions only when introducing a pattern
 these guides and the current conversation do not cover.
 
+Call persistent earthquake storage the Room database or database. It is the
+durable source for offline reads, with no automatic expiration or separate
+in-memory earthquake cache. Deduplicate by the USGS ID primary key; merge
+newer revisions transactionally and retain known aliases when the preferred
+ID changes. For example, refreshing `[A, B]` with `[B, C]` retains `[A, B, C]`
+and updates B when its source revision is newer.
+
 ## Observable reads
 
 All database read methods must return observable `Flow` types and have names
 ending in `Flow`. This applies to DAO SELECTs, internal SELECT helpers, and
-repository methods that expose cached data. Use ordinary `fun`, not `suspend
+repository methods that expose stored data. Use ordinary `fun`, not `suspend
 fun`, for functions returning a Flow. Follow these implemented APIs:
 
 ```kotlin
@@ -86,13 +93,13 @@ cannot overwrite newer ones. Compare product snapshots by their own revision,
 retain them across summary refreshes, and expose their freshness through
 `isDetailCurrent`. Preserve known detail URLs when omitted from detail responses.
 Use explicit USGS ID associations when merging preferred-ID changes; retain
-aliases and the newest product snapshot without duplicate cached events.
+aliases and the newest product snapshot without duplicate stored events.
 Insert previously unseen IDs and retain events absent from a later response.
 Refreshes must never clear the earthquake table or delete events outside the
 requested time window. The unfiltered `getEarthquakesFlow()` reads all retained
 history, including after the database is reopened without network access.
 Empty feeds and refresh failures preserve existing data. See the
-[data guide](earthquake-data.md) for the cache's deletion and split limitations.
+[data guide](earthquake-data.md) for the database's deletion and split limitations.
 
 ## Schema history and verification
 
