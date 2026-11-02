@@ -4,6 +4,7 @@ import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.DeleteTable
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
 
 @Database(
@@ -15,7 +16,7 @@ import androidx.room.migration.AutoMigrationSpec
             EarthquakeRefreshDatabaseModel::class,
             EarthquakeAlertDatabaseModel::class,
         ],
-    version = 4,
+    version = 5,
     autoMigrations =
         [
             AutoMigration(from = 1, to = 2),
@@ -23,6 +24,7 @@ import androidx.room.migration.AutoMigrationSpec
             AutoMigration(from = 3, to = 4, spec = MainDatabase.RemoveProductsMigration::class),
         ],
 )
+@TypeConverters(EarthquakeInstantConverters::class)
 abstract class MainDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
 

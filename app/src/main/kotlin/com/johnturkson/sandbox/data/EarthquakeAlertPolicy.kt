@@ -1,9 +1,13 @@
 package com.johnturkson.sandbox.data
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
+
 class EarthquakeAlertPolicy {
-    fun qualifies(item: EarthquakeDatabaseModel, minimumMagnitude: Int, nowMillis: Long): Boolean =
+    fun qualifies(item: EarthquakeDatabaseModel, minimumMagnitude: Int, now: Instant): Boolean =
         item.type == "earthquake" &&
             item.magnitude != null &&
             item.magnitude >= minimumMagnitude &&
-            nowMillis - item.time in 0..60_000L
+            now - item.time in Duration.ZERO..1.minutes
 }

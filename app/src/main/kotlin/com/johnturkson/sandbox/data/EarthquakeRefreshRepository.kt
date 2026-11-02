@@ -7,6 +7,11 @@ import io.ktor.serialization.JsonConvertException
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
@@ -40,7 +45,7 @@ constructor(
             val items =
                 try {
                     val response =
-                        withTimeoutOrNull(30_000) { api.getEarthquakes(EarthquakeFeed.ALL_DAY) }
+                        withTimeoutOrNull(30.seconds) { api.getEarthquakes(EarthquakeFeed.ALL_DAY) }
                             ?: throw IOException("Earthquake refresh timed out")
                     require(response.type == "FeatureCollection" && response.metadata.status == 200)
                     response.features.map { it.toDatabaseModel() }
@@ -57,13 +62,11 @@ constructor(
                 } catch (_: Exception) {
                     return@withContext fetchFailure(EarthquakeRefreshResult.NetworkError)
                 }
-            val savedAt = System.currentTimeMillis()
+            val savedAt = Clock.System.now()
             try {
                 database.withTransaction {
                     dao.mergeEarthquakes(items)
-                    monitoringDao.updateRefresh(
-                        EarthquakeRefreshDatabaseModel(updatedMillis = savedAt)
-                    )
+                    monitoringDao.updateRefresh(EarthquakeRefreshDatabaseModel(updatedAt = savedAt))
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -84,11 +87,15 @@ constructor(
     private suspend fun publishAlerts() {
         val preferences = settings.settings.first()
         if (!preferences.alertsEnabled) return
-        val now = System.currentTimeMillis()
+        val now = Clock.System.now()
         val recent =
-            dao.getEarthquakesFlow(now - 60_000, now + 1, preferences.minimumMagnitude.toDouble())
+            dao.getEarthquakesFlow(
+                    now - 1.minutes,
+                    now + 1.nanoseconds,
+                    preferences.minimumMagnitude.toDouble(),
+                )
                 .first()
         alerts.deliver(recent, preferences, now)
-        monitoringDao.pruneAlerts(now - 30L * 24 * 60 * 60 * 1000)
+        monitoringDao.pruneAlerts(now - 30.days)
     }
 }

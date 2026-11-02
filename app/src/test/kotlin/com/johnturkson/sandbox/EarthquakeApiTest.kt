@@ -27,6 +27,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -47,11 +48,14 @@ class EarthquakeApiTest {
             .use { client ->
                 val response = EarthquakeApi(client).getEarthquakes()
                 assertEquals(2, response.metadata.count)
-                assertEquals(1700000000123L, response.metadata.generated)
+                assertEquals(
+                    Instant.fromEpochMilliseconds(1700000000123L),
+                    response.metadata.generated,
+                )
                 val earthquake = response.features.first().toDatabaseModel()
                 assertEquals("us-test", earthquake.id)
-                assertEquals(1699999000123L, earthquake.time)
-                assertEquals(1700000000001L, earthquake.updated)
+                assertEquals(Instant.fromEpochMilliseconds(1699999000123L), earthquake.time)
+                assertEquals(Instant.fromEpochMilliseconds(1700000000001L), earthquake.updated)
                 assertEquals(-123.5, earthquake.longitude)
                 assertEquals(45.5, earthquake.latitude)
                 assertEquals(-0.4, earthquake.depth)
@@ -106,7 +110,10 @@ class EarthquakeApiTest {
                 assertNull(response.properties.detail)
                 assertEquals("us-test", response.id)
                 assertEquals(4.2, response.properties.magnitude)
-                assertEquals(1700000000001L, response.properties.updated)
+                assertEquals(
+                    Instant.fromEpochMilliseconds(1700000000001L),
+                    response.properties.updated,
+                )
             }
     }
 
@@ -116,7 +123,7 @@ class EarthquakeApiTest {
             assertEquals("/fdsnws/event/1/query", request.url.encodedPath)
             assertEquals("geojson", request.url.parameters["format"])
             assertEquals("2020-01-01T00:00:00Z", request.url.parameters["starttime"])
-            assertEquals("2023-11-14T22:13:20+00:00", request.url.parameters["updatedafter"])
+            assertEquals("2023-11-14T22:13:20Z", request.url.parameters["updatedafter"])
             assertEquals("2023-11-15T00:00:00Z", request.url.parameters["endtime"])
             assertEquals("10", request.url.parameters["limit"])
             assertEquals("11", request.url.parameters["offset"])
@@ -127,9 +134,9 @@ class EarthquakeApiTest {
                     EarthquakeApi(client)
                         .queryEarthquakes(
                             EarthquakeCatalogResources.Query(
-                                startTime = "2020-01-01T00:00:00Z",
-                                endTime = "2023-11-15T00:00:00Z",
-                                updatedAfter = "2023-11-14T22:13:20+00:00",
+                                startTime = Instant.parse("2020-01-01T00:00:00Z"),
+                                endTime = Instant.parse("2023-11-15T00:00:00Z"),
+                                updatedAfter = Instant.parse("2023-11-14T22:13:20+00:00"),
                                 limit = 10,
                                 offset = 11,
                             )

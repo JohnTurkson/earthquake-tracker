@@ -1,6 +1,7 @@
 package com.johnturkson.sandbox.data
 
 import javax.inject.Inject
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 
 class EarthquakeRepository
@@ -10,8 +11,8 @@ constructor(
     private val monitoringDao: EarthquakeMonitoringDao,
 ) {
     fun getEarthquakesFlow(
-        startTime: Long = Long.MIN_VALUE,
-        endTime: Long = Long.MAX_VALUE,
+        startTime: Instant? = null,
+        endTime: Instant? = null,
         minimumMagnitude: Double? = null,
     ): Flow<List<EarthquakeDatabaseModel>> {
         return dao.getEarthquakesFlow(startTime, endTime, minimumMagnitude)

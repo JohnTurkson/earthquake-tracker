@@ -5,12 +5,15 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.johnturkson.sandbox.data.EarthquakeLocation
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -26,6 +29,48 @@ class EarthquakeLocationRepositoryTest {
     @get:Rule val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun legacyMillisecondsRemainReadableAndUpgradeToIsoOnTheNextFix() = runTest {
+        val file = temporaryFolder.newFolder().resolve("location.preferences_pb")
+        val store =
+            PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
+        val legacyKey = longPreferencesKey("last_known_user_timestamp_millis")
+        val isoKey = stringPreferencesKey("last_known_user_timestamp")
+        store.edit {
+            it[doublePreferencesKey("last_known_user_latitude")] = 49.2827
+            it[doublePreferencesKey("last_known_user_longitude")] = -123.1207
+            it[legacyKey] = 2_000L
+        }
+        val repository = EarthquakeLocationRepository(store)
+        val legacy = EarthquakeLocation(49.2827, -123.1207, Instant.fromEpochMilliseconds(2_000))
+        assertEquals(legacy, repository.lastKnownLocation.first())
+        repository.updateLastKnownLocation(
+            legacy.copy(timestamp = Instant.fromEpochMilliseconds(1_000))
+        )
+        assertEquals(legacy, repository.lastKnownLocation.first())
+        val current = legacy.copy(timestamp = Instant.parse("2026-11-01T00:00:00.123456789Z"))
+        repository.updateLastKnownLocation(current)
+        assertEquals(current, repository.lastKnownLocation.first())
+        assertEquals("2026-11-01T00:00:00.123456789Z", store.data.first()[isoKey])
+        assertNull(store.data.first()[legacyKey])
+    }
+
+    @Test
+    fun malformedIsoTimestampKeepsValidCoordinatesAvailable() = runTest {
+        val file = temporaryFolder.newFolder().resolve("location.preferences_pb")
+        val store =
+            PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
+        store.edit {
+            it[doublePreferencesKey("last_known_user_latitude")] = 49.2827
+            it[doublePreferencesKey("last_known_user_longitude")] = -123.1207
+            it[stringPreferencesKey("last_known_user_timestamp")] = "invalid"
+        }
+        assertEquals(
+            EarthquakeLocation(49.2827, -123.1207),
+            EarthquakeLocationRepository(store).lastKnownLocation.first(),
+        )
+    }
+
+    @Test
     fun missingLocationStaysNullAndLeavesDefaultAsSanFrancisco() = runTest {
         val file = temporaryFolder.newFolder().resolve("location.preferences_pb")
         val store =
@@ -33,7 +78,7 @@ class EarthquakeLocationRepositoryTest {
         assertNull(EarthquakeLocationRepository(store).lastKnownLocation.first())
         assertEquals(37.7749, EarthquakeLocation.Default.latitude)
         assertEquals(-122.4194, EarthquakeLocation.Default.longitude)
-        assertNull(EarthquakeLocation.Default.timestampMillis)
+        assertNull(EarthquakeLocation.Default.timestamp)
     }
 
     @Test
@@ -45,7 +90,7 @@ class EarthquakeLocationRepositoryTest {
                 scope = CoroutineScope(backgroundScope.coroutineContext + storeJob),
                 produceFile = { file },
             )
-        val location = EarthquakeLocation(49.2827, -123.1207, 1_000L)
+        val location = EarthquakeLocation(49.2827, -123.1207, Instant.fromEpochMilliseconds(1_000L))
         EarthquakeLocationRepository(firstStore).updateLastKnownLocation(location)
         storeJob.cancelAndJoin()
 
@@ -72,9 +117,11 @@ class EarthquakeLocationRepositoryTest {
         val store =
             PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
         val repository = EarthquakeLocationRepository(store)
-        val latest = EarthquakeLocation(49.2827, -123.1207, 2_000L)
+        val latest = EarthquakeLocation(49.2827, -123.1207, Instant.fromEpochMilliseconds(2_000L))
         repository.updateLastKnownLocation(latest)
-        repository.updateLastKnownLocation(EarthquakeLocation(37.7749, -122.4194, 1_000L))
+        repository.updateLastKnownLocation(
+            EarthquakeLocation(37.7749, -122.4194, Instant.fromEpochMilliseconds(1_000L))
+        )
         assertEquals(latest, repository.lastKnownLocation.first())
     }
 
@@ -84,10 +131,12 @@ class EarthquakeLocationRepositoryTest {
         val store =
             PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
         val repository = EarthquakeLocationRepository(store)
-        val location = EarthquakeLocation(49.2827, -123.1207, 1_000L)
+        val location = EarthquakeLocation(49.2827, -123.1207, Instant.fromEpochMilliseconds(1_000L))
         repository.updateLastKnownLocation(location)
         assertFailsWith<IllegalArgumentException> {
-            repository.updateLastKnownLocation(EarthquakeLocation(Double.NaN, 0.0, 2_000L))
+            repository.updateLastKnownLocation(
+                EarthquakeLocation(Double.NaN, 0.0, Instant.fromEpochMilliseconds(2_000L))
+            )
         }
         assertEquals(location, repository.lastKnownLocation.first())
     }

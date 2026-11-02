@@ -1,6 +1,7 @@
 package com.johnturkson.sandbox.data
 
 import io.ktor.resources.Resource
+import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -45,9 +46,9 @@ class EarthquakeCatalogResources {
     @Resource("query")
     data class Query(
         val parent: EarthquakeCatalogResources = EarthquakeCatalogResources(),
-        @SerialName("starttime") val startTime: String? = null,
-        @SerialName("endtime") val endTime: String? = null,
-        @SerialName("updatedafter") val updatedAfter: String? = null,
+        @SerialName("starttime") val startTime: Instant? = null,
+        @SerialName("endtime") val endTime: Instant? = null,
+        @SerialName("updatedafter") val updatedAfter: Instant? = null,
         val limit: Int = 20000,
         val offset: Int = 1,
         val format: String = "geojson",

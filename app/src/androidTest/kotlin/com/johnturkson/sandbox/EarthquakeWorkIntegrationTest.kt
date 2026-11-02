@@ -14,6 +14,7 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -33,7 +34,7 @@ class EarthquakeWorkIntegrationTest {
         val alert =
             EarthquakeMonitoringFixtures.item(
                 id = "stop-test-${UUID.randomUUID()}",
-                time = System.currentTimeMillis(),
+                time = Clock.System.now(),
             )
         try {
             assertFalse(

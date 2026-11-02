@@ -20,6 +20,7 @@ import com.johnturkson.sandbox.data.EarthquakeDao
 import com.johnturkson.sandbox.data.EarthquakeMonitoringDao
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRefresher
+import com.johnturkson.sandbox.data.EarthquakeTimestampMigration
 import com.johnturkson.sandbox.data.MainDatabase
 import dagger.Module
 import dagger.Provides
@@ -103,7 +104,9 @@ object EarthquakeModule {
     @Provides
     @Singleton
     fun provideMainDatabase(@ApplicationContext context: Context): MainDatabase {
-        return Room.databaseBuilder(context, MainDatabase::class.java, "MainDatabase").build()
+        return Room.databaseBuilder(context, MainDatabase::class.java, "MainDatabase")
+            .addMigrations(EarthquakeTimestampMigration)
+            .build()
     }
 
     @Provides

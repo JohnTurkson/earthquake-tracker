@@ -59,8 +59,8 @@ EarthquakeMap(
 ```
 
 `EarthquakeMapItem` is an immutable presentation value with a stable unique ID,
-coordinates, title, optional numeric magnitude, optional snippet, and optional event time in epoch
-milliseconds. The explorer uses the same values for its map and list. Format
+coordinates, title, optional numeric magnitude, optional snippet, and optional
+`Instant` event time. The explorer uses the same values for its map and list. Format
 event times in the UI using the device's locale and time preferences; do not
 store formatted time strings as feature state. It has no network or database
 annotations. Maps Utils owns unselected marker lifetimes through immutable
@@ -349,8 +349,8 @@ for shared app preferences, including the last known user location. Add future
 small settings to this store through their owning repositories.
 [EarthquakeLocationRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeLocationRepository.kt)
 owns private preference keys and atomic reads/writes of latitude, longitude, and
-the location fix's epoch-millisecond timestamp. Missing, incomplete, invalid, or
-unreadable coordinates produce a null last known location; the ViewModel maps
+the location fix's ISO-8601 timestamp, exposed as `Instant`.
+Missing, incomplete, invalid, or unreadable coordinates produce a null last known location; the ViewModel maps
 that to `EarthquakeLocation.Default` (San Francisco). Never record that fallback
 as a measured user location. A corrupt preferences file resets to empty values.
 An older cached fix cannot overwrite a newer timestamp. Optional cache-write IO
@@ -451,7 +451,7 @@ publishes alerts after commit. It returns `EarthquakeRefreshResult` outcomes for
 success, offline, network, decode, and storage failures. Cancellation propagates;
 notification failures must not roll back saved earthquake data. The repository
 does not own work status or deduplicate refresh requests.
-Read epoch timestamps directly with `System.currentTimeMillis()` for refresh
+Read typed instants directly with `Clock.System.now()` for refresh
 metadata and alert freshness; do not add a dedicated class that only forwards
 that system call.
 
@@ -540,7 +540,9 @@ filters and observes refresh metadata separately. A failed merge rolls back both
 event changes and the last-successful-refresh timestamp.
 
 `MainDatabase` version 3 adds only `earthquake_refresh` and `earthquake_alerts`,
-using the existing additive auto-migration convention. `EarthquakeMonitoringDao`
+using additive auto-migrations. Version 4 removes obsolete product snapshots.
+Version 5 converts timestamp columns to ISO-8601 text with the explicit
+`EarthquakeTimestampMigration`, retaining existing data. `EarthquakeMonitoringDao`
 keeps all reads observable with names ending in `Flow`. Delivered-alert queries
 join retained aliases, so a preferred-ID change does not repeat a notification.
 Notification taps and existing selection resolve through the same repository's
@@ -554,3 +556,6 @@ allow worker/API/database integration tests to use MockEngine while the device
 is offline. The refresh repository bounds its own summary request with a
 30-second coroutine timeout, preserving the shared client's other endpoint
 behavior.
+
+Follow the [date and time conventions](date-time.md) for typed instants and
+durations, ISO storage, SDK conversions, and timestamp serialization.

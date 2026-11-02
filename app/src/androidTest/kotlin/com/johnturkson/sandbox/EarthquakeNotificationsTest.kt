@@ -11,6 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -45,7 +46,7 @@ class EarthquakeNotificationsTest {
         val wasGranted =
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
                 PackageManager.PERMISSION_GRANTED
-        val now = System.currentTimeMillis()
+        val now = Clock.System.now()
         val first =
             EarthquakeMonitoringFixtures.item(
                 id = "notification-test-${UUID.randomUUID()}",

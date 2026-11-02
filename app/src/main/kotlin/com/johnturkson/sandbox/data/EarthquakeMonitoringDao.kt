@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -25,6 +26,6 @@ interface EarthquakeMonitoringDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun recordAlert(alert: EarthquakeAlertDatabaseModel)
 
-    @Query("DELETE FROM earthquake_alerts WHERE deliveredMillis < :beforeMillis")
-    suspend fun pruneAlerts(beforeMillis: Long)
+    @Query("DELETE FROM earthquake_alerts WHERE deliveredAt < :before")
+    suspend fun pruneAlerts(before: Instant)
 }

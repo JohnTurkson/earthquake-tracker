@@ -1,6 +1,7 @@
 package com.johnturkson.sandbox.ui
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.Instant
 
 @Immutable
 data class EarthquakeMapItem(
@@ -9,6 +10,6 @@ data class EarthquakeMapItem(
     val longitude: Double,
     val title: String,
     val snippet: String? = null,
-    val eventTimeMillis: Long? = null,
+    val eventTime: Instant? = null,
     val magnitude: Double? = null,
 )

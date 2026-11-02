@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox.data
 
+import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,7 +14,7 @@ data class EarthquakeCollectionNetworkModel(
 
 @Serializable
 data class EarthquakeMetadataNetworkModel(
-    val generated: Long,
+    @Serializable(with = EarthquakeEpochMillisecondsSerializer::class) val generated: Instant,
     val url: String,
     val title: String,
     val status: Int,
@@ -31,8 +32,8 @@ data class EarthquakeNetworkModel(
 
 @Serializable
 data class EarthquakePropertiesNetworkModel(
-    val time: Long,
-    val updated: Long,
+    @Serializable(with = EarthquakeEpochMillisecondsSerializer::class) val time: Instant,
+    @Serializable(with = EarthquakeEpochMillisecondsSerializer::class) val updated: Instant,
     @SerialName("mag") val magnitude: Double? = null,
     val place: String? = null,
     val tz: Int? = null,

@@ -182,8 +182,8 @@ fun EarthquakeListRow(
 internal fun earthquakeEventTime(item: EarthquakeMapItem): String? {
     val context = LocalContext.current
     LocalConfiguration.current
-    return item.eventTimeMillis?.let { time ->
-        val date = Date(time)
+    return item.eventTime?.let { time ->
+        val date = Date(time.toEpochMilliseconds())
         stringResource(
             R.string.earthquake_event_time,
             DateFormat.getMediumDateFormat(context).format(date),

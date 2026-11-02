@@ -1,11 +1,11 @@
 package com.johnturkson.sandbox.ui
 
-import java.time.Instant
+import kotlin.time.Instant
 
 internal object EarthquakeMapFixtures {
     const val sourceUrl =
         "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
-    const val generatedAt = 1793502120000L
+    val generatedAt = Instant.parse("2026-11-01T03:02:00Z")
     val items =
         listOf(
             EarthquakeMapItem(
@@ -14,7 +14,7 @@ internal object EarthquakeMapFixtures {
                 longitude = 136.9854,
                 title = "M 6.0 - 58 km SSE of Shima, Japan",
                 magnitude = 6.0,
-                eventTimeMillis = Instant.parse("2026-10-31T22:15:02.901000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T22:15:02.901000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tuky",
@@ -22,7 +22,7 @@ internal object EarthquakeMapFixtures {
                 longitude = 165.6456,
                 title = "M 5.2 - 200 km NW of Port-Olry, Vanuatu",
                 magnitude = 5.2,
-                eventTimeMillis = Instant.parse("2026-10-31T22:42:39.540000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T22:42:39.540000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tujf",
@@ -30,7 +30,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -80.2547,
                 title = "M 5.2 - 4 km S of Bajo Corral, Panama",
                 magnitude = 5.2,
-                eventTimeMillis = Instant.parse("2026-10-31T15:50:18.909000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T15:50:18.909000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tukm",
@@ -38,7 +38,7 @@ internal object EarthquakeMapFixtures {
                 longitude = 51.5076,
                 title = "M 5.0 - 115 km SE of Bushehr, Iran",
                 magnitude = 5.0,
-                eventTimeMillis = Instant.parse("2026-10-31T21:20:39.173000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T21:20:39.173000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tuly",
@@ -46,7 +46,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -68.435,
                 title = "M 4.5 - 55 km SSW of Ollagüe, Chile",
                 magnitude = 4.5,
-                eventTimeMillis = Instant.parse("2026-11-01T01:24:52.448000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-11-01T01:24:52.448000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tuk4",
@@ -54,7 +54,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -172.7931,
                 title = "M 4.5 - 111 km ESE of Atka, Alaska",
                 magnitude = 4.5,
-                eventTimeMillis = Instant.parse("2026-10-31T18:51:02.721000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T18:51:02.721000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tuj1",
@@ -62,7 +62,7 @@ internal object EarthquakeMapFixtures {
                 longitude = 120.9249,
                 title = "M 4.4 - 62 km NNW of Claveria, Philippines",
                 magnitude = 4.4,
-                eventTimeMillis = Instant.parse("2026-10-31T13:31:14.759000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T13:31:14.759000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tui9",
@@ -70,7 +70,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -177.4956,
                 title = "M 4.4 - Fiji region",
                 magnitude = 4.4,
-                eventTimeMillis = Instant.parse("2026-10-31T10:42:10.031000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T10:42:10.031000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tuh8",
@@ -78,7 +78,7 @@ internal object EarthquakeMapFixtures {
                 longitude = 94.0675,
                 title = "M 4.4 - 222 km ENE of Nagqu, China",
                 magnitude = 4.4,
-                eventTimeMillis = Instant.parse("2026-10-31T05:52:03.468000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T05:52:03.468000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tuh7",
@@ -86,7 +86,7 @@ internal object EarthquakeMapFixtures {
                 longitude = 158.7423,
                 title = "M 4.4 - 35 km SE of Vilyuchinsk, Russia",
                 magnitude = 4.4,
-                eventTimeMillis = Instant.parse("2026-10-31T05:29:19.961000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T05:29:19.961000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "us7000tuiw",
@@ -94,7 +94,7 @@ internal object EarthquakeMapFixtures {
                 longitude = 128.9289,
                 title = "M 4.3 - Banda Sea",
                 magnitude = 4.3,
-                eventTimeMillis = Instant.parse("2026-10-31T13:10:08.987000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T13:10:08.987000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "uu80162166",
@@ -102,7 +102,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -112.2915,
                 title = "M 3.3 - 8 km NW of Junction, Utah",
                 magnitude = 3.3,
-                eventTimeMillis = Instant.parse("2026-10-31T04:44:15.520000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T04:44:15.520000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "aka2026vplgct",
@@ -110,7 +110,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -149.835,
                 title = "M 3.1 - 10 km WSW of Hope, Alaska",
                 magnitude = 3.1,
-                eventTimeMillis = Instant.parse("2026-10-31T23:17:43.520000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T23:17:43.520000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "nc75460382",
@@ -118,7 +118,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -121.457664489746,
                 title = "M 2.9 - 27 km WSW of Westley, CA",
                 magnitude = 2.9,
-                eventTimeMillis = Instant.parse("2026-10-31T16:44:50.250000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T16:44:50.250000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "aka2026vovsfh",
@@ -126,7 +126,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -152.198,
                 title = "M 2.6 - 35 km NW of Ninilchik, Alaska",
                 magnitude = 2.6,
-                eventTimeMillis = Instant.parse("2026-10-31T15:32:36.070000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T15:32:36.070000+00:00"),
             ),
             EarthquakeMapItem(
                 id = "hv75066971",
@@ -134,7 +134,7 @@ internal object EarthquakeMapFixtures {
                 longitude = -155.274673461914,
                 title = "M 2.4 - 6 km SW of Volcano, Hawaii",
                 magnitude = 2.4,
-                eventTimeMillis = Instant.parse("2026-10-31T23:30:27.980000+00:00").toEpochMilli(),
+                eventTime = Instant.parse("2026-10-31T23:30:27.980000+00:00"),
             ),
         )
 

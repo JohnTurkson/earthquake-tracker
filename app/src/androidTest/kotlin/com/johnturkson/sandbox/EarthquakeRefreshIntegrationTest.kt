@@ -37,6 +37,10 @@ import java.io.IOException
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -56,7 +60,7 @@ class EarthquakeRefreshIntegrationTest {
         val systemNotifications = context.getSystemService(NotificationManager::class.java)
         val id = "refresh-test-${UUID.randomUUID()}"
         val preferredId = "$id-preferred"
-        val now = System.currentTimeMillis()
+        val now = Clock.System.now()
         val json = Json { ignoreUnknownKeys = true }
         var requests = 0
         val connection =
@@ -71,7 +75,7 @@ class EarthquakeRefreshIntegrationTest {
                 "Feature",
                 EarthquakePropertiesNetworkModel(
                     now,
-                    now + if (preferred) 1 else 0,
+                    now + if (preferred) 1.milliseconds else Duration.ZERO,
                     6.2,
                     place = "Test Pacific",
                     ids = if (preferred) ",$preferredId,$id-shared," else ",$id,$id-shared,",
@@ -144,8 +148,7 @@ class EarthquakeRefreshIntegrationTest {
                     notifications,
                     Dispatchers.IO,
                 )
-            val old =
-                EarthquakeMonitoringFixtures.item(id = "$id-history", time = now - 172_800_000)
+            val old = EarthquakeMonitoringFixtures.item(id = "$id-history", time = now - 2.days)
             database.earthquakeDao().mergeEarthquakes(listOf(old))
             val factory =
                 object : WorkerFactory() {

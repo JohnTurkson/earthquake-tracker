@@ -16,7 +16,7 @@ class EarthquakePollingLoopTest {
     fun pollsEveryMinuteAndCancellationStopsFutureChecks() = runTest {
         var checks = 0
         val job = backgroundScope.launch {
-            EarthquakePollingLoop(elapsedMillis = { testScheduler.currentTime })
+            EarthquakePollingLoop(timeSource = testScheduler.timeSource)
                 .run(MutableStateFlow(true), {}, { checks++ })
         }
         runCurrent()
@@ -38,7 +38,7 @@ class EarthquakePollingLoopTest {
         var checks = 0
         var pauses = 0
         backgroundScope.launch {
-            EarthquakePollingLoop(elapsedMillis = { testScheduler.currentTime })
+            EarthquakePollingLoop(timeSource = testScheduler.timeSource)
                 .run(online, { pauses++ }, { checks++ })
         }
         runCurrent()
@@ -62,7 +62,7 @@ class EarthquakePollingLoopTest {
         var active = 0
         var maximumActive = 0
         backgroundScope.launch {
-            EarthquakePollingLoop(elapsedMillis = { testScheduler.currentTime })
+            EarthquakePollingLoop(timeSource = testScheduler.timeSource)
                 .run(
                     MutableStateFlow(true),
                     {},

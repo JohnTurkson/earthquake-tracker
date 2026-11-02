@@ -125,7 +125,7 @@ constructor(
                         item.latitude,
                         item.longitude,
                         item.title ?: "M $magnitude – ${item.place ?: "Unknown location"}",
-                        eventTimeMillis = item.time,
+                        eventTime = item.time,
                         magnitude = item.magnitude,
                     )
                 }
@@ -134,7 +134,7 @@ constructor(
         }
         viewModelScope.launch {
             repository.getRefreshFlow().collect { metadata ->
-                monitoring = monitoring.copy(lastUpdatedMillis = metadata?.updatedMillis)
+                monitoring = monitoring.copy(lastUpdated = metadata?.updatedAt)
             }
         }
         viewModelScope.launch {

@@ -4,12 +4,13 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlin.time.Instant
 
 @Entity(tableName = "earthquakes", indices = [Index("time"), Index("updated")])
 data class EarthquakeDatabaseModel(
     @PrimaryKey override val id: String,
-    val time: Long,
-    val updated: Long,
+    val time: Instant,
+    val updated: Instant,
     val longitude: Double,
     val latitude: Double,
     val depth: Double,

@@ -1,5 +1,9 @@
 package com.johnturkson.sandbox.work
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -7,8 +11,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withTimeoutOrNull
 
 class EarthquakePollingLoop(
-    private val intervalMillis: Long = 60_000,
-    private val elapsedMillis: () -> Long = { System.nanoTime() / 1_000_000 },
+    private val interval: Duration = 1.minutes,
+    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) {
     suspend fun run(
         online: StateFlow<Boolean>,
@@ -20,11 +24,11 @@ class EarthquakePollingLoop(
                 onPaused()
                 online.first { it }
             }
-            val started = elapsedMillis()
+            val started = timeSource.markNow()
             onTick()
             if (!online.value) continue
-            val waitMillis = (intervalMillis - (elapsedMillis() - started)).coerceAtLeast(1_000)
-            withTimeoutOrNull(waitMillis) { online.first { !it } }
+            val wait = (interval - started.elapsedNow()).coerceAtLeast(1.seconds)
+            withTimeoutOrNull(wait) { online.first { !it } }
         }
     }
 }

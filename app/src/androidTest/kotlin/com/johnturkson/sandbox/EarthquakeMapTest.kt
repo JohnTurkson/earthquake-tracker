@@ -38,6 +38,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 import org.junit.Rule
 import org.junit.Test
 
@@ -59,13 +60,25 @@ class EarthquakeMapTest {
         }
         val map = awaitMap()
         composeRule.runOnIdle {
-            state = state.copy(userLocation = EarthquakeLocation(49.2827, -123.1207, 1_000L))
+            state =
+                state.copy(
+                    userLocation =
+                        EarthquakeLocation(
+                            49.2827,
+                            -123.1207,
+                            Instant.fromEpochMilliseconds(1_000L),
+                        )
+                )
         }
         composeRule.waitUntil(10_000) { !isLocatingUser }
         composeRule.runOnIdle {
             assertEquals(49.2827, map.cameraPosition.target.latitude, 0.0001)
             assertEquals(-123.1207, map.cameraPosition.target.longitude, 0.0001)
-            state = state.copy(userLocation = EarthquakeLocation(40.7128, -74.0060, 2_000L))
+            state =
+                state.copy(
+                    userLocation =
+                        EarthquakeLocation(40.7128, -74.0060, Instant.fromEpochMilliseconds(2_000L))
+                )
         }
         composeRule.waitForIdle()
         composeRule.runOnIdle { assertEquals(49.2827, map.cameraPosition.target.latitude, 0.0001) }

@@ -26,6 +26,7 @@ import io.ktor.serialization.kotlinx.json.json
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -94,7 +95,8 @@ class EarthquakeRefreshRepositoryTest {
             fixture.readSettings = {
                 assertEquals(2, fixture.database.earthquakeDao().getEarthquakesFlow().first().size)
                 assertTrue(
-                    fixture.database.monitoringDao().getRefreshFlow().first()!!.updatedMillis > 100
+                    fixture.database.monitoringDao().getRefreshFlow().first()!!.updatedAt >
+                        Instant.fromEpochMilliseconds(100)
                 )
                 throw SecurityException("Notifications unavailable")
             }
@@ -139,8 +141,10 @@ class EarthquakeRefreshRepositoryTest {
     private class Fixture {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
-        val old = EarthquakeMonitoringFixtures.item(id = "old", time = 1)
-        val metadata = EarthquakeRefreshDatabaseModel(updatedMillis = 100)
+        val old =
+            EarthquakeMonitoringFixtures.item(id = "old", time = Instant.fromEpochMilliseconds(1))
+        val metadata =
+            EarthquakeRefreshDatabaseModel(updatedAt = Instant.fromEpochMilliseconds(100))
         val feed =
             """
             {"type":"FeatureCollection","metadata":{"generated":200,"url":"https://earthquake.usgs.gov/","title":"Test","status":200,"api":"1.0","count":1},"features":[{"type":"Feature","id":"new","properties":{"time":100,"updated":200,"mag":1.0},"geometry":{"type":"Point","coordinates":[2.0,1.0,10.0]}}]}

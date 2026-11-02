@@ -41,7 +41,9 @@ properties. Reuse models when response shapes match.
 Preserve nullable measurements and required identity and update fields. Ignore
 unused product metadata through the shared `Json.ignoreUnknownKeys` configuration;
 do not mirror every USGS field or introduce product maps without a feature that
-uses them. Preserve numeric precision and units: epoch milliseconds use `Long`; coordinates are longitude and latitude
+uses them. Preserve numeric precision and units: numeric epoch milliseconds
+decode directly to `Instant` through
+`EarthquakeEpochMillisecondsSerializer`; coordinates are longitude and latitude
 in degrees, followed by depth in kilometers. Negative depth is valid.
 
 Use the injected `HttpClient` in an API wrapper, following
@@ -74,3 +76,7 @@ call the live service. Test any new repository behavior at its owning boundary.
 Update this guide when an agreed network pattern is introduced and update the
 [earthquake data guide](earthquake-data.md) for public API usage or changed
 service limits. Run and report the applicable checks from the testing guide.
+
+Follow the [date and time conventions](date-time.md). Keep catalog time filters
+typed as `Instant`; Ktor Resources serializes them as ISO-8601 query values.
+USGS's numeric wire representation does not determine the storage format.

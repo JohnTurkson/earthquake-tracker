@@ -24,6 +24,7 @@ import com.johnturkson.sandbox.ui.EarthquakeNotificationState
 import com.johnturkson.sandbox.ui.EarthquakePreviewState
 import com.johnturkson.sandbox.ui.EarthquakeScreen
 import com.johnturkson.sandbox.ui.EarthquakeView
+import kotlin.time.Instant
 
 class EarthquakeNotificationsScreenshotTest {
     @PreviewTest
@@ -38,7 +39,7 @@ class EarthquakeNotificationsScreenshotTest {
                 EarthquakeMonitoringCard(
                     state,
                     {},
-                    lastUpdatedLabel = if (state.lastUpdatedMillis != null) "10:42" else null,
+                    lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
                 )
             }
         }
@@ -320,16 +321,16 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
         sequenceOf(
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking),
             EarthquakeMonitoringState(),
-            EarthquakeMonitoringState(lastUpdatedMillis = 1),
+            EarthquakeMonitoringState(lastUpdated = Instant.fromEpochMilliseconds(1)),
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Starting),
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Running,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Offline,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Queued),
@@ -341,12 +342,12 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
             ),
             EarthquakeMonitoringState(
                 refresh = EarthquakeMonitoringState.Refresh.NetworkError,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.DataError),
             EarthquakeMonitoringState(
                 refresh = EarthquakeMonitoringState.Refresh.StorageError,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Offline),
             EarthquakeMonitoringState(
@@ -355,7 +356,7 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
@@ -390,12 +391,12 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
                 refresh = EarthquakeMonitoringState.Refresh.NetworkError,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
                 refresh = EarthquakeMonitoringState.Refresh.Offline,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Failed,
@@ -403,7 +404,7 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Failed,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Offline,
@@ -423,7 +424,7 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
             ),
             EarthquakeMonitoringState(
                 refresh = EarthquakeMonitoringState.Refresh.Offline,
-                lastUpdatedMillis = 1,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Failed,

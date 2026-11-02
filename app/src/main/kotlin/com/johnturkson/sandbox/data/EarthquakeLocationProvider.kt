@@ -12,6 +12,9 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -37,20 +40,31 @@ constructor(
                 override fun onLocationResult(result: LocationResult) {
                     val location = result.lastLocation ?: return
                     trySend(
-                        EarthquakeLocation(location.latitude, location.longitude, location.time)
+                        EarthquakeLocation(
+                            location.latitude,
+                            location.longitude,
+                            Instant.fromEpochMilliseconds(location.time),
+                        )
                     )
                 }
             }
         val request =
-            LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 60_000)
-                .setMinUpdateIntervalMillis(15_000)
+            LocationRequest.Builder(
+                    Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                    1.minutes.inWholeMilliseconds,
+                )
+                .setMinUpdateIntervalMillis(15.seconds.inWholeMilliseconds)
                 .setMinUpdateDistanceMeters(1_000f)
                 .build()
         try {
             client.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     trySend(
-                        EarthquakeLocation(location.latitude, location.longitude, location.time)
+                        EarthquakeLocation(
+                            location.latitude,
+                            location.longitude,
+                            Instant.fromEpochMilliseconds(location.time),
+                        )
                     )
                 }
             }

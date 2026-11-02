@@ -24,7 +24,8 @@ An earthquake record is mutable. USGS explains that
 as observations arrive and analysts review events, including later catalog
 revisions. Compare each feature's `properties.updated`, not its occurrence time
 or the collection's generation time, when deciding which stored values to keep.
-Times are epoch milliseconds. Coordinates are longitude, latitude, and depth in
+USGS wire times are epoch milliseconds; app models use `Instant` and storage
+uses ISO-8601 text. See the [date and time conventions](date-time.md). Coordinates are longitude, latitude, and depth in
 kilometers. Missing measurements remain null, not zero.
 
 Do not treat the preferred feature ID as an immutable identifier for a physical
@@ -47,8 +48,8 @@ val earthquakes = repository.getEarthquakesFlow()
 val earthquake = repository.getEarthquakeFlow("us7000example")
 val refresh = repository.getRefreshFlow()
 val recent = repository.getEarthquakesFlow(
-    startTime = startEpochMillis,
-    endTime = endEpochMillis,
+    startTime = Instant.parse("2026-10-01T00:00:00Z"),
+    endTime = Instant.parse("2026-11-01T00:00:00Z"),
     minimumMagnitude = 2.5,
 )
 workScheduler.refresh()

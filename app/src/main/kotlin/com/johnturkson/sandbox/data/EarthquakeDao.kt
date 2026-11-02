@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
@@ -12,14 +13,15 @@ abstract class EarthquakeDao {
     @Query(
         """
         SELECT * FROM earthquakes
-        WHERE time >= :startTime AND time < :endTime
+        WHERE (:startTime IS NULL OR time >= :startTime)
+        AND (:endTime IS NULL OR time < :endTime)
         AND (:minimumMagnitude IS NULL OR magnitude >= :minimumMagnitude)
         ORDER BY time DESC, id ASC
         """
     )
     abstract fun getEarthquakesFlow(
-        startTime: Long = Long.MIN_VALUE,
-        endTime: Long = Long.MAX_VALUE,
+        startTime: Instant? = null,
+        endTime: Instant? = null,
         minimumMagnitude: Double? = null,
     ): Flow<List<EarthquakeDatabaseModel>>
 

@@ -67,8 +67,9 @@ fun EarthquakeMonitoringCard(
         }
     val lastUpdated =
         lastUpdatedLabel
-            ?: state.lastUpdatedMillis?.let {
-                DateFormat.getTimeFormat(LocalContext.current).format(Date(it))
+            ?: state.lastUpdated?.let {
+                DateFormat.getTimeFormat(LocalContext.current)
+                    .format(Date(it.toEpochMilliseconds()))
             }
     val detail =
         when {

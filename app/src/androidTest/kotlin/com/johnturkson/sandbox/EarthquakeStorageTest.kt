@@ -25,6 +25,7 @@ import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRefreshResult
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
+import com.johnturkson.sandbox.data.EarthquakeTimestampMigration
 import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.data.toDatabaseModel
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
@@ -48,6 +49,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -85,12 +89,48 @@ class EarthquakeStorageTest {
     @Test
     fun insertsRevisesAndIgnoresOlderAndEqualResponses() = runTest {
         val dao = database.earthquakeDao()
-        dao.mergeEarthquakes(listOf(earthquake(updated = 100), earthquake(id = "other")))
-        val revised = earthquake(updated = 200, magnitude = 5.5)
+        dao.mergeEarthquakes(
+            listOf(
+                earthquake(updated = Instant.fromEpochMilliseconds(100)),
+                earthquake(id = "other"),
+            )
+        )
+        val revised = earthquake(updated = Instant.fromEpochMilliseconds(200), magnitude = 5.5)
         dao.mergeEarthquakes(listOf(revised))
-        dao.mergeEarthquakes(listOf(earthquake(updated = 150), earthquake(updated = 200)))
+        dao.mergeEarthquakes(
+            listOf(
+                earthquake(updated = Instant.fromEpochMilliseconds(150)),
+                earthquake(updated = Instant.fromEpochMilliseconds(200)),
+            )
+        )
         assertEquals(revised, dao.getEarthquakeFlow("test").first())
         assertEquals(2, dao.getEarthquakesFlow().first().size)
+    }
+
+    @Test
+    fun textTimestampsPreserveNanosecondsAndHalfOpenQueries() = runTest {
+        val dao = database.earthquakeDao()
+        val start = Instant.parse("2026-11-01T00:00:00Z")
+        val events =
+            listOf(
+                earthquake(id = "before", time = start - 1.nanoseconds),
+                earthquake(id = "at", time = start),
+                earthquake(id = "after", time = start + 1.nanoseconds),
+            )
+        dao.mergeEarthquakes(events)
+        assertEquals(
+            listOf("after", "at", "before"),
+            dao.getEarthquakesFlow().first().map { it.id },
+        )
+        assertEquals(
+            listOf(events[1]),
+            dao.getEarthquakesFlow(start, start + 1.nanoseconds).first(),
+        )
+        assertEquals(listOf(events[2]), dao.getEarthquakesFlow(start + 1.nanoseconds).first())
+        val revised = events[1].copy(updated = events[1].updated + 1.nanoseconds, magnitude = 5.5)
+        dao.mergeEarthquakes(listOf(revised))
+        dao.mergeEarthquakes(listOf(events[1]))
+        assertEquals(revised, dao.getEarthquakeFlow("at").first())
     }
 
     @Test
@@ -98,10 +138,18 @@ class EarthquakeStorageTest {
         val dao = database.earthquakeDao()
         dao.mergeEarthquakes(
             listOf(
-                earthquake(id = "b", time = 200),
-                earthquake(id = "a", time = 200, aliases = ",a,alias-a,"),
-                earthquake(id = "old", time = 100),
-                earthquake(id = "unknown", time = 250, magnitude = null),
+                earthquake(id = "b", time = Instant.fromEpochMilliseconds(200)),
+                earthquake(
+                    id = "a",
+                    time = Instant.fromEpochMilliseconds(200),
+                    aliases = ",a,alias-a,",
+                ),
+                earthquake(id = "old", time = Instant.fromEpochMilliseconds(100)),
+                earthquake(
+                    id = "unknown",
+                    time = Instant.fromEpochMilliseconds(250),
+                    magnitude = null,
+                ),
             )
         )
         assertEquals("a", dao.getEarthquakeFlow("alias-a").first()!!.id)
@@ -110,7 +158,15 @@ class EarthquakeStorageTest {
             listOf("unknown", "a", "b", "old"),
             dao.getEarthquakesFlow().first().map { it.id },
         )
-        assertEquals(listOf("a", "b"), dao.getEarthquakesFlow(200, 250).first().map { it.id })
+        assertEquals(
+            listOf("a", "b"),
+            dao.getEarthquakesFlow(
+                    Instant.fromEpochMilliseconds(200),
+                    Instant.fromEpochMilliseconds(250),
+                )
+                .first()
+                .map { it.id },
+        )
         assertEquals(
             listOf("a", "b", "old"),
             dao.getEarthquakesFlow(minimumMagnitude = 4.0).first().map { it.id },
@@ -122,10 +178,10 @@ class EarthquakeStorageTest {
         val dao = database.earthquakeDao()
         dao.getEarthquakeFlow("test").test {
             assertNull(awaitItem())
-            dao.mergeEarthquakes(listOf(earthquake(updated = 100)))
-            assertEquals(100L, awaitItem()!!.updated)
-            dao.mergeEarthquakes(listOf(earthquake(updated = 200)))
-            assertEquals(200L, awaitItem()!!.updated)
+            dao.mergeEarthquakes(listOf(earthquake(updated = Instant.fromEpochMilliseconds(100))))
+            assertEquals(Instant.fromEpochMilliseconds(100L), awaitItem()!!.updated)
+            dao.mergeEarthquakes(listOf(earthquake(updated = Instant.fromEpochMilliseconds(200))))
+            assertEquals(Instant.fromEpochMilliseconds(200L), awaitItem()!!.updated)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -133,18 +189,53 @@ class EarthquakeStorageTest {
     @Test
     fun filteredListFlowEmitsAsRevisionsEnterAndLeaveTheQuery() = runTest {
         val dao = database.earthquakeDao()
-        dao.getEarthquakesFlow(startTime = 100, endTime = 300, minimumMagnitude = 4.0).test {
-            assertEquals(emptyList(), awaitItem())
-            dao.mergeEarthquakes(listOf(earthquake(updated = 100, time = 200)))
-            assertEquals(listOf("test"), awaitItem().map { it.id })
-            dao.mergeEarthquakes(listOf(earthquake(updated = 200, time = 200, magnitude = 3.0)))
-            assertEquals(emptyList(), awaitItem())
-            dao.mergeEarthquakes(listOf(earthquake(updated = 300, time = 200, magnitude = 5.0)))
-            assertEquals(5.0, awaitItem().single().magnitude)
-            dao.mergeEarthquakes(listOf(earthquake(updated = 400, time = 300)))
-            assertEquals(emptyList(), awaitItem())
-            cancelAndIgnoreRemainingEvents()
-        }
+        dao.getEarthquakesFlow(
+                startTime = Instant.fromEpochMilliseconds(100),
+                endTime = Instant.fromEpochMilliseconds(300),
+                minimumMagnitude = 4.0,
+            )
+            .test {
+                assertEquals(emptyList(), awaitItem())
+                dao.mergeEarthquakes(
+                    listOf(
+                        earthquake(
+                            updated = Instant.fromEpochMilliseconds(100),
+                            time = Instant.fromEpochMilliseconds(200),
+                        )
+                    )
+                )
+                assertEquals(listOf("test"), awaitItem().map { it.id })
+                dao.mergeEarthquakes(
+                    listOf(
+                        earthquake(
+                            updated = Instant.fromEpochMilliseconds(200),
+                            time = Instant.fromEpochMilliseconds(200),
+                            magnitude = 3.0,
+                        )
+                    )
+                )
+                assertEquals(emptyList(), awaitItem())
+                dao.mergeEarthquakes(
+                    listOf(
+                        earthquake(
+                            updated = Instant.fromEpochMilliseconds(300),
+                            time = Instant.fromEpochMilliseconds(200),
+                            magnitude = 5.0,
+                        )
+                    )
+                )
+                assertEquals(5.0, awaitItem().single().magnitude)
+                dao.mergeEarthquakes(
+                    listOf(
+                        earthquake(
+                            updated = Instant.fromEpochMilliseconds(400),
+                            time = Instant.fromEpochMilliseconds(300),
+                        )
+                    )
+                )
+                assertEquals(emptyList(), awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
     }
 
     @Test
@@ -159,7 +250,13 @@ class EarthquakeStorageTest {
             database
                 .earthquakeDao()
                 .mergeEarthquakes(
-                    listOf(earthquake(id = "new", updated = 200, aliases = ",new,old,"))
+                    listOf(
+                        earthquake(
+                            id = "new",
+                            updated = Instant.fromEpochMilliseconds(200),
+                            aliases = ",new,old,",
+                        )
+                    )
                 )
             assertEquals("new", awaitItem()!!.id)
             cancelAndIgnoreRemainingEvents()
@@ -169,9 +266,25 @@ class EarthquakeStorageTest {
     @Test
     fun mergesAssociatedIdsAndPreservesAliasesWhenPreferredIdChanges() = runTest {
         val dao = database.earthquakeDao()
-        dao.mergeEarthquake(earthquake(id = "old", updated = 100, aliases = ",old,old-alias,"))
-        dao.mergeEarthquakes(listOf(earthquake(id = "new", updated = 200, aliases = ",new,old,")))
-        dao.mergeEarthquakes(listOf(earthquake(id = "old", updated = 50)))
+        dao.mergeEarthquake(
+            earthquake(
+                id = "old",
+                updated = Instant.fromEpochMilliseconds(100),
+                aliases = ",old,old-alias,",
+            )
+        )
+        dao.mergeEarthquakes(
+            listOf(
+                earthquake(
+                    id = "new",
+                    updated = Instant.fromEpochMilliseconds(200),
+                    aliases = ",new,old,",
+                )
+            )
+        )
+        dao.mergeEarthquakes(
+            listOf(earthquake(id = "old", updated = Instant.fromEpochMilliseconds(50)))
+        )
         assertEquals(listOf("new"), dao.getEarthquakesFlow().first().map { it.id })
         for (id in listOf("old", "new", "old-alias")) {
             assertEquals("new", dao.getEarthquakeFlow(id).first()!!.id)
@@ -183,12 +296,18 @@ class EarthquakeStorageTest {
         val dao = database.earthquakeDao()
         dao.mergeEarthquakes(
             listOf(
-                earthquake(id = "first", updated = 100),
-                earthquake(id = "second", updated = 200),
+                earthquake(id = "first", updated = Instant.fromEpochMilliseconds(100)),
+                earthquake(id = "second", updated = Instant.fromEpochMilliseconds(200)),
             )
         )
         dao.mergeEarthquakes(
-            listOf(earthquake(id = "first", updated = 300, aliases = ",first,second,"))
+            listOf(
+                earthquake(
+                    id = "first",
+                    updated = Instant.fromEpochMilliseconds(300),
+                    aliases = ",first,second,",
+                )
+            )
         )
         assertEquals(1, dao.getEarthquakesFlow().first().size)
         assertEquals("first", dao.getEarthquakeFlow("second").first()!!.id)
@@ -200,11 +319,16 @@ class EarthquakeStorageTest {
         listOf(200L, 100L, 400L, 300L)
             .map { revision ->
                 async(Dispatchers.Default) {
-                    dao.mergeEarthquakes(listOf(earthquake(updated = revision)))
+                    dao.mergeEarthquakes(
+                        listOf(earthquake(updated = Instant.fromEpochMilliseconds(revision)))
+                    )
                 }
             }
             .awaitAll()
-        assertEquals(400L, dao.getEarthquakeFlow("test").first()!!.updated)
+        assertEquals(
+            Instant.fromEpochMilliseconds(400L),
+            dao.getEarthquakeFlow("test").first()!!.updated,
+        )
     }
 
     @Test
@@ -255,7 +379,7 @@ class EarthquakeStorageTest {
                     assertNull(awaitItem())
                     refresh(client)
                     val saved = awaitItem()!!
-                    assertTrue(saved.updatedMillis > 0)
+                    assertTrue(saved.updatedAt > Instant.fromEpochMilliseconds(0))
                     assertEquals(2, repository.getEarthquakesFlow().first().size)
                     unavailable = true
                     refresh(client, EarthquakeRefreshResult.NetworkError)
@@ -307,15 +431,19 @@ class EarthquakeStorageTest {
                     properties =
                         it.properties.copy(
                             ids = ",usc0001xgp,",
-                            time = 1299822384120,
-                            updated = 100,
+                            time = Instant.fromEpochMilliseconds(1299822384120),
+                            updated = Instant.fromEpochMilliseconds(100),
                         ),
                 )
             }
         val priorEvent =
             original.copy(
                 id = "ci38457511",
-                properties = original.properties.copy(ids = ",ci38457511,", time = 1562383193040),
+                properties =
+                    original.properties.copy(
+                        ids = ",ci38457511,",
+                        time = Instant.fromEpochMilliseconds(1562383193040),
+                    ),
             )
         val revised =
             original.copy(
@@ -323,7 +451,7 @@ class EarthquakeStorageTest {
                 properties =
                     original.properties.copy(
                         ids = ",usc0001xgp,official20110311054624120_30,usp000hvnu,",
-                        updated = 200,
+                        updated = Instant.fromEpochMilliseconds(200),
                         magnitude = 9.1,
                     ),
             )
@@ -361,7 +489,7 @@ class EarthquakeStorageTest {
                             properties =
                                 priorEvent.properties.copy(
                                     ids = ",new-event,",
-                                    time = priorEvent.properties.time + 1,
+                                    time = priorEvent.properties.time + 1.milliseconds,
                                 ),
                         )
                     offline = false
@@ -388,7 +516,7 @@ class EarthquakeStorageTest {
             original.copy(
                 properties =
                     original.properties.copy(
-                        updated = original.properties.updated + 100,
+                        updated = original.properties.updated + 100.milliseconds,
                         magnitude = 5.5,
                     )
             )
@@ -398,14 +526,17 @@ class EarthquakeStorageTest {
                 properties =
                     original.properties.copy(
                         ids = ",new-event,",
-                        time = original.properties.time + 1000,
+                        time = original.properties.time + 1000.milliseconds,
                     ),
             )
         var response = initial
         var networkRequests = 0
         try {
             database.close()
-            database = Room.databaseBuilder(context, MainDatabase::class.java, name).build()
+            database =
+                Room.databaseBuilder(context, MainDatabase::class.java, name)
+                    .addMigrations(EarthquakeTimestampMigration)
+                    .build()
             client {
                 networkRequests++
                 respond(
@@ -435,7 +566,10 @@ class EarthquakeStorageTest {
                 }
             assertEquals(3, networkRequests)
             database.close()
-            database = Room.databaseBuilder(context, MainDatabase::class.java, name).build()
+            database =
+                Room.databaseBuilder(context, MainDatabase::class.java, name)
+                    .addMigrations(EarthquakeTimestampMigration)
+                    .build()
             client {
                 networkRequests++
                 throw IOException("offline after restart")
@@ -463,8 +597,8 @@ class EarthquakeStorageTest {
 
     private fun earthquake(
         id: String = "test",
-        updated: Long = 100,
-        time: Long = 100,
+        updated: Instant = Instant.fromEpochMilliseconds(100),
+        time: Instant = Instant.fromEpochMilliseconds(100),
         magnitude: Double? = 4.2,
         aliases: String = ",$id,",
     ): EarthquakeDatabaseModel {

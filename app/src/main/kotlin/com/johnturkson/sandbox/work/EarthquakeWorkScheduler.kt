@@ -5,9 +5,12 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.await
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlin.time.toJavaDuration
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.filterNotNull
@@ -40,8 +43,11 @@ class EarthquakeWorkScheduler @Inject constructor(private val manager: WorkManag
             MonitoringWork,
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<EarthquakeMonitoringWorker>()
-                .addTag("requested:${System.currentTimeMillis()}")
-                .setBackoffCriteria(androidx.work.BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+                .addTag("requested:${Clock.System.now()}")
+                .setBackoffCriteria(
+                    androidx.work.BackoffPolicy.EXPONENTIAL,
+                    30.seconds.toJavaDuration(),
+                )
                 .build(),
         )
     }
@@ -51,8 +57,13 @@ class EarthquakeWorkScheduler @Inject constructor(private val manager: WorkManag
     }
 
     private fun latest(items: List<WorkInfo>): WorkInfo? = items.maxByOrNull { info ->
-        info.tags.firstOrNull { it.startsWith("requested:") }?.substringAfter(':')?.toLongOrNull()
-            ?: 0L
+        info.tags
+            .firstOrNull { it.startsWith("requested:") }
+            ?.substringAfter(':')
+            ?.let { value ->
+                Instant.parseOrNull(value)
+                    ?: value.toLongOrNull()?.let(Instant::fromEpochMilliseconds)
+            } ?: Instant.DISTANT_PAST
     }
 
     companion object {

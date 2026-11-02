@@ -142,7 +142,7 @@ constructor(@ApplicationContext private val context: Context) {
                 .setAutoCancel(true)
                 .setOnlyAlertOnce(true)
                 .setCategory(Notification.CATEGORY_EVENT)
-                .setWhen(item.time)
+                .setWhen(item.time.toEpochMilliseconds())
                 .build()
         return post(item.id, AlertId, notification)
     }

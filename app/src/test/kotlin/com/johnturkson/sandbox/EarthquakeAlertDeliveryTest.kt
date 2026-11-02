@@ -3,6 +3,7 @@ package com.johnturkson.sandbox
 import com.johnturkson.sandbox.data.EarthquakeAlertDelivery
 import com.johnturkson.sandbox.data.EarthquakeSettings
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -20,13 +21,23 @@ class EarthquakeAlertDeliveryTest {
                 },
                 { delivered += it.eventId },
             )
-        val item = EarthquakeMonitoringFixtures.item(id = "one", time = 100_000, updated = 100_000)
-        dispatcher().deliver(listOf(item), EarthquakeSettings(alertsEnabled = true), 100_000)
+        val item =
+            EarthquakeMonitoringFixtures.item(
+                id = "one",
+                time = Instant.fromEpochMilliseconds(100_000),
+                updated = Instant.fromEpochMilliseconds(100_000),
+            )
+        dispatcher()
+            .deliver(
+                listOf(item),
+                EarthquakeSettings(alertsEnabled = true),
+                Instant.fromEpochMilliseconds(100_000),
+            )
         dispatcher()
             .deliver(
                 listOf(item, item.copy(id = "two")),
                 EarthquakeSettings(alertsEnabled = true),
-                110_000,
+                Instant.fromEpochMilliseconds(110_000),
             )
         assertEquals(listOf("one", "two"), posted)
     }
@@ -45,13 +56,30 @@ class EarthquakeAlertDeliveryTest {
                 },
                 { delivered += it.eventId },
             )
-        val item = EarthquakeMonitoringFixtures.item(id = "one", time = 100_000, updated = 100_000)
-        dispatcher.deliver(listOf(item), EarthquakeSettings(), 100_000)
+        val item =
+            EarthquakeMonitoringFixtures.item(
+                id = "one",
+                time = Instant.fromEpochMilliseconds(100_000),
+                updated = Instant.fromEpochMilliseconds(100_000),
+            )
+        dispatcher.deliver(
+            listOf(item),
+            EarthquakeSettings(),
+            Instant.fromEpochMilliseconds(100_000),
+        )
         assertEquals(0, attempts)
-        dispatcher.deliver(listOf(item), EarthquakeSettings(alertsEnabled = true), 100_000)
+        dispatcher.deliver(
+            listOf(item),
+            EarthquakeSettings(alertsEnabled = true),
+            Instant.fromEpochMilliseconds(100_000),
+        )
         assertEquals(emptySet(), delivered)
         allowed = true
-        dispatcher.deliver(listOf(item), EarthquakeSettings(alertsEnabled = true), 100_000)
+        dispatcher.deliver(
+            listOf(item),
+            EarthquakeSettings(alertsEnabled = true),
+            Instant.fromEpochMilliseconds(100_000),
+        )
         assertEquals(setOf("one"), delivered)
     }
 }

@@ -23,8 +23,8 @@ fun`, for functions returning a Flow. Follow these implemented APIs:
 
 ```kotlin
 fun getEarthquakesFlow(
-    startTime: Long = Long.MIN_VALUE,
-    endTime: Long = Long.MAX_VALUE,
+    startTime: Instant? = null,
+    endTime: Instant? = null,
     minimumMagnitude: Double? = null,
 ): Flow<List<EarthquakeDatabaseModel>>
 
@@ -108,10 +108,12 @@ obsolete table with an explicit nested `AutoMigrationSpec` annotated with
 obsolete metadata; preserve earthquake records, aliases, refresh metadata, and
 alert history. Establish other new migration patterns with the user when needed. Keep generated
 schema history under `app/schemas` in Git; never format or hand-edit it. The
-current version is 4, with additive migrations from version 1 to 2 and 2 to 3,
-then removal of `earthquake_details` from version 3 to 4. Keep historical schema
-exports. A read-method rename does not change the schema or require another
-database version.
+current version is 5, with additive migrations from version 1 to 2 and 2 to 3,
+then removal of `earthquake_details` from version 3 to 4 and conversion of numeric
+timestamp columns to ISO-8601 text from 4 to 5. Register the explicit
+`EarthquakeTimestampMigration` with `addMigrations` on disk-backed builders.
+Keep historical schema exports. A read-method rename does not change the schema
+or require another database version.
 
 Extend [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
 for behavior using real Room and Turbine on Android. Keep collectors active
@@ -133,3 +135,7 @@ provides observable reads and explicit writes. Advance refresh metadata in the
 same database transaction as the event merge. `getDeliveredAlertsFlow` joins the
 retained USGS alias table to deduplicate alerts across preferred-ID changes. The
 monitoring history has no cascading link to preferred earthquake rows.
+
+Follow the [date and time conventions](date-time.md) for `Instant` entity fields
+and query parameters, automatic Room converters, and the fixed UTC format required
+for chronological text comparisons.

@@ -1,5 +1,7 @@
 package com.johnturkson.sandbox.data
 
+import kotlin.time.Instant
+
 class EarthquakeAlertDelivery(
     private val wasDelivered: suspend (String) -> Boolean,
     private val publish: (EarthquakeDatabaseModel) -> Boolean,
@@ -10,14 +12,14 @@ class EarthquakeAlertDelivery(
     suspend fun deliver(
         items: List<EarthquakeDatabaseModel>,
         settings: EarthquakeSettings,
-        nowMillis: Long,
+        now: Instant,
     ) {
         if (!settings.alertsEnabled) return
         items
-            .filter { policy.qualifies(it, settings.minimumMagnitude, nowMillis) }
+            .filter { policy.qualifies(it, settings.minimumMagnitude, now) }
             .forEach { item ->
                 if (!wasDelivered(item.id) && publish(item))
-                    recordDelivery(EarthquakeAlertDatabaseModel(item.id, nowMillis))
+                    recordDelivery(EarthquakeAlertDatabaseModel(item.id, now))
             }
     }
 }

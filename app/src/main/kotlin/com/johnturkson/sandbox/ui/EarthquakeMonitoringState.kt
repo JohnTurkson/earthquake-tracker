@@ -1,12 +1,13 @@
 package com.johnturkson.sandbox.ui
 
 import androidx.compose.runtime.Immutable
+import kotlin.time.Instant
 
 @Immutable
 data class EarthquakeMonitoringState(
     val status: Status = Status.Stopped,
     val refresh: Refresh = Refresh.Idle,
-    val lastUpdatedMillis: Long? = null,
+    val lastUpdated: Instant? = null,
     val hasStoredData: Boolean = false,
 ) {
     enum class Status {
