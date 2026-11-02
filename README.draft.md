@@ -296,11 +296,6 @@ entries. Camera position, list scrolling, selection, and an open detail event
 stay with their existing owners. Explicit **More details** actions open Details;
 ordinary marker and row selections keep their selection behavior.
 
-Back closes Notifications first, then Details. From the remaining destinations,
-it minimizes an open expanded list, returns compact List to Map, or exits from
-the Map root. The current adaptation follows window size; separate book or
-tabletop experiences have not been added.
-
 ## Testing
 
 Tests use fixed earthquake fixtures and controlled network responses. Different
