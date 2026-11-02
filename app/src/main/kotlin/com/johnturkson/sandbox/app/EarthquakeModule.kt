@@ -8,12 +8,18 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.johnturkson.sandbox.annotations.DefaultDispatcher
 import com.johnturkson.sandbox.annotations.IoDispatcher
 import com.johnturkson.sandbox.annotations.MainDispatcher
+import com.johnturkson.sandbox.data.EarthquakeConnection
+import com.johnturkson.sandbox.data.EarthquakeConnectivity
 import com.johnturkson.sandbox.data.EarthquakeDao
+import com.johnturkson.sandbox.data.EarthquakeMonitoringDao
+import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
+import com.johnturkson.sandbox.data.EarthquakeRefresher
 import com.johnturkson.sandbox.data.MainDatabase
 import dagger.Module
 import dagger.Provides
@@ -38,6 +44,21 @@ import kotlinx.serialization.json.Json
 @Module
 @InstallIn(SingletonComponent::class)
 object EarthquakeModule {
+    @Provides
+    fun provideConnection(connection: EarthquakeConnectivity): EarthquakeConnection = connection
+
+    @Provides
+    fun provideRefresher(repository: EarthquakeRefreshRepository): EarthquakeRefresher = repository
+
+    @Provides
+    fun provideMonitoringDao(database: MainDatabase): EarthquakeMonitoringDao =
+        database.monitoringDao()
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
+        WorkManager.getInstance(context)
+
     @Provides
     @Singleton
     fun provideFusedLocationProviderClient(

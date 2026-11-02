@@ -28,15 +28,24 @@ The reusable
 `EarthquakeMap` component accepts immutable item values, selection callbacks,
 map properties/UI settings, padding, and UI-owned camera state.
 
-The screen uses a fixed USGS snapshot for UI development, rather than a live
-feed. Keep UI components
-independent of runtime API and storage access by passing marker presentation
-values through the screen's state contract.
+The screen observes a Room database populated from the USGS all-day GeoJSON feed.
+Manual refresh uses a one-time WorkManager request and preserves stored data on
+failure. Live monitoring uses a foreground WorkManager worker that checks every
+minute while active, pauses offline, and resumes on reconnection. Android can
+stop or delay work; the screen observes the actual worker state. Stopping a
+session cancels it without scheduling a replacement.
 
-The [earthquake data layer](docs/earthquake-data.md) supports explicit USGS
-refreshes and observable Room reads. It retains previously fetched earthquakes,
-merges newer revisions by ID and known aliases, and supports offline reads after
-reopening the app. The current fixture-based screen does not consume it yet.
+The separate bell opens the notification page in compact windows and a right
+pane in expanded windows. The monitoring card is the first scrolling list item;
+when the expanded list is minimized, it appears over the map. Large-earthquake
+alerts use a separate channel from quiet monitoring status. Alerts default to
+M6+ events within the past minute and are opt-in. Previously delivered event IDs
+are retained to avoid repeated alerts.
+
+Keep UI components independent of runtime API and storage access by passing
+presentation values through the screen's state contract.
+
+The [earthquake data layer](docs/earthquake-data.md) retains stored events, merges newer revisions by ID and known aliases, and supports offline reads after reopening the app. The explorer observes its unrestricted history queries.
 
 ## Testing
 

@@ -306,3 +306,58 @@ sufficient.
 
 After running checks, inspect `git status` for generated output and unrelated
 changes before staging. Follow the [source control guide](source-control.md).
+
+## Notification and refresh coverage
+
+Use `EarthquakeRefreshCoordinatorTest` for offline, fetch/decode/storage errors,
+coalescing, commit-before-alert order, cancellation, and notification failure
+isolation. `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
+`EarthquakePollingLoopTest` advances a coroutine test scheduler through minute
+boundaries, slow requests, offline pauses, reconnection, and cancellation;
+no real-minute sleeps are needed. Supply its monotonic clock from that scheduler.
+`EarthquakeAlertPolicyTest` covers magnitude and age boundaries and revisions;
+`EarthquakeAlertDeliveryTest` covers delivery deduplication and suppressed posts.
+
+On the Resizable API 37 emulator, `EarthquakeMonitoringStorageTest` checks durable data and
+alert history after reopening, transaction rollback, alias-aware alert deduplication, retained history after empty feeds, and the additive version-2-to-3 migration.
+`EarthquakeRefreshWorkerTest` builds real CoroutineWorkers with WorkManager's
+TestListenableWorkerBuilder and a controlled refresher to assert typed output.
+`EarthquakeNotificationsTest` queries the actual NotificationManager channels,
+rechecks registration, compares capabilities to Android's current runtime grant,
+and inspects posted notifications, distinct event PendingIntents, foreground
+channel, and Stop action. Run this class with notification permission granted and
+revoked externally to cover both platform states without killing instrumentation
+while it is running. Restore the original grant afterward and use an isolated
+test emulator for platform notification checks.
+
+`EarthquakeNotificationUiTest` exercises page capability changes, actions,
+threshold selection, disabled preview, refresh progress/failure, and the scrolling
+card across minimize/restore and presentation changes. The
+`EarthquakeNotificationsScreenshotTest` providers enumerate monitoring and page
+visual states, with narrow/large-font, dark, scrolled, expanded right-pane, and
+minimized fixtures. Review every provider-generated image as well as named
+previews. Host screenshots cover our controls, not native map pixels or Android's
+permission dialog and notification drawer.
+
+Also manually exercise a real foreground session, Stop, offline/reconnection,
+notification permission denial/settings return, channel settings, event taps,
+and compact/expanded resizing with selected events. Confirm that worker state,
+foreground notification, and the displayed snapshot agree. Do not treat virtual
+clock tests as evidence that Android will grant indefinite runtime or exact
+minute delivery.
+
+Run the device suite with internet access disabled under the shared reservation
+for deterministic startup/offline checks, then restore the recorded network
+settings. Production activity startup schedules a refresh; disabling internet
+prevents those startup checks from calling live USGS endpoints. API/repository
+tests use MockEngine. Restore online access for the separate manual Maps-tile and
+real monitoring checks, then complete the shared idle-home cleanup.
+
+`EarthquakeRefreshIntegrationTest` builds the actual refresh CoroutineWorker with
+WorkManager's test builder, the real refresh repository and Room database,
+Preferences DataStore, a MockEngine USGS feed, and a controlled
+`EarthquakeConnection`. It checks offline failure without a request, history
+retention, preferred-ID changes, alert deduplication/permission gating, and a
+network failure that preserves rows and refresh metadata. Run it with ordinary
+notification permission granted and denied. Platform notification assertions
+wait for the expected active tags because Android enqueues posts asynchronously.

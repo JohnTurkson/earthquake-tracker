@@ -3,11 +3,14 @@ package com.johnturkson.sandbox.ui
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,9 +18,12 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,10 +31,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -41,12 +49,16 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.johnturkson.sandbox.R
 import com.johnturkson.sandbox.data.EarthquakeLocation
+import com.johnturkson.sandbox.data.EarthquakeNotifications
 
 @Composable
 fun EarthquakeScreen(
     navKey: Destination.EarthquakeRoute,
     modifier: Modifier = Modifier,
+    notificationEventId: String? = null,
+    onNotificationEventConsumed: () -> Unit = {},
     viewModel: EarthquakeViewModel =
         hiltViewModel<EarthquakeViewModel, EarthquakeViewModel.Factory>(
             creationCallback = { factory -> factory.create(navKey) }
@@ -87,6 +99,62 @@ fun EarthquakeScreen(
         if (isLocationGranted) viewModel.startLocationUpdates()
         onStopOrDispose { viewModel.stopLocationUpdates() }
     }
+    var notificationRationale by rememberSaveable { mutableStateOf(false) }
+    var shouldExplainNotifications by remember { mutableStateOf(false) }
+    fun updateNotificationPermission() {
+        viewModel.refreshNotificationCapabilities()
+        shouldExplainNotifications =
+            Build.VERSION.SDK_INT >= 33 &&
+                activity != null &&
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                )
+    }
+    val notificationLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+            updateNotificationPermission()
+        }
+    LifecycleResumeEffect(Unit) {
+        updateNotificationPermission()
+        onPauseOrDispose {}
+    }
+    val notificationState = viewModel.notifications
+    val notificationSettingsRequired =
+        notificationState.permissionGranted && !notificationState.appEnabled ||
+            notificationState.hasRequestedPermission && !shouldExplainNotifications
+    fun launchNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            viewModel.recordNotificationPermissionRequest()
+            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+    fun enableNotifications() {
+        when {
+            notificationSettingsRequired || Build.VERSION.SDK_INT < 33 ->
+                context.startActivity(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                )
+            shouldExplainNotifications -> notificationRationale = true
+            else -> launchNotificationPermission()
+        }
+    }
+    BackHandler(viewModel.notificationsVisible) { viewModel.showNotifications(false) }
+    LaunchedEffect(notificationEventId) {
+        if (notificationEventId != null) {
+            viewModel.openNotificationEvent(notificationEventId)
+            onNotificationEventConsumed()
+        }
+    }
+    val snackbarHost = remember { SnackbarHostState() }
+    val unavailableMessage = stringResource(R.string.event_unavailable)
+    LaunchedEffect(viewModel.unavailableNotificationEvent) {
+        if (viewModel.unavailableNotificationEvent) {
+            snackbarHost.showSnackbar(unavailableMessage)
+            viewModel.dismissUnavailableEvent()
+        }
+    }
     val requiresSettings = hasRequestedLocation && !shouldShowRationale
     EarthquakeScreen(
         state = viewModel,
@@ -94,6 +162,41 @@ fun EarthquakeScreen(
         onMapClick = viewModel::clearMapSelection,
         onViewSelected = viewModel::selectView,
         onListPanelVisibilityChanged = viewModel::updateListPanelVisibility,
+        onRefresh = viewModel::refresh,
+        onNotificationsClick = { viewModel.showNotifications(true) },
+        onNotificationsClose = { viewModel.showNotifications(false) },
+        onMapFocusHandled = viewModel::consumeMapFocus,
+        notificationContent = { pageModifier ->
+            EarthquakeNotificationPage(
+                state = notificationState.copy(requiresSettings = notificationSettingsRequired),
+                monitoring = viewModel.monitoring,
+                onClose = { viewModel.showNotifications(false) },
+                onEnableNotifications = ::enableNotifications,
+                onAlertsEnabled = { enabled ->
+                    viewModel.setAlertsEnabled(enabled)
+                    if (
+                        enabled &&
+                            (!notificationState.permissionGranted || !notificationState.appEnabled)
+                    )
+                        enableNotifications()
+                },
+                onMagnitudeSelected = viewModel::setMinimumMagnitude,
+                onMonitoringEnabled = viewModel::setMonitoring,
+                onChannelSettings = { alerts ->
+                    context.startActivity(
+                        Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            .putExtra(
+                                Settings.EXTRA_CHANNEL_ID,
+                                if (alerts) EarthquakeNotifications.AlertsChannel
+                                else EarthquakeNotifications.MonitoringChannel,
+                            )
+                    )
+                },
+                onPreviewAlert = viewModel::previewNotification,
+                modifier = pageModifier,
+            )
+        },
         modifier = modifier,
         isLocationGranted = isLocationGranted,
         requiresLocationSettings = requiresSettings,
@@ -118,6 +221,22 @@ fun EarthquakeScreen(
             }
         },
     )
+    Box(Modifier.fillMaxSize()) {
+        SnackbarHost(
+            snackbarHost,
+            Modifier.align(Alignment.BottomCenter)
+                .padding(WindowInsets.safeDrawing.asPaddingValues()),
+        )
+    }
+    if (notificationRationale) {
+        EarthquakeNotificationRationale(
+            onContinue = {
+                notificationRationale = false
+                launchNotificationPermission()
+            },
+            onDismiss = { notificationRationale = false },
+        )
+    }
     if (showLocationRationale && !isLocationGranted) {
         EarthquakeLocationRationale(
             onContinue = {
@@ -146,6 +265,24 @@ fun EarthquakeScreen(
     onLocationClick: () -> Unit = {},
     isLocatingUser: Boolean = false,
     onUserLocated: () -> Unit = {},
+    onRefresh: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onNotificationsClose: () -> Unit = {},
+    onMapFocusHandled: () -> Unit = {},
+    notificationContent: @Composable (Modifier) -> Unit = { pageModifier ->
+        EarthquakeNotificationPage(
+            state.notifications,
+            state.monitoring,
+            onNotificationsClose,
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            pageModifier,
+        )
+    },
 ) {
     val cameraPositionState = rememberCameraPositionState {
         val location = EarthquakeLocation.Default
@@ -177,17 +314,30 @@ fun EarthquakeScreen(
             onUserLocated()
         }
     }
+    val requestedFocus = state.mapItems.find { it.id == state.requestedMapFocusId }
+    LaunchedEffect(requestedFocus) {
+        if (requestedFocus != null) {
+            cameraPositionState.position =
+                CameraPosition.fromLatLngZoom(
+                    LatLng(requestedFocus.latitude, requestedFocus.longitude),
+                    maxOf(5f, cameraPositionState.position.zoom),
+                )
+            hasInitializedCamera = true
+            onMapFocusHandled()
+        }
+    }
     val listState = rememberLazyListState()
     val safePadding = WindowInsets.safeDrawing.asPaddingValues()
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
+    var monitoringCardHeight by remember { mutableStateOf(0.dp) }
     var selectedCardHeight by remember { mutableStateOf(0.dp) }
     val selectedItem = state.mapItems.find { it.id == state.selectedMapItemId }
 
     BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
-        val showListPanel = expanded && state.isListPanelVisible
-        if (expanded || state.selectedView == EarthquakeView.Map) {
+        val showListPanel = expanded && state.isListPanelVisible && !state.notificationsVisible
+        if (expanded || state.selectedView == EarthquakeView.Map && !state.notificationsVisible) {
             EarthquakeMap(
                 items = state.mapItems,
                 onItemClick = onMapItemClick,
@@ -202,9 +352,17 @@ fun EarthquakeScreen(
                         start =
                             safePadding.calculateStartPadding(layoutDirection) +
                                 if (showListPanel) earthquakeListPaneWidth + 32.dp else 0.dp,
-                        end = safePadding.calculateEndPadding(layoutDirection),
+                        end =
+                            safePadding.calculateEndPadding(layoutDirection) +
+                                if (expanded && state.notificationsVisible)
+                                    earthquakeListPaneWidth + 32.dp
+                                else 0.dp,
                         top =
-                            safePadding.calculateTopPadding() + if (showListPanel) 16.dp else 84.dp,
+                            safePadding.calculateTopPadding() +
+                                if (showListPanel) 16.dp
+                                else
+                                    (if (!expanded && !isLocationGranted) 160.dp else 100.dp) +
+                                        monitoringCardHeight,
                         bottom =
                             safePadding.calculateBottomPadding() +
                                 if (showListPanel) 16.dp
@@ -237,6 +395,13 @@ fun EarthquakeScreen(
             showLocationButton = !isLocationGranted,
             requiresLocationSettings = requiresLocationSettings,
             onLocationClick = onLocationClick,
+            monitoring = state.monitoring,
+            onRefresh = onRefresh,
+            notificationsVisible = state.notificationsVisible,
+            onNotificationsClick = onNotificationsClick,
+            onNotificationsClose = onNotificationsClose,
+            notificationContent = notificationContent,
+            onMonitoringCardSizeChanged = { monitoringCardHeight = with(density) { it.toDp() } },
         )
     }
 }

@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
 
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
     implementation(libs.hilt.android)
 
     implementation(libs.maps.compose)
@@ -100,6 +102,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
 
+    androidTestImplementation(libs.androidx.work.testing)
+    androidTestImplementation(platform(libs.kotlinx.coroutines.bom))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -112,6 +116,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.hilt.android.compiler)
     kspAndroidTest(libs.hilt.android.compiler)
     ksp(libs.room.compiler)

@@ -8,16 +8,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.serialization.saved
 import androidx.lifecycle.viewModelScope
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
+import androidx.work.WorkInfo
+import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeLocation
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
+import com.johnturkson.sandbox.data.EarthquakeNotifications
+import com.johnturkson.sandbox.data.EarthquakeRefreshCoordinator
+import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
+import com.johnturkson.sandbox.data.EarthquakeRepository
+import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.ui.EarthquakeViewModel.Factory
+import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
+import java.util.Locale
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -29,7 +39,15 @@ constructor(
     private val savedStateHandle: SavedStateHandle,
     private val locationRepository: EarthquakeLocationRepository,
     private val locationProvider: EarthquakeLocationProvider,
+    private val repository: EarthquakeRepository,
+    private val refreshRepository: EarthquakeRefreshRepository,
+    private val settingsRepository: EarthquakeSettingsRepository,
+    private val notificationManager: EarthquakeNotifications,
+    private val workScheduler: EarthquakeWorkScheduler,
+    private val connectivity: EarthquakeConnection,
 ) : ViewModel(), EarthquakeState {
+    private var settingsLoaded = false
+    private var capabilitiesLoaded = false
     private var locationUpdates: Job? = null
     override var initialMapLocation: EarthquakeLocation? by mutableStateOf(null)
         private set
@@ -37,14 +55,28 @@ constructor(
     override var userLocation: EarthquakeLocation? by mutableStateOf(null)
         private set
 
-    init {
-        viewModelScope.launch {
-            initialMapLocation =
-                locationRepository.lastKnownLocation.first() ?: EarthquakeLocation.Default
-        }
-    }
+    override var monitoring by
+        mutableStateOf(EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Checking))
+        private set
 
-    override val mapItems: List<EarthquakeMapItem> = EarthquakeMapFixtures.items
+    override var notifications by mutableStateOf(EarthquakeNotificationState())
+        private set
+
+    override var requestedMapFocusId: String? by mutableStateOf(null)
+        private set
+
+    override var unavailableNotificationEvent by mutableStateOf(false)
+        private set
+
+    override var notificationsVisible: Boolean by
+        savedStateHandle
+            .saved(serializer = MutableStateSerializer<Boolean>()) { mutableStateOf(false) }
+            .getValue(this, this::notificationsVisible)
+        private set
+
+    override var mapItems: List<EarthquakeMapItem> by mutableStateOf(emptyList())
+        private set
+
     override var selectedMapItemId: String? by
         savedStateHandle
             .saved(serializer = MutableStateSerializer<String?>()) { mutableStateOf(null) }
@@ -64,6 +96,98 @@ constructor(
             .saved(serializer = MutableStateSerializer<Boolean>()) { mutableStateOf(true) }
             .getValue(this, this::isListPanelVisible)
         private set
+
+    init {
+        viewModelScope.launch {
+            initialMapLocation =
+                locationRepository.lastKnownLocation.first() ?: EarthquakeLocation.Default
+        }
+        viewModelScope.launch {
+            repository.getEarthquakesFlow().collect { items ->
+                val selected = selectedMapItemId
+                if (selected != null && items.none { it.id == selected }) {
+                    repository.getEarthquakeFlow(selected).first()?.let {
+                        selectedMapItemId = it.id
+                    }
+                }
+                mapItems = items.map { item ->
+                    val magnitude =
+                        item.magnitude?.let { String.format(Locale.ROOT, "%.1f", it) } ?: "?"
+                    EarthquakeMapItem(
+                        item.id,
+                        item.latitude,
+                        item.longitude,
+                        item.title ?: "M $magnitude – ${item.place ?: "Unknown location"}",
+                        eventTimeMillis = item.time,
+                    )
+                }
+                monitoring = monitoring.copy(hasStoredData = items.isNotEmpty())
+            }
+        }
+        viewModelScope.launch {
+            refreshRepository.getRefreshFlow().collect { metadata ->
+                monitoring = monitoring.copy(lastUpdatedMillis = metadata?.updatedMillis)
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.settings.collect { settings ->
+                settingsLoaded = true
+                notifications =
+                    notifications.copy(
+                        isChecking = !capabilitiesLoaded,
+                        alertsEnabled = settings.alertsEnabled,
+                        minimumMagnitude = settings.minimumMagnitude,
+                        hasRequestedPermission = settings.hasRequestedNotifications,
+                    )
+            }
+        }
+        viewModelScope.launch {
+            combine(
+                    workScheduler.monitoringWork,
+                    workScheduler.refreshWork,
+                    refreshRepository.refreshStatus,
+                    connectivity.online,
+                ) { monitor, refresh, status, online ->
+                    val phase =
+                        when (monitor?.state) {
+                            WorkInfo.State.ENQUEUED,
+                            WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Phase.Starting
+                            WorkInfo.State.RUNNING ->
+                                if (online) EarthquakeMonitoringState.Phase.Running
+                                else EarthquakeMonitoringState.Phase.Offline
+                            WorkInfo.State.FAILED -> EarthquakeMonitoringState.Phase.Failed
+                            else -> EarthquakeMonitoringState.Phase.Stopped
+                        }
+                    val latestResult =
+                        if (status != EarthquakeRefreshCoordinator.Result.Idle) status.name
+                        else
+                            refresh?.outputData?.getString(EarthquakeWorkScheduler.ResultKey)
+                                ?: monitor?.progress?.getString(EarthquakeWorkScheduler.ResultKey)
+                    val refreshing =
+                        when {
+                            status == EarthquakeRefreshCoordinator.Result.Running ||
+                                refresh?.state == WorkInfo.State.RUNNING ->
+                                EarthquakeMonitoringState.Refresh.Running
+                            refresh?.state == WorkInfo.State.ENQUEUED ||
+                                refresh?.state == WorkInfo.State.BLOCKED ->
+                                EarthquakeMonitoringState.Refresh.Queued
+                            else ->
+                                when (latestResult) {
+                                    "Offline" -> EarthquakeMonitoringState.Refresh.Offline
+                                    "NetworkError" -> EarthquakeMonitoringState.Refresh.NetworkError
+                                    "DataError" -> EarthquakeMonitoringState.Refresh.DataError
+                                    "StorageError" -> EarthquakeMonitoringState.Refresh.StorageError
+                                    else -> EarthquakeMonitoringState.Refresh.Idle
+                                }
+                        }
+                    phase to refreshing
+                }
+                .collect { (phase, refresh) ->
+                    monitoring = monitoring.copy(phase = phase, refresh = refresh)
+                }
+        }
+        workScheduler.refresh()
+    }
 
     fun updateListPanelVisibility(visible: Boolean) {
         isListPanelVisible = visible
@@ -98,6 +222,78 @@ constructor(
     fun stopLocationUpdates() {
         locationUpdates?.cancel()
         locationUpdates = null
+    }
+
+    fun refresh() = workScheduler.refresh()
+
+    fun setMonitoring(enabled: Boolean) {
+        if (enabled) workScheduler.startMonitoring() else workScheduler.stopMonitoring()
+    }
+
+    fun showNotifications(visible: Boolean) {
+        notificationsVisible = visible
+    }
+
+    fun refreshNotificationCapabilities() {
+        val capabilities = notificationManager.capabilities()
+        capabilitiesLoaded = true
+        notifications =
+            notifications.copy(
+                isChecking = !settingsLoaded,
+                permissionGranted = capabilities.permissionGranted,
+                appEnabled = capabilities.appEnabled,
+                monitoringChannelEnabled = capabilities.monitoringEnabled,
+                alertsChannelEnabled = capabilities.alertsEnabled,
+            )
+    }
+
+    fun setAlertsEnabled(enabled: Boolean) = saveSettings {
+        settingsRepository.setAlertsEnabled(enabled)
+    }
+
+    fun setMinimumMagnitude(magnitude: Int) = saveSettings {
+        settingsRepository.setMagnitude(magnitude)
+    }
+
+    fun recordNotificationPermissionRequest() = saveSettings {
+        settingsRepository.recordPermissionRequest()
+    }
+
+    fun previewNotification() {
+        if (notifications.canPostAlerts) notificationManager.previewAlert()
+        refreshNotificationCapabilities()
+    }
+
+    private fun saveSettings(update: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                update()
+                notifications = notifications.copy(settingsError = false)
+            } catch (_: IOException) {
+                notifications = notifications.copy(settingsError = true)
+            }
+        }
+    }
+
+    fun openNotificationEvent(eventId: String) {
+        viewModelScope.launch {
+            val item = repository.getEarthquakeFlow(eventId).first()
+            if (item != null) {
+                selectedMapItemId = item.id
+                requestedMapFocusId = item.id
+                selectedView = EarthquakeView.Map
+                notificationsVisible = false
+                unavailableNotificationEvent = false
+            } else unavailableNotificationEvent = true
+        }
+    }
+
+    fun consumeMapFocus() {
+        requestedMapFocusId = null
+    }
+
+    fun dismissUnavailableEvent() {
+        unavailableNotificationEvent = false
     }
 
     @AssistedFactory

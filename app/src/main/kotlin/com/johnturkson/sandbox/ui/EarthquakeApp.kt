@@ -15,7 +15,11 @@ import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.Destination.EarthquakeRoute
 
 @Composable
-fun EarthquakeApp(modifier: Modifier = Modifier) {
+fun EarthquakeApp(
+    modifier: Modifier = Modifier,
+    notificationEventId: String? = null,
+    onNotificationEventConsumed: () -> Unit = {},
+) {
     EarthquakeTheme {
         val backStack = rememberNavBackStack(EarthquakeRoute)
         NavDisplay(
@@ -47,7 +51,13 @@ fun EarthquakeApp(modifier: Modifier = Modifier) {
             },
             entryProvider =
                 entryProvider {
-                    entry<EarthquakeRoute> { navKey -> EarthquakeScreen(navKey = navKey) }
+                    entry<EarthquakeRoute> { navKey ->
+                        EarthquakeScreen(
+                            navKey = navKey,
+                            notificationEventId = notificationEventId,
+                            onNotificationEventConsumed = onNotificationEventConsumed,
+                        )
+                    }
                 },
         )
     }

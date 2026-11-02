@@ -9,11 +9,10 @@ Name app and feature types with the `Earthquake` prefix, as in `EarthquakeApp`,
 name for a type's Kotlin file. Keep technical names such as `MainDispatcher` tied
 to the platform concept they describe.
 
-The screen currently uses fixed earthquake fixtures. The earthquake network and
-Room layers are implemented separately from the UI. Product requirements in
-[the README](../README.md) describe the intended app; live screen refresh and
-offline presentation still need to use that data layer. The last known user
-location is persisted separately in Preferences DataStore.
+The explorer observes stored earthquakes through `EarthquakeRepository`.
+WorkManager updates the same Room database through `EarthquakeRefreshRepository`.
+Fixed fixtures remain for previews and tests. Location and notification preferences
+use the shared Preferences DataStore.
 
 ## UI and state ownership
 
@@ -138,7 +137,7 @@ contract.
 `EarthquakePreviewState` is a data class implementing the read-only `EarthquakeState`
 contract. It accepts item and selection fixtures, so tests can render a populated
 screen and update selection with `copy` without Hilt, storage, or API calls.
-The ViewModel supplies the same fixed items and owns the restorable selection.
+The ViewModel maps observable database rows to presentation values and owns the restorable selection.
 
 Every app UI component must have screenshot tests for all of its supported visual
 states. Add or update coverage with each UI change. Enumerate those states from
@@ -362,3 +361,88 @@ Use data-preserving migrations for later schema changes.
 
 See [earthquake data](earthquake-data.md) for the repository API and refresh
 limits. WorkManager scheduling and screen integration should reuse this layer.
+
+## Refresh, monitoring, and notifications
+
+`EarthquakeRefreshCoordinator` serializes refreshes and coalesces overlapping
+manual and monitoring requests. It checks validated connectivity inside the
+operation, fetches before merging stored earthquakes, and publishes alerts after commit.
+Expose typed offline, network, decode, and storage results. Cancellation must
+propagate and release the coordinator. Notification failures must not roll back
+saved earthquake data.
+
+`EarthquakeWorkScheduler` uses unique one-time work with `KEEP` for both manual
+refresh and a monitoring session. Neither request has a network constraint:
+manual offline work must fail instead of waiting, and a monitoring session must
+retain its foreground status while paused offline. Workers receive dependencies
+through `@HiltWorker` and the application's injected `HiltWorkerFactory`.
+`EarthquakeApplication` supplies WorkManager's on-demand configuration; remove
+only WorkManager's initializer from AndroidX Startup.
+
+`EarthquakeMonitoringWorker` calls `setForeground` with the `dataSync` service
+type. `EarthquakePollingLoop` owns cancellable minute pacing, skips catch-up
+bursts after slow requests, and wakes on reconnection. WorkManager owns
+execution and rescheduling. Do not add UI timers, restart work on recomposition,
+or re-enqueue after explicit cancellation. Observe `WorkInfo` to distinguish
+queued, running, stopped, and failed work. Android quota and service limits can
+interrupt the requested cadence; there is no app-imposed session cutoff.
+
+`EarthquakeNotifications` registers stable, idempotent channels: low-importance
+`earthquake_monitoring` for quiet foreground status, and high-importance
+`earthquake_alerts` for opt-in large-earthquake alerts. Updating a channel must
+preserve Android's user-controlled settings. Refresh notification capabilities
+on screen resume and recheck before every post. Foreground work still supplies
+its required notification when POST_NOTIFICATIONS is denied; ordinary alerts
+are suppressed. Request that permission only from a user action in the screen
+entry, with rationale and settings paths. Persist only the request attempt and
+user preferences, never an OS permission grant.
+
+`EarthquakeAlertPolicy` uses event time within the past 60 seconds and the chosen
+minimum magnitude. A magnitude revision may qualify while the event is fresh;
+`EarthquakeAlertDelivery` records successful delivery by USGS event ID in Room.
+Stable notification tags update the same event rather than creating duplicates.
+The database commit and Android notification post are separate operations;
+there is no exactly-once transaction spanning both. Late USGS reports and older
+events found after reconnection are deliberately excluded by the one-minute
+freshness policy. Notification intents have distinct event URIs and open the
+shared selection; an event no longer in the database shows an availability message.
+
+`EarthquakeMonitoringState` and `EarthquakeNotificationState` are immutable
+rendering values exposed by `EarthquakeState`. The ViewModel maps worker,
+repository, connectivity, and preference observations into those values.
+`EarthquakeMonitoringCard` is the first keyed item of `EarthquakeList`'s existing
+LazyColumn, so it scrolls away with the heading and rows. Keep the existing
+hoisted list state when switching layouts or minimizing. Expanded list headers
+remain fixed. Minimized maps show the same card as an overlay. A refresh keeps
+the old data and timestamp until storage succeeds.
+
+The bell is independent of the Map/List switcher and has no badge. Notification
+page visibility is restorable explorer state, like the expanded list panel.
+Closing it restores the existing compact view and expanded panel preference;
+opening it in expanded windows uses the right pane and temporarily hides the
+list. Keep the camera, list state, location flow, and selection owners above
+these layout branches. List rows retain selected semantics and background
+highlight without repeating the selection label used by the map's detail card.
+
+`EarthquakeRefreshRepository` reuses the shared `EarthquakeApi` and network-to-Room
+mapping, then calls the established `EarthquakeDao.mergeEarthquakes` inside a
+`MainDatabase.withTransaction` with refresh metadata. It never clears event rows.
+`EarthquakeViewModel` reads `EarthquakeRepository.getEarthquakesFlow` without time
+filters and observes refresh metadata separately. A failed merge rolls back both
+event changes and the last-successful-refresh timestamp.
+
+`MainDatabase` version 3 adds only `earthquake_refresh` and `earthquake_alerts`,
+using the existing additive auto-migration convention. `EarthquakeMonitoringDao`
+keeps all reads observable with names ending in `Flow`. Delivered-alert queries
+join retained aliases, so a preferred-ID change does not repeat a notification.
+Notification taps and existing selection resolve through the same repository's
+alias-aware single-event query. Notification history has no cascading foreign key
+to preferred earthquake rows.
+
+`EarthquakeConnection` describes current connectivity and its observable changes;
+`EarthquakeConnectivity` is the Android implementation. Hilt supplies the same
+validated-network source to workers and the ViewModel. Controlled implementations
+allow worker/API/database integration tests to use MockEngine while the device
+is offline. The refresh repository bounds its own summary request with a
+30-second coroutine timeout, preserving the shared client's other endpoint
+behavior.

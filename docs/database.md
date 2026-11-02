@@ -107,7 +107,7 @@ Increment the database version for schema changes and preserve existing data.
 Use additive auto-migrations where supported by the actual schema change;
 establish new migration patterns with the user when needed. Keep generated
 schema history under `app/schemas` in Git; never format or hand-edit it. The
-current version is 2 with an additive migration from version 1. A read-method
+current version is 3 with additive migrations from version 1 to 2 and 2 to 3. A read-method
 rename does not change the schema or require another database version.
 
 Extend [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
@@ -122,4 +122,11 @@ for schema upgrades and data retention.
 Update this guide with agreed conventions and implementation examples. Run and
 report the applicable checks from the testing guide, with an explicitly selected
 device for storage tests. Do not claim UI or screenshot verification from DAO
-tests; no earthquake UI is connected yet.
+tests; storage tests alone do not verify the connected explorer UI.
+
+`EarthquakeRefreshDatabaseModel` and `EarthquakeAlertDatabaseModel` add refresh
+metadata and delivered-notification history in version 3. `EarthquakeMonitoringDao`
+provides observable reads and explicit writes. Advance refresh metadata in the
+same database transaction as the event merge. `getDeliveredAlertsFlow` joins the
+retained USGS alias table to deduplicate alerts across preferred-ID changes. The
+monitoring history has no cascading link to preferred earthquake rows.

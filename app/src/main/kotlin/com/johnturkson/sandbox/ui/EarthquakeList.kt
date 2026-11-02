@@ -44,6 +44,8 @@ fun EarthquakeList(
     listState: LazyListState = rememberLazyListState(),
     isSupportingPane: Boolean = false,
     showTitle: Boolean = true,
+    monitoring: EarthquakeMonitoringState? = null,
+    onRefresh: () -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier,
@@ -57,6 +59,15 @@ fun EarthquakeList(
             ),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        if (monitoring != null) {
+            item(key = "monitoring") {
+                EarthquakeMonitoringCard(
+                    monitoring,
+                    onRefresh,
+                    Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                )
+            }
+        }
         item(key = "heading") {
             Column(
                 Modifier.padding(horizontal = 12.dp, vertical = if (showTitle) 12.dp else 0.dp)
@@ -150,12 +161,6 @@ fun EarthquakeListRow(
                         it,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                if (isSelected) {
-                    Text(
-                        stringResource(R.string.selected_earthquake),
-                        style = MaterialTheme.typography.labelMedium,
                     )
                 }
             }

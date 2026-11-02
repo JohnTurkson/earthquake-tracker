@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
@@ -17,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,20 +53,36 @@ fun EarthquakeExplorerControls(
     onLocationClick: () -> Unit = {},
     isListPanelVisible: Boolean = true,
     onListPanelVisibilityChanged: (Boolean) -> Unit = {},
+    monitoring: EarthquakeMonitoringState? = null,
+    onRefresh: () -> Unit = {},
+    notificationsVisible: Boolean = false,
+    onNotificationsClick: () -> Unit = {},
+    onNotificationsClose: () -> Unit = {},
+    notificationContent: @Composable (Modifier) -> Unit = {},
+    onMonitoringCardSizeChanged: (Int) -> Unit = {},
 ) {
     val selectedItem = items.find { it.id == selectedItemId }
-    val showListPanel = expanded && isListPanelVisible
-    val showMapCard = if (expanded) !isListPanelVisible else selectedView == EarthquakeView.Map
+    val showListPanel = expanded && isListPanelVisible && !notificationsVisible
+    val showMapCard =
+        if (expanded) !showListPanel
+        else selectedView == EarthquakeView.Map && !notificationsVisible
 
     Box(modifier.fillMaxSize()) {
-        if (showLocationButton && (expanded || selectedView == EarthquakeView.Map)) {
+        if (
+            showLocationButton &&
+                (expanded || selectedView == EarthquakeView.Map) &&
+                !notificationsVisible
+        ) {
             EarthquakeLocationButton(
                 onClick = onLocationClick,
                 requiresSettings = requiresLocationSettings,
                 modifier =
                     Modifier.align(Alignment.TopEnd)
                         .padding(contentPadding)
-                        .padding(top = if (expanded) 16.dp else 84.dp, end = 16.dp),
+                        .padding(
+                            top = if (expanded) 16.dp else 84.dp,
+                            end = if (expanded) 80.dp else 16.dp,
+                        ),
             )
         }
         if (showListPanel) {
@@ -105,10 +123,12 @@ fun EarthquakeExplorerControls(
                         listState = listState,
                         isSupportingPane = true,
                         showTitle = false,
+                        monitoring = monitoring,
+                        onRefresh = onRefresh,
                     )
                 }
             }
-        } else if (!expanded && selectedView == EarthquakeView.List) {
+        } else if (!expanded && selectedView == EarthquakeView.List && !notificationsVisible) {
             EarthquakeList(
                 items = items,
                 selectedItemId = selectedItemId,
@@ -119,6 +139,8 @@ fun EarthquakeExplorerControls(
                         .padding(top = 84.dp)
                         .fillMaxSize(),
                 listState = listState,
+                monitoring = monitoring,
+                onRefresh = onRefresh,
             )
         }
         if (showMapCard && selectedItem != null) {
@@ -128,24 +150,34 @@ fun EarthquakeExplorerControls(
                 modifier =
                     Modifier.align(Alignment.BottomCenter)
                         .padding(contentPadding)
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
+                        .padding(
+                            start = 16.dp,
+                            end =
+                                if (expanded && notificationsVisible)
+                                    earthquakeListPaneWidth + 32.dp
+                                else 16.dp,
+                            top = 16.dp,
+                            bottom = 16.dp,
+                        )
                         .widthIn(max = 480.dp)
                         .fillMaxWidth()
                         .onSizeChanged { onSelectionCardSizeChanged(it.height) },
             )
         }
-        if (!expanded) {
-            EarthquakeViewSwitcher(
-                selectedView = selectedView,
-                onViewSelected = onViewSelected,
-                modifier =
-                    Modifier.align(Alignment.TopCenter)
-                        .padding(contentPadding)
-                        .padding(top = 12.dp)
-                        .widthIn(max = 280.dp)
-                        .fillMaxWidth(),
-            )
-        } else if (!isListPanelVisible) {
+        if (!expanded && !notificationsVisible) {
+            Row(
+                Modifier.align(Alignment.TopCenter)
+                    .padding(contentPadding)
+                    .padding(top = 12.dp, start = 16.dp, end = 16.dp)
+                    .widthIn(max = 360.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                EarthquakeViewSwitcher(selectedView, onViewSelected, Modifier.weight(1f))
+                Spacer(Modifier.width(12.dp))
+                EarthquakeNotificationButton(onNotificationsClick)
+            }
+        } else if (expanded && !showListPanel) {
             Surface(
                 modifier =
                     Modifier.align(Alignment.TopStart).padding(contentPadding).padding(16.dp),
@@ -154,7 +186,10 @@ fun EarthquakeExplorerControls(
                 shadowElevation = 6.dp,
             ) {
                 TextButton(
-                    onClick = { onListPanelVisibilityChanged(true) },
+                    onClick = {
+                        onNotificationsClose()
+                        onListPanelVisibilityChanged(true)
+                    },
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
                 ) {
                     Icon(Icons.AutoMirrored.Outlined.List, contentDescription = null)
@@ -162,6 +197,65 @@ fun EarthquakeExplorerControls(
                     Text(stringResource(R.string.show_earthquake_list))
                 }
             }
+        }
+        if (expanded) {
+            EarthquakeNotificationButton(
+                onNotificationsClick,
+                Modifier.align(Alignment.TopEnd).padding(contentPadding).padding(16.dp),
+            )
+        }
+        if (
+            monitoring != null &&
+                !showListPanel &&
+                (expanded || selectedView == EarthquakeView.Map && !notificationsVisible)
+        ) {
+            EarthquakeMonitoringCard(
+                monitoring,
+                onRefresh,
+                Modifier.align(Alignment.TopCenter)
+                    .padding(contentPadding)
+                    .padding(
+                        start = 16.dp,
+                        end =
+                            if (expanded && notificationsVisible) earthquakeListPaneWidth + 32.dp
+                            else 16.dp,
+                        top = if (expanded) 84.dp else if (showLocationButton) 144.dp else 84.dp,
+                    )
+                    .widthIn(max = 560.dp)
+                    .fillMaxWidth()
+                    .onSizeChanged { onMonitoringCardSizeChanged(it.height) },
+            )
+        }
+        if (notificationsVisible) {
+            notificationContent(
+                Modifier.align(if (expanded) Alignment.CenterEnd else Alignment.Center)
+                    .padding(contentPadding)
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = if (expanded) 84.dp else 12.dp,
+                        bottom = 16.dp,
+                    )
+                    .then(
+                        if (expanded) Modifier.width(earthquakeListPaneWidth)
+                        else Modifier.fillMaxWidth()
+                    )
+                    .fillMaxHeight()
+            )
+        }
+    }
+}
+
+@Composable
+fun EarthquakeNotificationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        modifier,
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 6.dp,
+    ) {
+        IconButton(onClick, Modifier.size(52.dp)) {
+            Icon(Icons.Outlined.Notifications, stringResource(R.string.earthquake_alerts))
         }
     }
 }
