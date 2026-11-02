@@ -52,6 +52,9 @@ Google Maps Compose 9.0.1 is configured for this project. Follow the
 [build guide](docs/building.md) for prerequisites, Google Cloud billing and API key
 links, local key storage, and build and install commands.
 
+The Gradle wrapper automatically downloads the required JDK when needed; no
+separate JDK 21 installation is required.
+
 Store your key as `MAPS_API_KEY` in your machine's `~/.gradle/gradle.properties`.
 No custom debug signing is required.
 

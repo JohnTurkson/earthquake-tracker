@@ -3,12 +3,20 @@
 ## Prerequisites
 
 - Clone the repository, check out `main`, and open it in Android Studio.
-- Use JDK 21 for Gradle and Android Studio's Gradle JVM.
+- Use the included Gradle wrapper, which selects Gradle 9.6.1 and automatically
+  downloads the required JetBrains JDK 21 if it is not already available. No
+  separate JDK 21 installation is required.
 - Install Android SDK Platform 37 and the SDK tools requested during Gradle sync.
   Android Studio normally writes the SDK location to the ignored `local.properties`.
-- Use the included Gradle wrapper, which selects Gradle 9.6.1.
 - To run the app, use an Android 8.0 / API 26 or newer device or emulator. Maps
   requires Google Play services; select a Google APIs or Google Play emulator image.
+
+Android Studio includes a Java runtime that can start Gradle. For terminal builds,
+make an existing Java runtime available through `JAVA_HOME` or `java` on `PATH`;
+Android Studio's bundled runtime can be used. Gradle then selects or downloads the
+project's JDK independently of that runtime. The first build needs network access
+for downloads; downloaded JDKs are cached in `~/.gradle/jdks` (or
+`$GRADLE_USER_HOME/jdks` if customized).
 
 ## Get a Google Maps API key
 
@@ -101,8 +109,11 @@ Do not share unredacted logs containing keys.
 
 ## Troubleshooting
 
-- **Gradle or SDK errors:** verify JDK 21, SDK Platform 37, and the SDK location
-  in `local.properties`.
+- **Java startup or JDK download errors:** check that `JAVA_HOME` or `java` on
+  `PATH` points to a working Java runtime for terminal builds, and that network
+  access is available for Gradle's automatic JDK download.
+- **Android SDK errors:** verify SDK Platform 37 and the SDK location in
+  `local.properties`.
 - **Missing key:** builds still succeed with an empty placeholder, but a map
   cannot load until a valid key is provided. Building alone does not verify Maps
   authorization.
