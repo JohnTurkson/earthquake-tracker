@@ -36,6 +36,12 @@ Google's Secrets Gradle Plugin reads `MAPS_API_KEY` from your machine's
 For guided setup with Codex, use `$build-project` in this repository. The
 [project build skill](.agents/skills/build-project/SKILL.md) follows the same guide.
 
+Use the [Android CLI workflow](docs/android-cli.md) for Google's CLI installation
+on macOS, builds, emulator deployment, live UI hierarchy, screenshots and component
+images, taps and gestures, and device configuration. The
+[Google content review](docs/android-cli-review.md) records applicable agent
+capabilities and optional additions from Google's recent announcements.
+
 ## Contributing
 
 Follow the [formatting guidelines](docs/formatting.md) and

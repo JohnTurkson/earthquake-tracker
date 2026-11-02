@@ -86,6 +86,14 @@ are implemented.
 
 ## Report the results
 
+For exploratory device checks, use the [Android CLI workflow](android-cli.md) to
+inspect live hierarchy, perform selector-based actions, and visually review PNGs.
+Capture the resulting state after meaningful actions. Record the CLI version,
+device/API, scenario, observed result, and artifact paths. Restore temporary
+device configuration. These checks and preview renders supplement automated
+tests; they do not establish screenshot regression baselines or satisfy missing
+coverage by themselves.
+
 Report formatting, build, lint, unit tests, device tests, and manual checks
 separately, identifying what passed, failed, or was not run. Include the command
 or scenario, any relevant device/API level, and material limitations. For a

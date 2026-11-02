@@ -88,6 +88,11 @@ is declared.
 
 ## Build and run
 
+For Google's Android CLI installation and native build, install, and launch
+commands, follow the [Android CLI workflow](android-cli.md). It also covers
+emulator selection, UI inspection, component captures, and app interaction.
+The wrapper commands below remain the direct Gradle alternatives.
+
 From the repository root:
 
 ```sh

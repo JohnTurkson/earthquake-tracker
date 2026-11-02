@@ -52,3 +52,18 @@ requirements, including missing screenshot coverage for UI changes.
   writing tests, and reporting verification for a change.
 - Report formatting, build, lint, unit tests, device tests, and manual checks
   separately. State which checks passed, failed, or were not run, and why.
+
+# Android CLI
+
+Before building, deploying, inspecting UI, capturing component images, interacting
+with the app, or changing a development device's configuration, read and follow
+the [Android CLI workflow](docs/android-cli.md). Prefer Google's `android` CLI
+for supported operations, select the device explicitly, inspect live hierarchy
+before targeting controls, and verify the resulting UI. Follow the documented
+ADB fallbacks when the CLI lacks a needed operation. Keep artifacts out of Git,
+restore temporary device settings, and report unverified workflows accurately.
+
+Apply the [project-specific Google guidance](docs/android-cli-review.md#instructions-applicable-to-this-project-now)
+for current Android documentation, focused skills, preview prerequisites, and
+verification loops. Its optional workflows require a project decision before
+introducing new app, test, or external-service conventions.
