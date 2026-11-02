@@ -49,20 +49,29 @@ android emulator list
 adb devices -l
 ```
 
-Prefer an existing compatible device. If one is needed, use
-`android emulator create --list-profiles` and create a listed profile, such as
-`android emulator create medium_phone`. Prefer a standard phone profile for
-ordinary PNG capture; use Google APIs or Google Play images for Maps checks.
-Use Android Studio Device Manager when an exact hardware or system-image
-configuration is needed.
+Use an **API 37** emulator with the **Resizable** hardware profile for device
+tests, manual UI verification, and device screenshots. Reuse an existing AVD only
+after confirming both its hardware profile and system image. Do not default to
+Medium Phone or another fixed-size profile, even when one is already running.
+
+If no matching AVD exists, create one in Android Studio Device Manager using the
+**Resizable** hardware profile and an **API 37** system image. Use a Google APIs
+or Google Play image for Maps checks. The CLI's predefined phone, tablet, and
+desktop creation profiles do not replace the required Resizable profile.
+
+Check the AVD's hardware profile and system image in Device Manager or its
+`config.ini` (`hw.device.name=resizable` and an API 37 `image.sysdir.1`). An AVD's
+name alone does not establish its configuration. After starting it, confirm the
+running API level with `getprop` as shown below; it must report `37`.
 
 Start an AVD by its listed name, then select its actual connected serial.
 Replace the example name and serial below with those values:
 
 ```sh
-android emulator start medium_phone --headless
+android emulator start Resizable_API_37 --headless
 adb devices -l
 export ANDROID_SERIAL=emulator-5554
+adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk
 export ARTIFACT_DIR="$PWD/build/android-cli"
 mkdir -p "$ARTIFACT_DIR"
 ```

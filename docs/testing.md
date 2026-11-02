@@ -11,7 +11,7 @@ device, and Maps configuration.
 | --- | --- |
 | Documentation or instruction files only | Review the text and local links; run `git diff --check`. No Android build is needed. |
 | Kotlin source, resources, manifest, dependencies, or build configuration | Run formatting checks, assemble the debug app, run debug unit tests, and run Android lint. |
-| UI, navigation, lifecycle, Android storage, or platform integration | Also run relevant device tests and manually exercise the changed behavior on a compatible device or emulator. |
+| UI, navigation, lifecycle, Android storage, or platform integration | Also run relevant device tests and manually exercise the changed behavior on the resizable API 37 emulator described below. |
 | Maps configuration or rendering | Also follow the Maps checks in [Verify the run](building.md#verify-the-run). |
 
 Run the standard checks from the repository root:
@@ -29,7 +29,15 @@ Never format generated files or build/cache directories. The repository-wide
 `ktfmtFormat` task can also rewrite unrelated files; review its scope before
 using it and keep unrelated cleanup in a separate commit.
 
-For device tests, connect a compatible device or emulator and run:
+Use an API 37 emulator with the **Resizable** hardware profile for device tests,
+manual UI verification, and device screenshots. Medium Phone and other fixed-size
+profiles do not meet this requirement. Follow the
+[Android CLI device-selection workflow](android-cli.md#select-a-device) to confirm
+the hardware profile and API level before testing. If the required AVD is missing,
+create it rather than substituting an already-running fixed-size emulator. Other
+devices and API levels may supplement this required test environment.
+
+For device tests, start and select that emulator, then run:
 
 ```sh
 ./gradlew :app:connectedDebugAndroidTest

@@ -10,6 +10,10 @@
   Android Studio normally writes the SDK location to the ignored `local.properties`.
 - To run the app, use an Android 8.0 / API 26 or newer device or emulator. Maps
   requires Google Play services; select a Google APIs or Google Play emulator image.
+- For device tests, manual UI verification, and device screenshots, use an API 37
+  emulator with the **Resizable** hardware profile. Follow the
+  [device-selection workflow](android-cli.md#select-a-device); Medium Phone and
+  other fixed-size profiles do not meet the project's testing requirement.
 
 The project uses AGP 9.1.1 with compile and target SDK 37. Google's
 [API-level compatibility table](https://developer.android.com/build/releases/about-agp#api-level-support)
