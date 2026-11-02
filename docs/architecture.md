@@ -254,9 +254,18 @@ durable application data belongs in storage accessed through the repository.
 
 Map and List are separate Navigation 3 destinations. Compact windows show one at
 a time, selected with `EarthquakeViewSwitcher`; expanded windows keep the map
-full-screen with a floating list at the start edge. The host classifies available
-constraints as expanded at widths of at least 840 dp and heights of at least
-480 dp. Avoid hardware and fold-state checks.
+full-screen with a floating list at the start edge. Read the window size class
+through Material Adaptive's `currentWindowAdaptiveInfoV2().windowSizeClass`.
+Use AndroidX `WindowSizeClass` breakpoint APIs and named constants instead of
+comparing dimensions with numeric thresholds. Keep these layout decisions in
+the UI; do not infer them from hardware or fold state.
+
+[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
+and [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
+enable the expanded presentation with
+`isAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND, HEIGHT_DP_MEDIUM_LOWER_BOUND)`.
+This includes expanded, large, and extra-large widths when height is at least
+medium. The host uses the same adaptive information for its pane directive.
 
 [EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
 uses an opaque floating surface with flush Material single-choice segments and
@@ -315,8 +324,11 @@ alongside the open expanded list.
 [EarthquakeClusterSheet](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterSheet.kt)
 uses Material `ModalBottomSheet` with a fixed count heading and Close control, and a bounded `LazyColumn`
 of the existing `EarthquakeListRow` components. Limit content to 60% of the window
-height, or 45% in windows shorter than 600 dp, and allow every member to scroll;
-do not paginate a cluster. Read `LocalWindowInfo` for the actual window bounds. Keep
+height, or 45% in the compact height size class, and allow every member to scroll;
+do not paginate a cluster. Select the fraction with
+`windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)`.
+Read `LocalWindowInfo` for the actual window height used to calculate the cap;
+the percentages remain component design choices. Keep
 the explanation and magnitude summary inside the scrolling content so large
 text in a short window cannot consume the entire list viewport. Sheet
 expansion and list scroll position remain UI-owned.

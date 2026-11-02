@@ -104,6 +104,20 @@ class EarthquakeClusterScreenshotTest {
     }
 
     @PreviewTest
+    @Preview(widthDp = 400, locale = "en-US")
+    @Composable
+    fun compactHeightSheet() {
+        Sheet(maxHeight = 216)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 400, locale = "en-US")
+    @Composable
+    fun mediumHeightSheet() {
+        Sheet(maxHeight = 288)
+    }
+
+    @PreviewTest
     @Preview(widthDp = 384, locale = "en-US")
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)

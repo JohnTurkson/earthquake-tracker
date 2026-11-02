@@ -288,6 +288,10 @@ empty, unknown-magnitude, dark, narrow large-text, and short large-text states.
 [EarthquakeClusterSheetTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterSheetTest.kt)
 checks the real modal container, scrolling to the last member, retained selection
 after dismissal, back dismissal through the real screen, and disappearing members.
+It measures the content cap and checks last-member access across compact and
+medium height boundaries, including the former 600 dp threshold. The compact
+and medium height content previews cover the corresponding bounded viewports;
+the device test verifies the window-dependent sizing policy.
 [EarthquakeClusterStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterStateTest.kt)
 checks serialization and restoration of the ViewModel's cluster member IDs,
 independent event selection, numeric magnitude mapping from Room, and cluster
@@ -372,10 +376,13 @@ renders the real Nav3 host and Material adaptive scene with deterministic
 entry content. Use separate entry-scoped test ViewModels to verify result
 delivery, hidden-recipient restoration, row reveal, Notifications return, and
 compact/expanded resizing without substituting for native map coverage.
-Run this class with the reserved emulator window at least 900 dp wide. Its host
-changes actual content constraints between 400 dp and 900 dp at the device's
-native density; retain that density while exercising the Material scene's
-lookahead layout. Record and restore the display override through the
+Run this class with the reserved emulator window at least 900 dp wide and 600 dp
+tall. Its host uses Compose's `DeviceConfigurationOverride.WindowSize` so both
+content constraints and `LocalWindowInfo` reflect each fixture size. Include the
+839/840 dp width and 479/480 dp height boundaries and verify entry owners survive
+resizing. Keep fixture sizes within the available window to retain the device's
+native density while exercising the Material scene's lookahead layout.
+Record and restore the display override through the
 [Android CLI workflow](android-cli.md#change-device-configuration).
 [EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDestinationStateTest.kt)
 uses the real Map and List ViewModels with test-local Room data to check

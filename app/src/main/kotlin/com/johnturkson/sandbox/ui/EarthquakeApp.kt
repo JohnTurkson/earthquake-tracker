@@ -5,7 +5,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
@@ -31,6 +31,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.Destination.EarthquakeListRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeMapRoute
@@ -79,8 +81,13 @@ fun EarthquakeApp(
                 compactView = EarthquakeView.Map
             }
         }
-        BoxWithConstraints(modifier.fillMaxSize()) {
-            val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
+        val adaptiveInfo = currentWindowAdaptiveInfoV2()
+        val expanded =
+            adaptiveInfo.windowSizeClass.isAtLeastBreakpoint(
+                WIDTH_DP_EXPANDED_LOWER_BOUND,
+                HEIGHT_DP_MEDIUM_LOWER_BOUND,
+            )
+        Box(modifier.fillMaxSize()) {
             val listVisible = expanded && panelVisible && !notificationsVisible && !clusterVisible
             val showList =
                 if (expanded) panelVisible && !clusterVisible
@@ -94,7 +101,7 @@ fun EarthquakeApp(
                 if (notificationsVisible) backStack.add(EarthquakeNotificationsRoute)
             }
             val directive =
-                calculatePaneScaffoldDirective(currentWindowAdaptiveInfoV2())
+                calculatePaneScaffoldDirective(adaptiveInfo)
                     .copy(maxHorizontalPartitions = 1, maxVerticalPartitions = 1)
             val strategy =
                 rememberSupportingPaneSceneStrategy<NavKey>(

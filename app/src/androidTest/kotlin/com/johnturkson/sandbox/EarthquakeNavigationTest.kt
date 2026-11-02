@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.WindowSize
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
@@ -26,7 +27,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -52,7 +55,7 @@ import org.junit.Test
 class EarthquakeNavigationTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
     private val owners = mutableMapOf<Destination, EarthquakeNavigationTestViewModel>()
-    private var expanded by mutableStateOf(false)
+    private var windowSize by mutableStateOf(DpSize(400.dp, 600.dp))
 
     @Test
     fun destinationsExchangeResultsAndNotificationsReturnToThePreviousView() {
@@ -92,7 +95,7 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Open list").performClick()
         composeRule.onNodeWithText("List").assertIsSelected()
         val listOwner = owners.getValue(Destination.EarthquakeListRoute)
-        composeRule.runOnIdle { expanded = true }
+        composeRule.runOnIdle { windowSize = DpSize(900.dp, 600.dp) }
         composeRule.waitUntil(timeoutMillis = 5_000) {
             composeRule.onNodeWithText("Map destination").isDisplayed()
         }
@@ -114,7 +117,7 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Map destination").assertIsDisplayed()
         composeRule.onNodeWithText("Open list").performClick()
         assertLastEarthquakeSelected()
-        composeRule.runOnIdle { expanded = false }
+        composeRule.runOnIdle { windowSize = DpSize(400.dp, 600.dp) }
         composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.onNodeWithText("Map destination").assertDoesNotExist()
         assertLastEarthquakeSelected()
@@ -139,6 +142,33 @@ class EarthquakeNavigationTest {
         }
     }
 
+    @Test
+    fun panesFollowWidthAndHeightSizeClassesAcrossResizeBoundaries() {
+        composeRule.setContent { Content() }
+        composeRule.onNodeWithText("Open list").performClick()
+        val listOwner = owners.getValue(Destination.EarthquakeListRoute)
+        for ((size, showsBothDestinations) in
+            listOf(
+                DpSize(839.dp, 600.dp) to false,
+                DpSize(840.dp, 600.dp) to true,
+                DpSize(900.dp, 479.dp) to false,
+                DpSize(900.dp, 480.dp) to true,
+                DpSize(400.dp, 600.dp) to false,
+            )) {
+            composeRule.runOnIdle { windowSize = size }
+            if (showsBothDestinations) {
+                composeRule.onNodeWithText("Map destination").assertIsDisplayed()
+                composeRule.onNodeWithText("Recent earthquakes").assertIsDisplayed()
+            } else {
+                composeRule.onNodeWithText("Map destination").assertDoesNotExist()
+                composeRule.onNodeWithText("List").assertIsSelected()
+            }
+            composeRule.runOnIdle {
+                assertSame(listOwner, owners.getValue(Destination.EarthquakeListRoute))
+            }
+        }
+    }
+
     private fun assertLastEarthquakeSelected() {
         composeRule.waitUntil(timeoutMillis = 5_000) {
             composeRule.onNodeWithText("Earthquake 79").isDisplayed()
@@ -148,13 +178,17 @@ class EarthquakeNavigationTest {
 
     @Composable
     private fun Content() {
-        val width = LocalWindowInfo.current.containerSize.width / LocalDensity.current.density
-        require(width >= 900f) { "Run navigation tests in a window at least 900 dp wide." }
+        val availableSize =
+            with(LocalDensity.current) { LocalWindowInfo.current.containerSize.toSize().toDpSize() }
+        require(availableSize.width >= 900.dp && availableSize.height >= 600.dp) {
+            "Run navigation tests in a window at least 900 dp wide and 600 dp tall."
+        }
         Box(Modifier.fillMaxSize()) {
-            EarthquakeApp(
-                modifier = Modifier.width(if (expanded) 900.dp else 400.dp),
-                destinationContent = { route, actions -> DestinationContent(route, actions) },
-            )
+            DeviceConfigurationOverride(DeviceConfigurationOverride.WindowSize(windowSize)) {
+                EarthquakeApp(
+                    destinationContent = { route, actions -> DestinationContent(route, actions) }
+                )
+            }
         }
     }
 

@@ -4,6 +4,10 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.WindowSize
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollToIndexAction
@@ -12,6 +16,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.test.espresso.Espresso.pressBack
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeClusterSheet
@@ -25,6 +31,42 @@ import org.junit.Test
 
 class EarthquakeClusterSheetTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun sheetHeightFollowsCompactAndMediumWindowHeightClasses() {
+        var windowSize by mutableStateOf(DpSize(400.dp, 479.dp))
+        var contentHeight = 0
+        composeRule.setContent {
+            DeviceConfigurationOverride(DeviceConfigurationOverride.WindowSize(windowSize)) {
+                EarthquakeTheme {
+                    EarthquakeClusterSheet(
+                        items = EarthquakeMapFixtures.denseItems,
+                        selectedItemId = null,
+                        onItemClick = {},
+                        onDismiss = {},
+                        modifier = Modifier.onSizeChanged { contentHeight = it.height },
+                    )
+                }
+            }
+        }
+        for ((height, expectedMaximum) in
+            listOf(479.dp to 215.55.dp, 480.dp to 288.dp, 599.dp to 359.4.dp, 600.dp to 360.dp)) {
+            composeRule.runOnIdle { windowSize = DpSize(400.dp, height) }
+            composeRule.runOnIdle {
+                assertEquals(
+                    with(composeRule.density) { expectedMaximum.roundToPx() },
+                    contentHeight,
+                )
+            }
+            composeRule.onNodeWithContentDescription("Close earthquake cluster").assertIsDisplayed()
+            composeRule
+                .onNode(hasScrollToIndexAction())
+                .performScrollToIndex(EarthquakeMapFixtures.denseItems.size)
+            composeRule
+                .onNodeWithText(EarthquakeMapFixtures.denseItems.last().title)
+                .assertIsDisplayed()
+        }
+    }
 
     @Test
     fun allMembersAreScrollableAndSelectionDoesNotDismissSheet() {

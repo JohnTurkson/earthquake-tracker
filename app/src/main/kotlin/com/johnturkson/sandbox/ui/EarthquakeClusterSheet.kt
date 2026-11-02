@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,6 +29,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND
 import com.johnturkson.sandbox.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +43,11 @@ fun EarthquakeClusterSheet(
 ) {
     val windowHeight =
         with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
-    val maximumHeight = windowHeight * if (windowHeight < 600.dp) 0.45f else 0.6f
+    val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
+    val maximumHeight =
+        windowHeight *
+            if (windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)) 0.6f
+            else 0.45f
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
