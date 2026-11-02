@@ -33,6 +33,11 @@ feed. Keep UI components
 independent of runtime API and storage access by passing marker presentation
 values through the screen's state contract.
 
+The [earthquake data layer](docs/earthquake-data.md) supports explicit USGS
+refreshes and observable Room reads. It retains previously fetched earthquakes,
+merges newer revisions by ID and known aliases, and supports offline reads after
+reopening the app. The current fixture-based screen does not consume it yet.
+
 ## Testing
 
 Use automated tests to cover important behavior and relevant failure cases.

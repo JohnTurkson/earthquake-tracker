@@ -39,6 +39,8 @@ android {
     }
 
     buildFeatures { compose = true }
+
+    sourceSets.getByName("androidTest").assets.directories.add("src/test/resources")
 }
 
 dependencies {
@@ -75,6 +77,7 @@ dependencies {
     implementation(libs.kotlinx.serialization)
 
     implementation(platform(libs.ktor.bom))
+    androidTestImplementation(platform(libs.ktor.bom))
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging)
@@ -101,6 +104,10 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(libs.ktor.client.mock)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.turbine)
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)

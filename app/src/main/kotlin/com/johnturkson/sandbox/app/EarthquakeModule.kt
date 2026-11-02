@@ -7,11 +7,14 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.room.Room
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.johnturkson.sandbox.annotations.DefaultDispatcher
 import com.johnturkson.sandbox.annotations.IoDispatcher
 import com.johnturkson.sandbox.annotations.MainDispatcher
+import com.johnturkson.sandbox.data.EarthquakeDao
+import com.johnturkson.sandbox.data.MainDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,6 +23,7 @@ import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.resources.Resources
@@ -68,10 +72,23 @@ object EarthquakeModule {
     @Singleton
     fun provideHttpClient(json: Json): HttpClient {
         return HttpClient(CIO) {
+            defaultRequest { url("https://earthquake.usgs.gov/") }
             install(ContentNegotiation) { json(json) }
             install(Logging) { level = LogLevel.ALL }
             install(Resources)
         }
+    }
+
+    @Provides
+    @Singleton
+    fun provideMainDatabase(@ApplicationContext context: Context): MainDatabase {
+        return Room.databaseBuilder(context, MainDatabase::class.java, "MainDatabase").build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideEarthquakeDao(database: MainDatabase): EarthquakeDao {
+        return database.earthquakeDao()
     }
 
     @Provides

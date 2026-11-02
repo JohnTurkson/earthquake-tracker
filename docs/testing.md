@@ -124,9 +124,34 @@ merely repeat the implementation.
 The current suite covers response decoding with a test-local fixture, activity
 startup and recreation, map behavior, and marker artwork. Keep tests focused on
 observable behavior rather than unconditional assertions or empty content.
-Passing these tests does not establish runtime earthquake fetching, offline
-behavior, refresh, or Maps authorization. Add feature coverage as those behaviors
-are implemented.
+Passing UI tests does not establish runtime earthquake fetching, offline screen
+behavior, refresh, or Maps authorization. The separate data-layer coverage below
+checks persistent cache behavior without connecting it to the fixture-based UI.
+
+## Earthquake data tests
+
+[EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeApiTest.kt)
+uses Ktor `MockEngine` and fixtures under `app/src/test/resources` to verify USGS
+typed routes, query arguments, decoding, and failures without live requests.
+The same fixtures are available as Android test assets.
+
+[EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
+uses real Room with active Turbine collectors. Preserve coverage for new IDs,
+duplicate IDs, newer/older revisions, retained history across rolling refreshes,
+alias changes, detail freshness, filters, atomic rollback, and concurrent merges.
+Close the disk-backed database and recreate the repository with a failing network
+client to verify retained summaries and details are readable offline. Cached reads
+must not initiate network requests. A database reopen tests persistent storage;
+it does not alone establish offline screen behavior or an actual device reboot.
+
+[EarthquakeMigrationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMigrationTest.kt)
+uses Room's `MigrationTestHelper` and tracked schema exports to validate the
+additive upgrade from version 1 while retaining existing rows. Generate schema
+exports through Room; never hand-edit them.
+
+Run these tests on the required Resizable API 37 emulator. Continue to run the
+normal build, formatting, unit, and lint checks. Storage-only changes do not add
+UI states or screenshot baselines.
 
 ## Map behavior and screenshot coverage
 

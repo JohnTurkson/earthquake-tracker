@@ -9,10 +9,11 @@ Name app and feature types with the `Earthquake` prefix, as in `EarthquakeApp`,
 name for a type's Kotlin file. Keep technical names such as `MainDispatcher` tied
 to the platform concept they describe.
 
-The screen currently uses fixed earthquake fixtures. Product requirements in
-[the README](../README.md) describe the intended app; runtime earthquake fetching
-and earthquake storage have not been implemented. The last known user location
-is persisted separately in Preferences DataStore.
+The screen currently uses fixed earthquake fixtures. The earthquake network and
+Room layers are implemented separately from the UI. Product requirements in
+[the README](../README.md) describe the intended app; live screen refresh and
+offline presentation still need to use that data layer. The last known user
+location is persisted separately in Preferences DataStore.
 
 ## UI and state ownership
 
@@ -283,9 +284,8 @@ failures preserve existing data and allow the next location update to retry.
 
 Keep `EarthquakeLocation` independent of SDK `Location` and `LatLng` types. Convert
 device readings at the provider boundary and map camera coordinates in the UI.
-Keep data access in repositories and inject them into ViewModels. Room remains
-a declared dependency without a database or DAO; discuss its conventions before
-introducing the first earthquake database.
+Keep data access in repositories and inject them into ViewModels. Room stores
+earthquake history through the data layer described below.
 
 Inject qualified dispatchers where execution context is needed.
 `EarthquakeModule` provides `@IoDispatcher`, `@MainDispatcher`, and
@@ -315,9 +315,8 @@ and data code.
 
 Use the injected Ktor client for API access.
 `EarthquakeModule.provideHttpClient` configures CIO, `ContentNegotiation` with the
-provided `Json`, `Logging`, and `Resources`. Extend the shared configuration
-rather than creating a new client in each feature. No production API wrapper or
-endpoints are implemented yet.
+provided `Json`, `Logging`, and `Resources`, with the USGS base URL. Extend the
+shared configuration rather than creating a new client in each feature.
 
 Keep requests and response decoding in API wrappers, data coordination in
 repositories, and presentation state in ViewModels. Keep network serialization
@@ -330,5 +329,36 @@ is the working example for decoding a test-local serializable response with Ktor
 `MockEngine` and `runTest`. It verifies the request path, JSON decoding, and ignored
 unknown fields without a live service. Its response and URL are test fixtures,
 not a production USGS schema or endpoint. Use that approach when implementing API
-operations. The installed `Resources` plugin has no typed resource endpoints yet;
-discuss endpoint conventions when implementing the first real requests.
+operations.
+
+## Earthquake history and offline storage
+
+Use the existing path for runtime earthquake data:
+
+```text
+EarthquakeModule -> HttpClient -> EarthquakeApi -> EarthquakeRepository
+EarthquakeModule -> MainDatabase -> EarthquakeDao -> EarthquakeRepository
+```
+
+Follow the [network instructions](networking.md) for typed Ktor endpoints and
+separate network models, and the [database instructions](database.md) for Room
+entities, transactions, migrations, and observable queries. Database read names
+end in `Flow`; writes and explicit network refreshes are suspend operations.
+Rendered components remain independent of these dependencies.
+
+`EarthquakeDatabaseModel.id` is the primary key. Refreshes merge new IDs and
+update existing IDs only for newer USGS `updated` revisions, retaining cached
+events absent from subsequent feeds. Do not clear history on refresh or delete
+an event merely because it aged out of a rolling feed. Empty and failed
+responses preserve cached information. Read the durable cache independently of
+network access; an unrestricted `getEarthquakesFlow()` includes historical rows.
+UI time filters must not delete stored history.
+
+Keep the imported alias handling for preferred-ID changes and separately
+versioned detail snapshots. `MainDatabase` retains its original name, schema
+history, and legacy `ItemDatabaseModel` table to preserve compatibility with
+existing installations; that table is not a feature or a pattern for new work.
+Use data-preserving migrations for later schema changes.
+
+See [earthquake data](earthquake-data.md) for the repository API and refresh
+limits. WorkManager scheduling and screen integration should reuse this layer.
