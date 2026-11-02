@@ -30,7 +30,7 @@ class EarthquakeViewsTest {
 
     @Test
     fun locationStaysAtBottomRightWithoutMovingMonitoringOrCoveringSelection() {
-        val item = EarthquakeMapItem("fixture", 37.0, -122.0, "M 4.5 - California")
+        val item = EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")
         var showLocation by mutableStateOf(false)
         var selectedId by mutableStateOf<String?>(null)
         var locationClicks = 0
@@ -83,7 +83,7 @@ class EarthquakeViewsTest {
 
     @Test
     fun expandedPanelKeepsSelectionWithoutViewSwitching() {
-        val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M 6.0 - Shima, Japan")
+        val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M6.0 - Shima, Japan")
         var selectedId by mutableStateOf<String?>(null)
         var isListPanelVisible by mutableStateOf(true)
         var viewSwitches = 0
@@ -132,7 +132,7 @@ class EarthquakeViewsTest {
 
     @Test
     fun listSelectionAndViewSwitchingKeepTheSameEarthquake() {
-        val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M 6.0 - Shima, Japan")
+        val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M6.0 - Shima, Japan")
         var state by mutableStateOf(EarthquakePreviewState(mapItems = listOf(item)))
         var selectedView by mutableStateOf(EarthquakeView.List)
         composeRule.setContent {

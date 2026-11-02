@@ -25,7 +25,7 @@ class EarthquakeViewsScreenshotTest {
             id = "shima",
             latitude = 33.822,
             longitude = 136.9854,
-            title = "M 6.0 - 58 km SSE of Shima, Japan",
+            title = "M6.0 - 58 km SSE of Shima, Japan",
             snippet = "Oct 31, 2026 · 10:15 PM",
         )
     private val second =
@@ -33,7 +33,7 @@ class EarthquakeViewsScreenshotTest {
             id = "alaska",
             latitude = 51.6994,
             longitude = -172.7931,
-            title = "M 4.5 - 111 km ESE of Atka, Alaska",
+            title = "M4.5 - 111 km ESE of Atka, Alaska",
         )
 
     @PreviewTest

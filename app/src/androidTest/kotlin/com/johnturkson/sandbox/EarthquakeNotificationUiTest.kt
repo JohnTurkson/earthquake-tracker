@@ -84,9 +84,9 @@ class EarthquakeNotificationUiTest {
             assertEquals(1, previewRequests)
             assertEquals(true, state.alertsEnabled)
         }
-        rule.onNode(hasScrollAction()).performScrollToNode(hasText("M 7.0+"))
-        rule.onNodeWithText("M 7.0+").performClick()
-        rule.onNodeWithText("M 7.0+").assertIsSelected()
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("M7.0+"))
+        rule.onNodeWithText("M7.0+").performClick()
+        rule.onNodeWithText("M7.0+").assertIsSelected()
     }
 
     @Test

@@ -294,7 +294,7 @@ class EarthquakeNotificationsScreenshotTest {
                     "$it",
                     33.8,
                     136.9,
-                    "M 6.0 – Example earthquake $it",
+                    "M6.0 – Example earthquake $it",
                     snippet = "Oct 31, 2026 · 10:42 PM",
                 )
             }

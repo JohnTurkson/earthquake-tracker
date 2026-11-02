@@ -43,7 +43,7 @@ class EarthquakeLocationScreenshotTest {
     fun expandedLocationControls() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeExplorerControls(
-                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M 4.5 - California")),
+                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")),
                 selectedItemId = null,
                 selectedView = EarthquakeView.Map,
                 expanded = true,
@@ -63,7 +63,7 @@ class EarthquakeLocationScreenshotTest {
     fun minimizedLocationControls() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeExplorerControls(
-                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M 4.5 - California")),
+                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")),
                 selectedItemId = "fixture",
                 selectedView = EarthquakeView.Map,
                 expanded = true,
@@ -91,7 +91,7 @@ class EarthquakeLocationScreenshotTest {
     fun compactSelectedLocationControls() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeExplorerControls(
-                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M 4.5 - California")),
+                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")),
                 selectedItemId = "fixture",
                 selectedView = EarthquakeView.Map,
                 expanded = false,

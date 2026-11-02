@@ -22,7 +22,8 @@ internal fun EarthquakeDatabaseModel.toMapItem(): EarthquakeMapItem {
         id = id,
         latitude = latitude,
         longitude = longitude,
-        title = title ?: "M $label – ${place ?: "Unknown location"}",
+        title =
+            title?.replaceFirst(Regex("^M\\s+"), "M") ?: "M$label – ${place ?: "Unknown location"}",
         eventTime = time,
         magnitude = magnitude,
     )

@@ -39,10 +39,10 @@ class EarthquakeComponentScreenshotTest {
                         id = "shima",
                         latitude = 33.822,
                         longitude = 136.9854,
-                        title = "M 6.0 - 58 km SSE of Shima, Japan",
+                        title = "M6.0 - 58 km SSE of Shima, Japan",
                         snippet = "Oct 31, 2026 · 10:15 PM",
                     ),
-                    EarthquakeMapItem("alaska", 51.6994, -172.7931, "M 4.5 - Atka, Alaska"),
+                    EarthquakeMapItem("alaska", 51.6994, -172.7931, "M4.5 - Atka, Alaska"),
                 )
                 .take(case.itemCount)
         EarthquakeTheme(dynamicColor = false) {
@@ -74,7 +74,7 @@ class EarthquakeComponentScreenshotTest {
                             id = "shima",
                             latitude = 33.822,
                             longitude = 136.9854,
-                            title = "M 6.0 - 58 km SSE of Shima, Japan",
+                            title = "M6.0 - 58 km SSE of Shima, Japan",
                             snippet = if (case.hasTime) "Oct 31, 2026 · 10:15 PM" else null,
                         ),
                     isSelected = case.selected,

@@ -124,8 +124,8 @@ constructor(@ApplicationContext private val context: Context) {
         if (!capability.permissionGranted || !capability.appEnabled || !capability.alertsEnabled)
             return false
         val title =
-            item.title?.takeIf { it.isNotBlank() }
-                ?: "M ${item.magnitude} – ${item.place ?: "Unknown location"}"
+            item.title?.takeIf { it.isNotBlank() }?.replaceFirst(Regex("^M\\s+"), "M")
+                ?: "M${item.magnitude} – ${item.place ?: "Unknown location"}"
         val notification =
             NotificationCompat.Builder(context, AlertsChannel)
                 .setSmallIcon(R.drawable.ic_notification_earthquake)
