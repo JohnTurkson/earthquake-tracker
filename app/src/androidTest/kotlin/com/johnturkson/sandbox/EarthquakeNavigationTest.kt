@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,13 +19,13 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -59,7 +59,7 @@ class EarthquakeNavigationTest {
         composeRule.setContent { Content() }
         composeRule.onNodeWithText("Select last earthquake").performClick()
         composeRule.onNodeWithText("Open list").performClick()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
         val mapOwner = owners.getValue(Destination.EarthquakeMapRoute)
         val listOwner = owners.getValue(Destination.EarthquakeListRoute)
         assertNotSame(mapOwner, listOwner)
@@ -83,37 +83,41 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Close notifications").performClick()
         composeRule.onNodeWithText("Map selection: event-79").assertIsDisplayed()
         composeRule.onNodeWithText("Open list").performClick()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
     }
 
     @Test
     fun resizingKeepsIndependentOwnersAndDisplaysBothDestinations() {
         composeRule.setContent { Content() }
         composeRule.onNodeWithText("Open list").performClick()
+        composeRule.onNodeWithText("List").assertIsSelected()
         val listOwner = owners.getValue(Destination.EarthquakeListRoute)
         composeRule.runOnIdle { expanded = true }
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onNodeWithText("Map destination").isDisplayed()
+        }
         composeRule.onNodeWithText("Map destination").assertIsDisplayed()
         composeRule.onNodeWithText("Recent earthquakes").assertIsDisplayed()
         composeRule.onNodeWithText("Select last earthquake").performClick()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
         composeRule.onNode(hasScrollAction()).performScrollToIndex(0)
         composeRule.onNodeWithText("Select last earthquake").performClick()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
         composeRule.onNodeWithText("Notifications shortcut").performClick()
         composeRule.onNodeWithText("Notification destination").assertIsDisplayed()
         composeRule.onNodeWithText("Map destination").assertIsDisplayed()
         composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
         composeRule.onNodeWithText("Close notifications").performClick()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
         composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
         composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
         composeRule.onNodeWithText("Map destination").assertIsDisplayed()
         composeRule.onNodeWithText("Open list").performClick()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
         composeRule.runOnIdle { expanded = false }
         composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.onNodeWithText("Map destination").assertDoesNotExist()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
         composeRule.runOnIdle {
             assertSame(listOwner, owners.getValue(Destination.EarthquakeListRoute))
         }
@@ -126,7 +130,7 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Select last earthquake").performClick()
         restoration.emulateSavedInstanceStateRestore()
         composeRule.onNodeWithText("Open list").performClick()
-        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        assertLastEarthquakeSelected()
         composeRule.runOnIdle {
             assertEquals(
                 "event-79",
@@ -135,14 +139,21 @@ class EarthquakeNavigationTest {
         }
     }
 
+    private fun assertLastEarthquakeSelected() {
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onNodeWithText("Earthquake 79").isDisplayed()
+        }
+        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+    }
+
     @Composable
     private fun Content() {
-        val widthPixels = LocalWindowInfo.current.containerSize.width.coerceAtLeast(1).toFloat()
-        CompositionLocalProvider(
-            LocalDensity provides Density(widthPixels / if (expanded) 1100f else 400f)
-        ) {
+        val width = LocalWindowInfo.current.containerSize.width / LocalDensity.current.density
+        require(width >= 900f) { "Run navigation tests in a window at least 900 dp wide." }
+        Box(Modifier.fillMaxSize()) {
             EarthquakeApp(
-                destinationContent = { route, actions -> DestinationContent(route, actions) }
+                modifier = Modifier.width(if (expanded) 900.dp else 400.dp),
+                destinationContent = { route, actions -> DestinationContent(route, actions) },
             )
         }
     }

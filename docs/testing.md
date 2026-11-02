@@ -373,6 +373,11 @@ renders the real Nav3 host and Material adaptive scene with deterministic
 entry content. Use separate entry-scoped test ViewModels to verify result
 delivery, hidden-recipient restoration, row reveal, Notifications return, and
 compact/expanded resizing without substituting for native map coverage.
+Run this class with the reserved emulator window at least 900 dp wide. Its host
+changes actual content constraints between 400 dp and 900 dp at the device's
+native density; retain that density while exercising the Material scene's
+lookahead layout. Record and restore the display override through the
+[Android CLI workflow](android-cli.md#change-device-configuration).
 [EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDestinationStateTest.kt)
 uses the real Map and List ViewModels with test-local Room data to check
 independent selection, saved result revisions, pending scroll restoration,
