@@ -22,11 +22,13 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.johnturkson.sandbox.data.EarthquakeLocation
 import com.johnturkson.sandbox.ui.EarthquakeMap
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.EarthquakePreviewState
 import com.johnturkson.sandbox.ui.EarthquakeScreen
+import kotlin.math.abs
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -67,12 +69,19 @@ class EarthquakeMapTest {
     @Test
     fun persistedLocationInitializesCameraOnceAndRestoredCameraWins() {
         val restorationTester = StateRestorationTester(composeRule)
+        lateinit var camera: CameraPositionState
         var state by
             mutableStateOf(
                 EarthquakePreviewState(initialMapLocation = EarthquakeLocation(49.2827, -123.1207))
             )
         restorationTester.setContent {
-            EarthquakeScreen(state = state, onMapItemClick = {}, onMapClick = {})
+            camera = rememberCameraPositionState()
+            EarthquakeScreen(
+                state = state,
+                onMapItemClick = {},
+                onMapClick = {},
+                cameraPositionState = camera,
+            )
         }
         val map = awaitMap()
         composeRule.runOnIdle {
@@ -80,7 +89,9 @@ class EarthquakeMapTest {
             assertEquals(-123.1207, map.cameraPosition.target.longitude, 0.0001)
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(34.0522, -118.2437), 7f))
         }
-        composeRule.waitForIdle()
+        composeRule.waitUntil(10_000) {
+            abs(camera.position.target.latitude - 34.0522) < 0.0001 && !camera.isMoving
+        }
         composeRule.runOnIdle {
             state = state.copy(initialMapLocation = EarthquakeLocation(40.7128, -74.0060))
         }
@@ -88,6 +99,11 @@ class EarthquakeMapTest {
         composeRule.runOnIdle { assertEquals(34.0522, map.cameraPosition.target.latitude, 0.0001) }
         restorationTester.emulateSavedInstanceStateRestore()
         val restoredMap = awaitMap()
+        composeRule.waitUntil(10_000) {
+            composeRule.runOnIdle {
+                abs(restoredMap.cameraPosition.target.latitude - 34.0522) < 0.0001
+            }
+        }
         composeRule.runOnIdle {
             assertEquals(34.0522, restoredMap.cameraPosition.target.latitude, 0.0001)
             assertEquals(-118.2437, restoredMap.cameraPosition.target.longitude, 0.0001)

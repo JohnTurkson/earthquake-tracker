@@ -45,11 +45,12 @@ class EarthquakeNotificationsTest {
         val wasGranted =
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
                 PackageManager.PERMISSION_GRANTED
+        val now = System.currentTimeMillis()
         val first =
             EarthquakeMonitoringFixtures.item(
                 id = "notification-test-${UUID.randomUUID()}",
-                time = 100,
-                updated = 100,
+                time = now,
+                updated = now,
             )
         val second = first.copy(id = "${first.id}-second")
         try {

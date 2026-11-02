@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.johnturkson.sandbox.R
@@ -283,11 +284,11 @@ fun EarthquakeScreen(
             pageModifier,
         )
     },
-) {
-    val cameraPositionState = rememberCameraPositionState {
+    cameraPositionState: CameraPositionState = rememberCameraPositionState {
         val location = EarthquakeLocation.Default
         position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 10f)
-    }
+    },
+) {
     var hasInitializedCamera by rememberSaveable { mutableStateOf(false) }
     val initialMapLocation = state.initialMapLocation
     LaunchedEffect(initialMapLocation) {

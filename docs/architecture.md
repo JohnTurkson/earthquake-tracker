@@ -80,6 +80,9 @@ and local variables of type `CameraPositionState`, created by
 bearing. Pass it directly to `GoogleMap(cameraPositionState = cameraPositionState)`.
 
 Camera state, projection, marker, and other SDK rendering objects belong in the UI.
+The rendering overload of `EarthquakeScreen` also accepts a hoisted
+`CameraPositionState`, defaulting to its own remembered state. Tests can observe
+that same UI owner when verifying saved-state restoration.
 The component accepts a hoisted `CameraPositionState`, `MapProperties`,
 `MapUiSettings`, and content padding. Its remembered default camera restores
 through Maps Compose's saver. Camera changes are UI state and must not be copied

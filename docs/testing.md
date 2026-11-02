@@ -179,8 +179,10 @@ callbacks.
 It also verifies that stored initial coordinates apply once and that camera
 state survives Compose saved-state restoration without being recentered by a
 later location value. Use `StateRestorationTester` for that UI-owned state.
+Wait for the hoisted `CameraPositionState` to receive native camera changes and
+become idle before saving; Compose idle alone does not await SDK camera events.
 `MapType.NONE` avoids relying on live geographic tiles for these behavior checks;
-it still initializes Google's native SDK and needs a compatible device.
+the native SDK checks still require online access on the shared emulator.
 `EarthquakeActivityTest` separately checks real destination startup and recreation.
 
 ## Compose screenshot tests
@@ -347,12 +349,29 @@ foreground notification, and the displayed snapshot agree. Do not treat virtual
 clock tests as evidence that Android will grant indefinite runtime or exact
 minute delivery.
 
-Run the device suite with internet access disabled under the shared reservation
-for deterministic startup/offline checks, then restore the recorded network
-settings. Production activity startup schedules a refresh; disabling internet
-prevents those startup checks from calling live USGS endpoints. API/repository
-tests use MockEngine. Restore online access for the separate manual Maps-tile and
-real monitoring checks, then complete the shared idle-home cleanup.
+Run the data, notification, UI and offline-worker checks with internet access
+disabled under the shared reservation. Production activity startup schedules a
+refresh; disabling internet prevents those checks from calling live USGS
+endpoints. API/repository tests use MockEngine. Run native-map checks separately
+online; the complementary selections exercise the complete device suite:
+
+```sh
+ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.notClass=com.johnturkson.sandbox.EarthquakeMapTest
+```
+
+Restore online access, then run:
+
+```sh
+ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.johnturkson.sandbox.EarthquakeMapTest
+```
+
+The offline WorkManager integration test asserts its network precondition and
+leaves connectivity changes to the parent reservation owner. It verifies that
+Stop removes foreground status while an ordinary alert remains. Restore recorded
+network settings after manual Maps-tile and real monitoring checks, then complete
+the shared idle-home cleanup.
 
 `EarthquakeRefreshIntegrationTest` builds the actual refresh CoroutineWorker with
 WorkManager's test builder, the real refresh repository and Room database,
