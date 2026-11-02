@@ -218,7 +218,12 @@ fun EarthquakeExplorerControls(
                         end =
                             if (expanded && notificationsVisible) earthquakeListPaneWidth + 32.dp
                             else 16.dp,
-                        top = if (expanded) 84.dp else if (showLocationButton) 144.dp else 84.dp,
+                        top =
+                            when {
+                                expanded -> 84.dp
+                                showLocationButton -> 144.dp
+                                else -> 84.dp
+                            },
                     )
                     .widthIn(max = 560.dp)
                     .fillMaxWidth()

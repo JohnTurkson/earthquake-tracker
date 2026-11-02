@@ -118,10 +118,12 @@ fun EarthquakeMonitoringCard(
             }
             val refreshDescription =
                 stringResource(
-                    if (state.refresh == EarthquakeMonitoringState.Refresh.Queued)
-                        R.string.refresh_queued
-                    else if (state.isRefreshing) R.string.refreshing_earthquakes
-                    else R.string.refresh_earthquakes
+                    when {
+                        state.refresh == EarthquakeMonitoringState.Refresh.Queued ->
+                            R.string.refresh_queued
+                        state.isRefreshing -> R.string.refreshing_earthquakes
+                        else -> R.string.refresh_earthquakes
+                    }
                 )
             IconButton(
                 onClick = onRefresh,

@@ -91,10 +91,12 @@ constructor(@ApplicationContext private val context: Context) {
                 .setSmallIcon(R.drawable.ic_notification_earthquake)
                 .setContentTitle(
                     context.getString(
-                        if (offline) R.string.monitoring_offline
-                        else if (refreshing) R.string.refreshing_earthquakes
-                        else if (failed) R.string.refresh_failed
-                        else R.string.monitor_notification_title
+                        when {
+                            offline -> R.string.monitoring_offline
+                            refreshing -> R.string.refreshing_earthquakes
+                            failed -> R.string.refresh_failed
+                            else -> R.string.monitor_notification_title
+                        }
                     )
                 )
                 .setContentText(

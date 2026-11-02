@@ -9,6 +9,7 @@ guide design, implementation, and testing.
 At the start of every turn that changes files, reread and follow:
 
 - [Formatting guidelines](docs/formatting.md).
+- [Coding conventions](docs/coding-conventions.md).
 - [Architecture and state management guidelines](docs/architecture.md).
 - [Source control guide](docs/source-control.md).
 - [Testing guide](docs/testing.md).

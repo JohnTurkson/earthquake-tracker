@@ -87,7 +87,8 @@ and skills.
 
 ## Contributing
 
-Follow the [formatting guidelines](docs/formatting.md) and
+Follow the [formatting guidelines](docs/formatting.md),
+[coding conventions](docs/coding-conventions.md), and
 [architecture and state management guidelines](docs/architecture.md). These apply
 to human contributors and agents, with examples from the current implementation.
 Discuss additions as new project patterns are introduced and update the guides

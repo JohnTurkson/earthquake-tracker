@@ -393,16 +393,21 @@ fun EarthquakeScreen(
                                 else 0.dp,
                         top =
                             safePadding.calculateTopPadding() +
-                                if (showCluster) 16.dp
-                                else if (showListPanel) 80.dp
-                                else
-                                    (if (!expanded && !isLocationGranted) 160.dp else 100.dp) +
-                                        monitoringCardHeight,
+                                when {
+                                    showCluster -> 16.dp
+                                    showListPanel -> 80.dp
+                                    else ->
+                                        (if (!expanded && !isLocationGranted) 160.dp else 100.dp) +
+                                            monitoringCardHeight
+                                },
                         bottom =
                             safePadding.calculateBottomPadding() +
-                                if (showCluster) clusterSheetHeight + 48.dp
-                                else if (showListPanel) 16.dp
-                                else if (selectedItem != null) selectedCardHeight + 32.dp else 0.dp,
+                                when {
+                                    showCluster -> clusterSheetHeight + 48.dp
+                                    showListPanel -> 16.dp
+                                    selectedItem != null -> selectedCardHeight + 32.dp
+                                    else -> 0.dp
+                                },
                     ),
             )
         }
