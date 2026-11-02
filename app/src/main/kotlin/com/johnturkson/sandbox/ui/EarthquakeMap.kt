@@ -47,9 +47,13 @@ fun EarthquakeMap(
         ),
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    val titledItems = items.map { item ->
+        val title = earthquakeTitle(item)
+        remember(item, title) { EarthquakeClusterItem(item, title) }
+    }
     val clusterItems =
-        remember(items, selectedItemId) {
-            items.filter { it.id != selectedItemId }.map(::EarthquakeClusterItem)
+        remember(titledItems, selectedItemId) {
+            titledItems.filter { it.item.id != selectedItemId }
         }
     GoogleMap(
         modifier = modifier,
@@ -87,12 +91,13 @@ fun EarthquakeMap(
             .find { it.id == selectedItemId }
             ?.let { item ->
                 key(item.id) {
+                    val title = earthquakeTitle(item)
                     MarkerComposable(
                         item.id,
                         true,
                         state = rememberUpdatedMarkerState(LatLng(item.latitude, item.longitude)),
-                        contentDescription = item.title,
-                        title = item.title,
+                        contentDescription = title,
+                        title = title,
                         snippet = item.snippet,
                         anchor = Offset(0.5f, 0.5f),
                         zIndex = 2f,

@@ -44,18 +44,28 @@ legacy migration.
 
 Keep app-authored display text in Android string resources. Use numbered format
 arguments for dynamic values so translations can reorder them. Resolve resources
-with `stringResource` in Compose and `context.getString` in Android components
-that already own a context.
+with `stringResource` in composable functions and Context resource APIs such as
+`context.getString` in non-composable Android code. Keep resource resolution in
+the UI or the owning Android component rather than adding a Context to ViewModels
+for display formatting.
 
 [EarthquakeNotifications](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNotifications.kt)
 uses a nonblank USGS title with the established magnitude-label formatting and
-otherwise formats `alert_fallback_title` with the event's magnitude and place,
+otherwise formats `earthquake_fallback_title` with the event's magnitude and place,
 using `unknown_location` when the place is null:
 
 ```kotlin
 context.getString(
-    R.string.alert_fallback_title,
+    R.string.earthquake_fallback_title,
     item.magnitude.toString(),
     item.place ?: context.getString(R.string.unknown_location),
 )
 ```
+
+[EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapItem.kt)
+retains nullable source title and place values. Its composable `earthquakeTitle`
+helper uses `stringResource` for the same fallback template, `unknown_location`,
+and the `unknown_magnitude` placeholder. List rows, selection cards, and map
+marker titles resolve that text in composition, following the existing
+`earthquakeEventTime` helper pattern. SDK cluster wrappers receive the resolved
+title from the map composable.

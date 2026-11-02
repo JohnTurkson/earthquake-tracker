@@ -83,7 +83,8 @@ class EarthquakeViewsTest {
 
     @Test
     fun expandedPanelKeepsSelectionWithoutViewSwitching() {
-        val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M6.0 - Shima, Japan")
+        val title = "M6.0 - Shima, Japan"
+        val item = EarthquakeMapItem("shima", 33.822, 136.9854, title)
         var selectedId by mutableStateOf<String?>(null)
         var isListPanelVisible by mutableStateOf(true)
         var viewSwitches = 0
@@ -105,18 +106,18 @@ class EarthquakeViewsTest {
 
         composeRule.onNodeWithText("Map").assertDoesNotExist()
         composeRule.onNodeWithText("List").assertDoesNotExist()
-        composeRule.onNodeWithText(item.title).performClick()
-        composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
-        composeRule.onNodeWithText(item.title).assertIsSelected()
+        composeRule.onNodeWithText(title).performClick()
+        composeRule.onAllNodesWithText(title).assertCountEquals(1)
+        composeRule.onNodeWithText(title).assertIsSelected()
         composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
         composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
         composeRule.onNodeWithText("Show list").assertIsDisplayed()
-        composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
+        composeRule.onAllNodesWithText(title).assertCountEquals(1)
         composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
         composeRule.onNodeWithText("Show list").performClick()
-        composeRule.onNodeWithText(item.title).assertIsSelected()
+        composeRule.onNodeWithText(title).assertIsSelected()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
         composeRule.runOnIdle {
@@ -124,15 +125,16 @@ class EarthquakeViewsTest {
             assertEquals(0, viewSwitches)
         }
         composeRule.onNodeWithContentDescription("Clear earthquake selection").performClick()
-        composeRule.onNodeWithText(item.title).assertDoesNotExist()
+        composeRule.onNodeWithText(title).assertDoesNotExist()
         composeRule.onNodeWithText("Show list").performClick()
-        composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
+        composeRule.onAllNodesWithText(title).assertCountEquals(1)
         composeRule.runOnIdle { assertEquals(null, selectedId) }
     }
 
     @Test
     fun listSelectionAndViewSwitchingKeepTheSameEarthquake() {
-        val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M6.0 - Shima, Japan")
+        val title = "M6.0 - Shima, Japan"
+        val item = EarthquakeMapItem("shima", 33.822, 136.9854, title)
         var state by mutableStateOf(EarthquakePreviewState(mapItems = listOf(item)))
         var selectedView by mutableStateOf(EarthquakeView.List)
         composeRule.setContent {
@@ -147,22 +149,53 @@ class EarthquakeViewsTest {
             }
         }
 
-        composeRule.onNodeWithText(item.title).performClick()
+        composeRule.onNodeWithText(title).performClick()
         composeRule.onNodeWithText("Map").assertIsSelected()
         composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
-        composeRule.onNodeWithText(item.title).assertIsDisplayed()
+        composeRule.onNodeWithText(title).assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(item.id, state.selectedMapItemId) }
 
         composeRule.onNodeWithText("List").performClick()
         composeRule.onNodeWithText("List").assertIsSelected()
-        composeRule.onNodeWithText(item.title).assertIsSelected()
+        composeRule.onNodeWithText(title).assertIsSelected()
         composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
 
         composeRule.onNodeWithText("Map").performClick()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").performClick()
         composeRule.onNodeWithText("List").performClick()
         composeRule.runOnIdle { assertEquals(null, state.selectedMapItemId) }
-        composeRule.onNodeWithText(item.title).assertIsDisplayed()
+        composeRule.onNodeWithText(title).assertIsDisplayed()
+    }
+
+    @Test
+    fun fallbackTitleStaysVisibleAcrossListSelectionAndMinimizing() {
+        val item = EarthquakeMapItem("unknown", 0.0, 0.0, title = null)
+        var selectedId by mutableStateOf<String?>(null)
+        var isListPanelVisible by mutableStateOf(true)
+        composeRule.setContent {
+            EarthquakeTheme {
+                EarthquakeExplorerControls(
+                    items = listOf(item),
+                    selectedItemId = selectedId,
+                    selectedView = EarthquakeView.List,
+                    expanded = true,
+                    isListPanelVisible = isListPanelVisible,
+                    onListPanelVisibilityChanged = { isListPanelVisible = it },
+                    onItemClick = { selectedId = it.id },
+                    onClearSelection = { selectedId = null },
+                    onViewSelected = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("M? – Unknown location").performClick()
+        composeRule.onNodeWithText("M? – Unknown location").assertIsSelected()
+        composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
+        composeRule.onNodeWithText("M? – Unknown location").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
+        composeRule.onNodeWithText("Show list").performClick()
+        composeRule.onNodeWithText("M? – Unknown location").assertIsSelected()
+        composeRule.runOnIdle { assertEquals(item.id, selectedId) }
     }
 }

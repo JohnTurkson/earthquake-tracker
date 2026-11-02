@@ -155,7 +155,7 @@ fun EarthquakeListRow(
                 )
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(item.title, style = MaterialTheme.typography.titleMedium)
+                Text(earthquakeTitle(item), style = MaterialTheme.typography.titleMedium)
                 earthquakeEventTime(item)?.let {
                     Text(
                         it,

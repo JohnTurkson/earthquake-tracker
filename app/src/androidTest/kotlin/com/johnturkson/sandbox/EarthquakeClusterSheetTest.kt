@@ -63,7 +63,7 @@ class EarthquakeClusterSheetTest {
                 .onNode(hasScrollToIndexAction())
                 .performScrollToIndex(EarthquakeMapFixtures.denseItems.size)
             composeRule
-                .onNodeWithText(EarthquakeMapFixtures.denseItems.last().title)
+                .onNodeWithText(requireNotNull(EarthquakeMapFixtures.denseItems.last().title))
                 .assertIsDisplayed()
         }
     }
@@ -86,7 +86,10 @@ class EarthquakeClusterSheetTest {
         }
         composeRule.onNodeWithText("120 earthquakes in this area").assertIsDisplayed()
         composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(items.size)
-        composeRule.onNodeWithText(items.last().title).performClick().assertIsSelected()
+        composeRule
+            .onNodeWithText(requireNotNull(items.last().title))
+            .performClick()
+            .assertIsSelected()
         composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         composeRule.onNodeWithText("120 earthquakes in this area").assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(items.last().id, selected) }
@@ -130,11 +133,11 @@ class EarthquakeClusterSheetTest {
             }
         }
         composeRule.onNodeWithContentDescription("Close earthquake cluster").assertIsDisplayed()
-        composeRule.onNodeWithText(items.first().title).assertIsSelected()
+        composeRule.onNodeWithText(requireNotNull(items.first().title)).assertIsSelected()
         composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         pressBack()
         composeRule.onNodeWithContentDescription("Close earthquake cluster").assertDoesNotExist()
-        composeRule.onNodeWithText(items.first().title).assertIsDisplayed()
+        composeRule.onNodeWithText(requireNotNull(items.first().title)).assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
         composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         composeRule.runOnIdle {

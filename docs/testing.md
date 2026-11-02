@@ -259,8 +259,11 @@ isolates the list, rows, and unavailable-event snackbar. Its list provider cover
 empty, single-event, and multiple-event data with both title and supporting-pane
 flags. Its row provider covers selection, available/missing time, and the map
 arrow. Render each fixture in light, dark, and narrow large-text configurations.
-The snackbar uses the same `EarthquakeEventSnackbar`
-as the runtime host, with fixed `SnackbarData` and no running duration or queue.
+The fallback-title provider renders real rows and selection cards with every
+available/missing magnitude and place combination when the source title is absent,
+in light, dark, and narrow large-text configurations. The snackbar uses the same
+`EarthquakeEventSnackbar` as the runtime host, with fixed `SnackbarData` and no
+running duration or queue.
 Host queueing, timing, and dismissal are separate from these pixel fixtures.
 
 The component state inventory is:
@@ -271,8 +274,8 @@ The component state inventory is:
 | Cluster badge | Available/missing magnitude, small/large count, dark, and large text. |
 | Cluster sheet content | Empty, populated, selected, missing magnitude/time, and the last scrolled member; include short windows. |
 | List | Empty/single/multiple events with each title/supporting-pane presentation; monitoring present and absent in parent fixtures. |
-| List row | Selected/unselected, available/missing time, and map arrow shown/hidden. |
-| Selection card | Available/missing time and wrapped text. |
+| List row | Selected/unselected, available/missing time, map arrow shown/hidden, and fallback titles with available/missing magnitude and place. |
+| Selection card | Available/missing time, wrapped text, and fallback titles with available/missing magnitude and place. |
 | View switcher | Map/List selected with labels and with icons only, including dark and large text. |
 | Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
 | Location button and rationale | Request/settings labels and the rationale, with light/dark and large text. |

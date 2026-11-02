@@ -68,15 +68,19 @@ EarthquakeMap(
 ```
 
 `EarthquakeMapItem` is an immutable presentation value with a stable unique ID,
-coordinates, title, optional numeric magnitude, optional snippet, and optional
-`Instant` event time. The explorer uses the same values for its map and list. Format
-event times in the UI using the device's locale and time preferences; do not
-store formatted time strings as feature state. It has no network or database
-annotations. Display magnitude labels without a space after `M`, as in `M5.0`
+coordinates, optional source title and place, optional numeric magnitude, optional
+snippet, and optional `Instant` event time. The explorer uses the same values for
+its map and list. Format event times in the UI using the device's locale and time
+preferences; do not store formatted time strings as feature state. It has no
+network or database annotations. Display magnitude labels without a space after `M`, as in `M5.0`
 and `Max M5.0`. `EarthquakeDatabaseModel.toMapItem` removes the source title's
 leading magnitude space for map, list, selection-card, and cluster-sheet titles;
-keep stored source titles unchanged. Maps Utils owns unselected marker lifetimes
-through immutable
+keep stored source titles unchanged. Preserve a missing title and place as null
+in the presentation value. Resolve fallback titles through the composable
+`earthquakeTitle` helper using string resources, alongside the existing UI-owned
+event-time formatting. Map supplies resolved text to SDK marker and cluster
+wrappers; ViewModels remain independent of Context and localized strings.
+Maps Utils owns unselected marker lifetimes through immutable
 [EarthquakeClusterItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterItem.kt)
 wrappers. The separately rendered selected marker is keyed by its event ID;
 `rememberUpdatedMarkerState` applies coordinate changes without turning the SDK

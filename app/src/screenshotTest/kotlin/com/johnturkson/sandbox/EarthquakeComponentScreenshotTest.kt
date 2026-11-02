@@ -1,7 +1,9 @@
 package com.johnturkson.sandbox
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarDuration
@@ -20,6 +22,7 @@ import com.johnturkson.sandbox.ui.EarthquakeEventSnackbar
 import com.johnturkson.sandbox.ui.EarthquakeList
 import com.johnturkson.sandbox.ui.EarthquakeListRow
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
+import com.johnturkson.sandbox.ui.EarthquakeSelectionCard
 
 class EarthquakeComponentScreenshotTest {
     @PreviewTest
@@ -90,6 +93,24 @@ class EarthquakeComponentScreenshotTest {
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
+    fun fallbackTitles(
+        @PreviewParameter(EarthquakeFallbackTitleProvider::class) item: EarthquakeMapItem
+    ) {
+        EarthquakeTheme(dynamicColor = false) {
+            Surface {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    EarthquakeListRow(item, isSelected = false, onClick = {})
+                    EarthquakeSelectionCard(item, onDismiss = {})
+                }
+            }
+        }
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, locale = "en-US")
+    @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
+    @Composable
     fun unavailableEventSnackbar() {
         val eventMessage = stringResource(R.string.event_unavailable)
         val data =
@@ -143,6 +164,25 @@ class EarthquakeListRowCaseProvider : PreviewParameterProvider<EarthquakeListRow
                 for (showMapAction in listOf(false, true)) {
                     yield(EarthquakeListRowCase(selected, hasTime, showMapAction))
                 }
+            }
+        }
+    }
+}
+
+class EarthquakeFallbackTitleProvider : PreviewParameterProvider<EarthquakeMapItem> {
+    override val values = sequence {
+        for (magnitude in listOf(6.0, null)) {
+            for (place in listOf("Shima, Japan", null)) {
+                yield(
+                    EarthquakeMapItem(
+                        id = "fallback",
+                        latitude = 33.822,
+                        longitude = 136.9854,
+                        title = null,
+                        magnitude = magnitude,
+                        place = place,
+                    )
+                )
             }
         }
     }

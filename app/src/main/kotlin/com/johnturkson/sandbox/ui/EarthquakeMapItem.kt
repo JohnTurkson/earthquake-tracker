@@ -1,6 +1,9 @@
 package com.johnturkson.sandbox.ui
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.res.stringResource
+import com.johnturkson.sandbox.R
 import com.johnturkson.sandbox.data.EarthquakeDatabaseModel
 import java.util.Locale
 import kotlin.time.Instant
@@ -10,21 +13,30 @@ data class EarthquakeMapItem(
     val id: String,
     val latitude: Double,
     val longitude: Double,
-    val title: String,
+    val title: String?,
     val snippet: String? = null,
     val eventTime: Instant? = null,
     val magnitude: Double? = null,
+    val place: String? = null,
 )
 
-internal fun EarthquakeDatabaseModel.toMapItem(): EarthquakeMapItem {
-    val label = magnitude?.let { String.format(Locale.ROOT, "%.1f", it) } ?: "?"
-    return EarthquakeMapItem(
+internal fun EarthquakeDatabaseModel.toMapItem(): EarthquakeMapItem =
+    EarthquakeMapItem(
         id = id,
         latitude = latitude,
         longitude = longitude,
-        title =
-            title?.replaceFirst(Regex("^M\\s+"), "M") ?: "M$label – ${place ?: "Unknown location"}",
+        title = title?.replaceFirst(Regex("^M\\s+"), "M"),
         eventTime = time,
         magnitude = magnitude,
+        place = place,
     )
-}
+
+@Composable
+internal fun earthquakeTitle(item: EarthquakeMapItem): String =
+    item.title
+        ?: stringResource(
+            R.string.earthquake_fallback_title,
+            item.magnitude?.let { String.format(Locale.ROOT, "%.1f", it) }
+                ?: stringResource(R.string.unknown_magnitude),
+            item.place ?: stringResource(R.string.unknown_location),
+        )

@@ -159,7 +159,15 @@ class EarthquakeMapTest {
 
     @Test
     fun markerClicksUseCurrentItemsAfterReorderingAndMoving() {
-        val first = EarthquakeMapItem("first", 0.0, -8.0, "First earthquake")
+        val first =
+            EarthquakeMapItem(
+                "first",
+                0.0,
+                -8.0,
+                title = null,
+                magnitude = 4.5,
+                place = "First earthquake",
+            )
         val second = EarthquakeMapItem("second", 0.0, 8.0, "Second earthquake")
         var items by mutableStateOf(listOf(first, second))
         var selectedItem by mutableStateOf<EarthquakeMapItem?>(null)

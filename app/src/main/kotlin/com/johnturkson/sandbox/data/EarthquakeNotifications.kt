@@ -126,7 +126,7 @@ constructor(@ApplicationContext private val context: Context) {
         val title =
             item.title?.takeIf { it.isNotBlank() }?.replaceFirst(Regex("^M\\s+"), "M")
                 ?: context.getString(
-                    R.string.alert_fallback_title,
+                    R.string.earthquake_fallback_title,
                     item.magnitude.toString(),
                     item.place ?: context.getString(R.string.unknown_location),
                 )
