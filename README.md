@@ -3,7 +3,7 @@
 Earthquake Tracker is an Android-only app for exploring recent earthquake activity
 using the earthquake data API.
 
-## Current explorer screen
+## Features
 
 Explore earthquakes in Map and List, open event details, and browse grouped map
 markers. Compact windows show one view at a time; expanded windows show floating
