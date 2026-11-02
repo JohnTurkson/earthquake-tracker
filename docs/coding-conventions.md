@@ -38,7 +38,7 @@ Kotlin date/time APIs and `kotlinx.datetime` calendar/time-zone types where
 applicable. Serialize instants to ISO-8601 strings at storage boundaries and
 convert automatically; keep entities, queries, state, and navigation arguments
 typed. The dedicated guide describes the required sortable Room format and
-legacy migration.
+initial schema.
 
 ## String resources
 

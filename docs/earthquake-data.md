@@ -2,7 +2,7 @@
 
 Room is the source of truth for earthquake records, retained history, local ID
 lookups, and the last successful refresh timestamp. WorkManager owns all runtime
-updates. Hilt provides the shared Ktor client, `MainDatabase`, and `EarthquakeDao`; constructor injection
+updates. Hilt provides the shared Ktor client, `EarthquakeDatabase`, and `EarthquakeDao`; constructor injection
 provides `EarthquakeApi` and `EarthquakeRepository`. The explorer observes the
 unrestricted stored history. `EarthquakeRefreshRepository` reuses this API and
 merge path for the shared one-time refresh worker. Manual refresh and

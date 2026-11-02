@@ -199,15 +199,13 @@ successes and failures. Database reads
 must not initiate network requests. A database reopen tests persistent storage;
 it does not alone establish offline screen behavior or an actual device reboot.
 
-[EarthquakeMigrationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMigrationTest.kt)
-uses Room's `MigrationTestHelper` and tracked schema exports to validate the
-upgrade paths and removal of obsolete item and product tables while retaining
-earthquakes, aliases, refresh metadata, and alert history. The version 4-to-5
-timestamp migration also checks ISO text storage and pre-epoch data retention.
-Exercise the complete upgrade through version 6, including the version-5-to-6
-item table removal, and reopen Room to verify retained records remain readable.
-Storage tests cover nanosecond precision and chronological half-open queries.
-Generate schema exports through Room; never hand-edit them.
+[EarthquakeDatabaseTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDatabaseTest.kt)
+creates a fresh disk-backed version-1 database without migrations. It verifies
+empty initial reads, the earthquake-only table set, ISO text timestamps with
+pre-epoch and nanosecond values, and retained events, aliases, refresh metadata,
+and alert history after reopening. Storage tests cover nanosecond precision and
+chronological half-open queries. Generate schema exports through Room; never
+hand-edit them.
 
 Run these tests on the shared Earthquake Project emulator under the exclusive
 reservation described above. Continue to run the normal build, formatting,
@@ -546,7 +544,7 @@ joining. No separate pacing helper or injected monotonic clock is required.
 `EarthquakeAlertDeliveryTest` covers delivery deduplication and suppressed posts.
 
 On the Resizable API 37 emulator, `EarthquakeMonitoringStorageTest` checks durable data and
-alert history after reopening, transaction rollback, alias-aware alert deduplication, retained history after empty feeds, and the additive version-2-to-3 migration.
+alert history after reopening, transaction rollback, alias-aware alert deduplication, and retained history after empty feeds.
 `EarthquakeRefreshWorkerTest` uses TestListenableWorkerBuilder with a controlled
 refresher to check offline failure before fetching or alert delivery,
 save-before-alert order, propagation of refresh exceptions and cancellation, and

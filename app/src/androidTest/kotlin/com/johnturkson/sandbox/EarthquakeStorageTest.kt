@@ -14,6 +14,7 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import app.cash.turbine.test
 import com.johnturkson.sandbox.data.EarthquakeApi
 import com.johnturkson.sandbox.data.EarthquakeCollectionNetworkModel
+import com.johnturkson.sandbox.data.EarthquakeDatabase
 import com.johnturkson.sandbox.data.EarthquakeDatabaseModel
 import com.johnturkson.sandbox.data.EarthquakeGeometryNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeNetworkModel
@@ -22,8 +23,6 @@ import com.johnturkson.sandbox.data.EarthquakePropertiesNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
-import com.johnturkson.sandbox.data.EarthquakeTimestampMigration
-import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.data.toDatabaseModel
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
 import io.ktor.client.HttpClient
@@ -69,11 +68,11 @@ import org.junit.runner.RunWith
 class EarthquakeStorageTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private val json = Json { ignoreUnknownKeys = true }
-    private lateinit var database: MainDatabase
+    private lateinit var database: EarthquakeDatabase
 
     @Before
     fun createDatabase() {
-        database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
+        database = Room.inMemoryDatabaseBuilder(context, EarthquakeDatabase::class.java).build()
     }
 
     @After
@@ -531,10 +530,7 @@ class EarthquakeStorageTest {
         var networkRequests = 0
         try {
             database.close()
-            database =
-                Room.databaseBuilder(context, MainDatabase::class.java, name)
-                    .addMigrations(EarthquakeTimestampMigration)
-                    .build()
+            database = Room.databaseBuilder(context, EarthquakeDatabase::class.java, name).build()
             client {
                 networkRequests++
                 respond(
@@ -564,10 +560,7 @@ class EarthquakeStorageTest {
                 }
             assertEquals(3, networkRequests)
             database.close()
-            database =
-                Room.databaseBuilder(context, MainDatabase::class.java, name)
-                    .addMigrations(EarthquakeTimestampMigration)
-                    .build()
+            database = Room.databaseBuilder(context, EarthquakeDatabase::class.java, name).build()
             client {
                 networkRequests++
                 throw IOException("offline after restart")

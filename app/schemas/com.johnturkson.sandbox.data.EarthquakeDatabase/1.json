@@ -1,30 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 4,
-    "identityHash": "b0a14003f6cff53e79dc09d2d8a1c5f1",
+    "version": 1,
+    "identityHash": "71e3016ae709df97a9cf596027703280",
     "entities": [
       {
-        "tableName": "ItemDatabaseModel",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, PRIMARY KEY(`id`))",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "id"
-          ]
-        }
-      },
-      {
         "tableName": "earthquakes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `time` INTEGER NOT NULL, `updated` INTEGER NOT NULL, `longitude` REAL NOT NULL, `latitude` REAL NOT NULL, `depth` REAL NOT NULL, `magnitude` REAL, `place` TEXT, `tz` INTEGER, `url` TEXT, `detail` TEXT, `felt` INTEGER, `cdi` REAL, `mmi` REAL, `alert` TEXT, `status` TEXT, `tsunami` INTEGER, `significance` INTEGER, `network` TEXT, `code` TEXT, `ids` TEXT, `sources` TEXT, `types` TEXT, `stationCount` INTEGER, `minimumDistance` REAL, `rms` REAL, `gap` REAL, `magnitudeType` TEXT, `type` TEXT, `title` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `time` TEXT NOT NULL, `updated` TEXT NOT NULL, `longitude` REAL NOT NULL, `latitude` REAL NOT NULL, `depth` REAL NOT NULL, `magnitude` REAL, `place` TEXT, `tz` INTEGER, `url` TEXT, `detail` TEXT, `felt` INTEGER, `cdi` REAL, `mmi` REAL, `alert` TEXT, `status` TEXT, `tsunami` INTEGER, `significance` INTEGER, `network` TEXT, `code` TEXT, `ids` TEXT, `sources` TEXT, `types` TEXT, `stationCount` INTEGER, `minimumDistance` REAL, `rms` REAL, `gap` REAL, `magnitudeType` TEXT, `type` TEXT, `title` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -35,13 +17,13 @@
           {
             "fieldPath": "time",
             "columnName": "time",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "updated",
             "columnName": "updated",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -260,7 +242,7 @@
       },
       {
         "tableName": "earthquake_refresh",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `updatedMillis` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `updatedAt` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -269,9 +251,9 @@
             "notNull": true
           },
           {
-            "fieldPath": "updatedMillis",
-            "columnName": "updatedMillis",
-            "affinity": "INTEGER",
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -284,7 +266,7 @@
       },
       {
         "tableName": "earthquake_alerts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventId` TEXT NOT NULL, `deliveredMillis` INTEGER NOT NULL, PRIMARY KEY(`eventId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventId` TEXT NOT NULL, `deliveredAt` TEXT NOT NULL, PRIMARY KEY(`eventId`))",
         "fields": [
           {
             "fieldPath": "eventId",
@@ -293,9 +275,9 @@
             "notNull": true
           },
           {
-            "fieldPath": "deliveredMillis",
-            "columnName": "deliveredMillis",
-            "affinity": "INTEGER",
+            "fieldPath": "deliveredAt",
+            "columnName": "deliveredAt",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -309,7 +291,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b0a14003f6cff53e79dc09d2d8a1c5f1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '71e3016ae709df97a9cf596027703280')"
     ]
   }
 }

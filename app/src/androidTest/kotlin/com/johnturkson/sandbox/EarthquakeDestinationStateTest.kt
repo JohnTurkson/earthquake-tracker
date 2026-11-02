@@ -10,10 +10,10 @@ import androidx.room.Room
 import androidx.work.WorkManager
 import androidx.work.await
 import com.google.android.gms.location.LocationServices
+import com.johnturkson.sandbox.data.EarthquakeDatabase
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
-import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.ui.Destination
 import com.johnturkson.sandbox.ui.EarthquakeListViewModel
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringObserver
@@ -47,7 +47,7 @@ class EarthquakeDestinationStateTest {
                 LocationServices.getFusedLocationProviderClient(context),
                 context,
             )
-        val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
+        val database = Room.inMemoryDatabaseBuilder(context, EarthquakeDatabase::class.java).build()
         val repository = EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
         val scheduler = EarthquakeMonitor(WorkManager.getInstance(context))
         scheduler.stop().await()

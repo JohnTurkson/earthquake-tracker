@@ -20,7 +20,7 @@ class EarthquakeRefreshRepository
 @Inject
 constructor(
     private val api: EarthquakeApi,
-    private val database: MainDatabase,
+    private val database: EarthquakeDatabase,
     private val dao: EarthquakeDao,
     private val monitoringDao: EarthquakeMonitoringDao,
     private val settings: EarthquakeSettingsRepository,

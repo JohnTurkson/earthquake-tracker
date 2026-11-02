@@ -36,11 +36,11 @@ precision must not be written to these columns. Supported stored years are
 silently misordering expanded or negative years. No numeric timestamp arithmetic
 belongs in these text queries.
 
-Use data-preserving migrations when changing a stored representation.
-[EarthquakeTimestampMigration](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeTimestampMigration.kt)
-converts legacy numeric columns, preserves aliases and relationships, and retains
-unrelated legacy rows. It upgrades version 4 to version 5 after the existing
-product-removal migration. Register it on disk-backed Room builders. Room's generated schema exports remain the schema history.
+[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabase.kt)
+stores this ISO representation from its initial version-1 schema. No legacy
+numeric database conversion is required. Preserve saved data if a later schema
+change introduces another stored representation. Room's generated schema exports
+record the baseline and future versions.
 
 The feed's numeric wire timestamps use
 [EarthquakeEpochMillisecondsSerializer](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeEpochMillisecondsSerializer.kt).
@@ -70,7 +70,7 @@ external URI or platform API that requires text, encode an ISO value and parse
 it at that boundary. The catalog query's typed instant arguments demonstrate
 ISO serialization through Ktor Resources.
 
-Use deterministic typed fixtures. The instant, alert, DataStore, migration, and
+Use deterministic typed fixtures. The instant, alert, DataStore, database, and
 Room storage tests cover wire decoding, string round trips, offset normalization,
-nanosecond boundaries, chronological text queries, and legacy data retention.
+nanosecond boundaries, chronological text queries, and persistence after reopening.
 Follow the [testing guide](testing.md) for required host and device checks.

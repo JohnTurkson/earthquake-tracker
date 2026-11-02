@@ -622,7 +622,7 @@ Use the existing path for runtime earthquake data:
 ```text
 EarthquakeMonitor -> EarthquakeRefreshWorker -> EarthquakeRefreshRepository
 EarthquakeRefreshRepository -> EarthquakeApi -> Earthquake feed
-EarthquakeRefreshRepository -> MainDatabase -> EarthquakeDao
+EarthquakeRefreshRepository -> EarthquakeDatabase -> EarthquakeDao
 EarthquakeDao + EarthquakeMonitoringDao -> EarthquakeRepository -> EarthquakeViewModel
 ```
 
@@ -645,10 +645,9 @@ without separate product snapshots, product maps, or detail-freshness wrappers.
 `EarthquakeRepository` is read-only and exposes Room flows for records and refresh
 metadata. The one-time `EarthquakeRefreshWorker` is the only runtime caller of
 `EarthquakeRefreshRepository.refresh()`; route every update through the scheduler.
-`MainDatabase` retains its original name and schema history to preserve
-compatibility with existing installations. Version 6 removes
-the unused item table through `EarthquakeOnlyMigration`; current entities and DAOs
-are earthquake-specific. Preserve earthquake data during later schema changes.
+`EarthquakeDatabase` starts at version 1 with earthquake-specific entities and
+DAOs. Hilt opens the disk file `EarthquakeDatabase` without legacy development
+migrations. Preserve saved earthquake data during future schema changes.
 
 See [earthquake data](earthquake-data.md) for the repository API and refresh
 limits. WorkManager scheduling and screen integration should reuse this layer.
@@ -796,15 +795,14 @@ label.
 
 `EarthquakeRefreshRepository` reuses the shared `EarthquakeApi` and network-to-Room
 mapping, then calls the established `EarthquakeDao.mergeEarthquakes` inside a
-`MainDatabase.withTransaction` with refresh metadata. It never clears event rows.
+`EarthquakeDatabase.withTransaction` with refresh metadata. It never clears event rows.
 `EarthquakeViewModel` reads `EarthquakeRepository.getEarthquakesFlow` without time
 filters and observes refresh metadata separately. A failed merge rolls back both
 event changes and the last-successful-refresh timestamp.
 
-`MainDatabase` version 3 adds only `earthquake_refresh` and `earthquake_alerts`,
-using additive auto-migrations. Version 4 removes obsolete product snapshots.
-Version 5 converts timestamp columns to ISO-8601 text with the explicit
-`EarthquakeTimestampMigration`, retaining existing data. `EarthquakeMonitoringDao`
+`EarthquakeDatabase` includes earthquake records, source aliases, refresh metadata,
+and delivered-alert history in its version-1 schema. Timestamp columns use
+ISO-8601 text through `EarthquakeInstantConverters`. `EarthquakeMonitoringDao`
 keeps all reads observable with names ending in `Flow`. Delivered-alert queries
 join retained aliases, so a preferred-ID change does not repeat a notification.
 Notification taps and existing selection resolve through the same repository's

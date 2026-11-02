@@ -13,8 +13,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import androidx.room.Room
+import com.johnturkson.sandbox.data.EarthquakeDatabase
 import com.johnturkson.sandbox.data.EarthquakeRepository
-import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.Destination
 import com.johnturkson.sandbox.ui.EarthquakeDetailsCard
@@ -101,7 +101,8 @@ class EarthquakeDetailsTest {
     @Test
     fun detailDestinationObservesSavedAliasesAndNewSourceRevisions() = runBlocking {
         val database =
-            Room.inMemoryDatabaseBuilder(composeRule.activity, MainDatabase::class.java).build()
+            Room.inMemoryDatabaseBuilder(composeRule.activity, EarthquakeDatabase::class.java)
+                .build()
         val record =
             EarthquakeMonitoringFixtures.item(magnitude = 4.2)
                 .copy(
@@ -145,7 +146,8 @@ class EarthquakeDetailsTest {
     fun unavailableDetailsCanCloseAndBecomeAvailableWhenRoomReceivesTheRecord(): Unit =
         runBlocking {
             val database =
-                Room.inMemoryDatabaseBuilder(composeRule.activity, MainDatabase::class.java).build()
+                Room.inMemoryDatabaseBuilder(composeRule.activity, EarthquakeDatabase::class.java)
+                    .build()
             val record = EarthquakeMonitoringFixtures.item().copy(id = "late-event", felt = 0)
             lateinit var model: EarthquakeDetailsViewModel
             var closed = false

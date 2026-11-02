@@ -10,6 +10,7 @@ import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import com.johnturkson.sandbox.data.EarthquakeApi
 import com.johnturkson.sandbox.data.EarthquakeCollectionNetworkModel
+import com.johnturkson.sandbox.data.EarthquakeDatabase
 import com.johnturkson.sandbox.data.EarthquakeGeometryNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeMetadataNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeNetworkModel
@@ -18,7 +19,6 @@ import com.johnturkson.sandbox.data.EarthquakePropertiesNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
-import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -112,7 +112,7 @@ class EarthquakeRefreshIntegrationTest {
                 install(Resources)
                 install(ContentNegotiation) { json(json) }
             }
-        val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
+        val database = Room.inMemoryDatabaseBuilder(context, EarthquakeDatabase::class.java).build()
         val storeJob = SupervisorJob()
         val file = File(context.cacheDir, "$id.preferences_pb")
         val store =

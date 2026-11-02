@@ -17,11 +17,10 @@ import com.johnturkson.sandbox.annotations.MainDispatcher
 import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeConnectivity
 import com.johnturkson.sandbox.data.EarthquakeDao
+import com.johnturkson.sandbox.data.EarthquakeDatabase
 import com.johnturkson.sandbox.data.EarthquakeMonitoringDao
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRefresher
-import com.johnturkson.sandbox.data.EarthquakeTimestampMigration
-import com.johnturkson.sandbox.data.MainDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -52,7 +51,7 @@ object EarthquakeModule {
     fun provideRefresher(repository: EarthquakeRefreshRepository): EarthquakeRefresher = repository
 
     @Provides
-    fun provideMonitoringDao(database: MainDatabase): EarthquakeMonitoringDao =
+    fun provideMonitoringDao(database: EarthquakeDatabase): EarthquakeMonitoringDao =
         database.monitoringDao()
 
     @Provides
@@ -103,15 +102,14 @@ object EarthquakeModule {
 
     @Provides
     @Singleton
-    fun provideMainDatabase(@ApplicationContext context: Context): MainDatabase {
-        return Room.databaseBuilder(context, MainDatabase::class.java, "MainDatabase")
-            .addMigrations(EarthquakeTimestampMigration)
+    fun provideEarthquakeDatabase(@ApplicationContext context: Context): EarthquakeDatabase {
+        return Room.databaseBuilder(context, EarthquakeDatabase::class.java, "EarthquakeDatabase")
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideEarthquakeDao(database: MainDatabase): EarthquakeDao {
+    fun provideEarthquakeDao(database: EarthquakeDatabase): EarthquakeDao {
         return database.earthquakeDao()
     }
 

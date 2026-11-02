@@ -56,7 +56,7 @@ or refresh methods. UI callers enqueue `EarthquakeMonitor.refresh()`;
 `EarthquakeRefreshWorker` alone invokes the refresh repository to fetch and save.
 
 Register entities and DAO accessors in
-[MainDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/MainDatabase.kt)
+[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabase.kt)
 and provide DAOs from
 [EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeModule.kt).
 Use constructor injection for repositories; do not construct databases in
@@ -101,22 +101,19 @@ Empty feeds and refresh failures preserve existing data. See the
 
 ## Schema history and verification
 
-Increment the database version for schema changes and preserve existing data.
-Use auto-migrations where supported by the actual schema change. Remove an
-obsolete table with an explicit nested `AutoMigrationSpec` annotated with
-`@DeleteTable`, as in `MainDatabase.RemoveProductsMigration` and
-`MainDatabase.EarthquakeOnlyMigration`. Register the spec on that version's
-`AutoMigration`. Delete only the obsolete table; retain earthquake records,
-aliases, refresh metadata, and alert history. Establish other new migration
-patterns with the user when needed. Keep generated schema history under
-`app/schemas` in Git; never format or hand-edit it. The current version is 6:
-additive migrations from version 1 to 2 and 2 to 3, removal of
-`earthquake_details` from version 3 to 4, conversion of numeric timestamp columns
-to ISO-8601 text from 4 to 5, and removal of the unused item table from 5 to 6.
-Register the explicit `EarthquakeTimestampMigration` with `addMigrations` on
-disk-backed builders. Keep older schema exports even when they describe removed
-tables. A read-method rename does not change the schema or require another
-database version.
+[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabase.kt)
+starts at version 1 and uses the disk filename `EarthquakeDatabase`, provided by
+`EarthquakeModule.provideEarthquakeDatabase`. Its initial schema contains only
+`earthquakes`, `earthquake_aliases`, `earthquake_refresh`, and `earthquake_alerts`,
+with typed instants stored as sortable ISO-8601 text. This is the new app's
+baseline; no upgrade path from earlier development databases is maintained.
+
+Keep Room-generated schema exports under
+`app/schemas/com.johnturkson.sandbox.data.EarthquakeDatabase` in Git. Never format
+or hand-edit them. Future schema changes must increment the version and preserve
+saved earthquake data. Use auto-migrations where the actual change supports
+them, and agree on new migration patterns when introduced. Read-method renames
+do not change the schema.
 
 Extend [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
 for behavior using real Room and Turbine on Android. Keep collectors active
@@ -124,16 +121,17 @@ across inserts and revisions, including filter membership, null-to-value reads,
 refresh metadata and preferred-ID changes. Assertions on `.first()`
 alone do not establish observability. Retain offline-reopen, transaction,
 concurrency, and refresh-failure coverage when touching those paths. Use
-[EarthquakeMigrationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMigrationTest.kt)
-for schema upgrades and data retention.
+[EarthquakeDatabaseTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDatabaseTest.kt)
+for fresh version-1 creation, empty initial reads, ISO text storage, and reopening
+without migrations while retaining events, aliases, refresh metadata, and alerts.
 
 Update this guide with agreed conventions and implementation examples. Run and
 report the applicable checks from the testing guide, with an explicitly selected
 device for storage tests. Do not claim UI or screenshot verification from DAO
 tests; storage tests alone do not verify the connected explorer UI.
 
-`EarthquakeRefreshDatabaseModel` and `EarthquakeAlertDatabaseModel` add refresh
-metadata and delivered-notification history in version 3. `EarthquakeMonitoringDao`
+`EarthquakeRefreshDatabaseModel` and `EarthquakeAlertDatabaseModel` store refresh
+metadata and delivered-notification history in the initial schema. `EarthquakeMonitoringDao`
 provides observable reads and explicit writes. Advance refresh metadata in the
 same database transaction as the event merge. `getDeliveredAlertsFlow` joins the
 retained source alias table to deduplicate alerts across preferred-ID changes. The

@@ -6,11 +6,11 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import com.johnturkson.sandbox.data.EarthquakeApi
+import com.johnturkson.sandbox.data.EarthquakeDatabase
 import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakeRefreshDatabaseModel
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
-import com.johnturkson.sandbox.data.MainDatabase
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -133,7 +133,7 @@ class EarthquakeRefreshRepositoryTest {
 
     private class Fixture {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
+        val database = Room.inMemoryDatabaseBuilder(context, EarthquakeDatabase::class.java).build()
         val old =
             EarthquakeMonitoringFixtures.item(id = "old", time = Instant.fromEpochMilliseconds(1))
         val metadata =
