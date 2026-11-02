@@ -48,6 +48,7 @@ fun EarthquakeExplorerControls(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     listState: LazyListState = rememberLazyListState(),
+    renderListContent: Boolean = true,
     onMapBottomControlsSizeChanged: (Int) -> Unit = {},
     showLocationButton: Boolean = false,
     requiresLocationSettings: Boolean = false,
@@ -73,50 +74,15 @@ fun EarthquakeExplorerControls(
             !notificationsVisible
 
     Box(modifier.fillMaxSize()) {
-        if (showListPanel) {
-            Surface(
-                modifier =
-                    Modifier.align(Alignment.CenterStart)
-                        .padding(contentPadding)
-                        .padding(16.dp)
-                        .width(earthquakeListPaneWidth)
-                        .fillMaxHeight(),
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 6.dp,
-            ) {
-                Column {
-                    Row(
-                        Modifier.padding(start = 28.dp, end = 12.dp, top = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            stringResource(R.string.recent_earthquakes),
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
-                        )
-                        IconButton(onClick = { onListPanelVisibilityChanged(false) }) {
-                            Icon(
-                                Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                                contentDescription =
-                                    stringResource(R.string.minimize_earthquake_list),
-                            )
-                        }
-                    }
-                    EarthquakeList(
-                        items = items,
-                        selectedItemId = selectedItemId,
-                        onItemClick = onItemClick,
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        listState = listState,
-                        isSupportingPane = true,
-                        showTitle = false,
-                        monitoring = monitoring,
-                        onRefresh = onRefresh,
-                    )
-                }
-            }
-        } else if (!expanded && selectedView == EarthquakeView.List && !notificationsVisible) {
+        if (showListPanel && renderListContent) {
+            EarthquakeListPanel(
+                items, selectedItemId, onItemClick, { onListPanelVisibilityChanged(false) },
+                listState,
+                Modifier.align(Alignment.CenterStart).padding(contentPadding).padding(16.dp)
+                    .width(earthquakeListPaneWidth).fillMaxHeight(),
+                monitoring, onRefresh,
+            )
+        } else if (renderListContent && !expanded && selectedView == EarthquakeView.List && !notificationsVisible) {
             EarthquakeList(
                 items = items,
                 selectedItemId = selectedItemId,

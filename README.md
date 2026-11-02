@@ -20,7 +20,10 @@ Compact windows have separate full-screen Map and List views, selected with a
 floating control at the top. Expanded windows show a floating earthquake list
 over the map, with no view toggle. The panel highlights the selected earthquake.
 Minimize the panel to see the full map and the same bottom selection card used
-in compact Map; Show list restores it. Both layouts share data and selection.
+in compact Map; Show list restores it. Map, List, and Notifications are separate Navigation 3 destinations. Map and List
+have independent ViewModels that observe the same data and exchange selection
+results. Selecting a map marker reveals its row when the list is visible or next
+opened.
 Selecting a list row centers its map location; the camera, list scroll position,
 and compact view choice survive layout changes.
 
@@ -43,8 +46,9 @@ offline, and resumes on reconnection. Android can stop or delay work; the screen
 observes the actual worker state and refresh result. Stopping a session cancels
 future checks while letting an already queued or running refresh finish.
 
-The separate bell opens the notification page in compact windows and a right
-pane in expanded windows. The monitoring card is the first scrolling list item;
+The separate bell opens the Notifications destination full-screen in compact
+windows and as a floating right pane in expanded windows. Material Adaptive
+scenes arrange the destinations as the window resizes. The monitoring card is the first scrolling list item;
 when the expanded list is minimized, it appears over the map. Large-earthquake
 alerts use a separate channel from quiet monitoring status. Alerts default to
 M6+ events within the past minute and are opt-in. Previously delivered event IDs

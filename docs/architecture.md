@@ -31,20 +31,28 @@ provides a test implementation without a ViewModel. Follow that interface and
 implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
 
-`EarthquakeState` exposes `navKey`, read-only `mapItems`, `selectedMapItemId`,
-`selectedClusterItemIds`, `selectedView`, `isListPanelVisible`, `initialMapLocation`, and the latest measured
-`userLocation`.
-`EarthquakeScreen` has a Hilt entry overload and a rendering overload that accepts
-`EarthquakeState` and callbacks. Extend this read-only contract when expanding screen
-state and provide deterministic preview and test implementations.
+`EarthquakeState` describes the Map destination: read-only items, selected event and
+cluster IDs, location values, monitoring, and pending camera focus.
+[EarthquakeListState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListState.kt)
+is implemented by its own
+[EarthquakeListViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListViewModel.kt)
+and deterministic `EarthquakeListPreviewState`.
+[EarthquakeNotificationsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsState.kt)
+is implemented by
+[EarthquakeNotificationsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsViewModel.kt).
+Each destination owns its state independently in its decorated navigation entry.
+Map and List observe the same repository data and communicate selection changes
+through navigation results. Do not introduce a shared selection ViewModel or a
+second selected-ID copy in a composable.
 
-`EarthquakeViewModel` exposes selection through `EarthquakeState` with a private
-setter and owns changes through `selectMapItem` and `clearMapSelection`. UI
-consumers receive read-only state and request changes through callbacks. Do not
-create a second copy of the same feature state inside a composable.
+`applySelection` accepts an `EarthquakeSelectionResult`, ignores older or repeated
+revisions, and updates only the receiving destination. Receiving a result must
+not publish another result. Local actions publish through the navigation host,
+then apply that revision locally without requesting their own scroll or camera
+movement. Rendered components continue to receive values and action callbacks.
 
 [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
-keeps Hilt lookup at the screen entry and passes values and actions into
+keeps lifecycle integration at the screen entry and passes values and actions into
 [EarthquakeMap](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMap.kt).
 Keep lifecycle integration at that entry when a feature needs it. Pass values
 or read-only models, callbacks, and a `Modifier` into rendered components:
@@ -213,13 +221,17 @@ coverage is still missing and must be reported.
 change that single restorable value. The map does not keep a second selection.
 Camera restoration remains UI-owned through `rememberCameraPositionState`.
 
-`EarthquakeViewModel.selectedView` uses the same `SavedStateHandle.saved` and
-`MutableStateSerializer` pattern with the serializable `EarthquakeView` enum.
-It restores the Map/List choice independently of earthquake selection.
-`isListPanelVisible` uses the same saved Boolean pattern, defaulting to true.
-`updateListPanelVisibility` changes only the expanded panel's visibility; compact
-presentation and the shared selection remain independent. Restore this choice
-through activity/process recreation rather than adding a navigation entry.
+Map and List each save their own selected ID and last-applied result revision
+through `SavedStateHandle.saved` and `MutableStateSerializer`. Map saves pending
+camera focus; List saves a pending scroll result until the matching row is
+available and the UI handles it. Use the existing serialization pattern for
+these values rather than relying on an in-memory result bus for restoration.
+
+The navigation host saves the compact view preference, expanded panel preference,
+notification visibility, result revision, and unacknowledged result payloads
+using `rememberSaveable`. These values describe navigation and delivery, not a
+shared destination selection. Keep camera and `LazyListState` in their respective
+entry's saveable UI scope so resizing and compact view switching preserve them.
 
 Inject `SavedStateHandle` into the ViewModel for state that needs restoration.
 Use the existing serialization pattern instead of maintaining an unrelated
@@ -239,56 +251,57 @@ durable application data belongs in storage accessed through the repository.
 
 ## Map and list presentation
 
-Use separate full-screen Map and List views in compact windows.
-[EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
-places Material single-choice segmented buttons in an opaque floating surface
-at the top, clear of system insets. Keep the segments flush with that surface,
-with no outer padding or overlap for the borderless buttons. Each segment has a
-minimum visual height of 48 dp so its fill covers the accessible touch target.
-Changing presentation is a screen action,
-not a new Navigation 3 back-stack entry. Keep destination navigation in
-`EarthquakeApp` when adding actual destinations.
-Measure the localized labels with the current typography and font scale. When
-both icon-and-label segments cannot fit, show only their Map/List icons and
-retain their accessible names and selected semantics. Keep the controls on one
-row; resizing restores labels when space permits.
+Map and List are separate Navigation 3 destinations. Compact windows show one at
+a time, selected with `EarthquakeViewSwitcher`; expanded windows keep the map
+full-screen with a floating list at the start edge. The host classifies available
+constraints as expanded at widths of at least 840 dp and heights of at least
+480 dp. Avoid hardware and fold-state checks.
 
-[EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
-classifies its available constraints in the UI. At widths of at least 840 dp
-and heights of at least 480 dp, keep the map visible and show a floating 360 dp
-list panel at the start edge, with no Map/List toggle. Shorter or narrower
-windows use the compact presentation. Avoid hardware or fold-state checks.
+[EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
+uses an opaque floating surface with flush Material single-choice segments and
+minimum 48 dp height. Measure localized labels with current typography and font
+scale; use accessible icon-only segments when both labels cannot fit, and restore
+labels when space permits. Keep controls on one row, clear of system insets.
+
+Use Material Adaptive's `rememberSupportingPaneSceneStrategy` with the Map entry
+as `mainPane`, List as `supportingPane`, and Notifications as `extraPane`.
+In expanded windows, configure the two secondary roles with
+`AdaptStrategy.Levitate`, aligned to the start and end respectively, without a
+scrim so the map remains interactive. Set one expanded horizontal partition so
+the main map fills the window. Compact windows use `AdaptStrategy.Hide` for the
+secondary roles and display the current destination full-screen. Keep
+`shouldHandleSinglePaneLayout` enabled to preserve one scaffold scene through
+resizing. Use the library's scene layout rather than a custom `Scene`.
+
+[EarthquakeListScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListScreen.kt)
+uses the same entry-owned `LazyListState` for both presentations.
+[EarthquakeListPanel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListPanel.kt)
+renders the fixed heading and Minimize control above the real list. The preferred
+outer pane width is 392 dp, including 16 dp outer spacing on each side, leaving
+the established 360 dp surface. Use `EarthquakeList(isSupportingPane = true,
+showTitle = false)` inside it. Rows omit the forward arrow in expanded windows.
+Compact rows select the earthquake and navigate to Map; expanded rows update
+Map through results while keeping the panel open.
 
 [EarthquakeExplorerControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerControls.kt)
-renders the ordinary Compose content around the native map. Its `expanded`
-input comes from the screen's layout decision. Compact Map shows the floating
-switcher and an optional selection card; compact List shows the same switcher
-above the full list. The expanded panel contains a fixed heading and Minimize
-button above the list; the selected row is highlighted without a duplicate
-selection card. `EarthquakeList(isSupportingPane = true, showTitle = false)`
-omits its own title and uses a short local-time label. Its rows omit the forward
-arrow because selection updates the adjacent map rather than opening another
-presentation.
+places the map overlays and compact controls. Runtime Map and List destinations
+set `renderListContent = false` when using its controls so the List entry renders
+the list independently. Its aggregate rendering option supports deterministic
+component fixtures using the same list and panel components.
 
-Both layouts consume the same `mapItems` and selected ID. Selecting a list row
-updates selection and centers the map on that item. Only compact list selection
-switches to Map. Expanded selection leaves the compact view preference unchanged.
-Returning to compact restores that preference. Clearing selection on the map or
-in the details clears the list highlight too.
+A Map selection sends a result to List. List retains a pending request while
+hidden or waiting for data, resolves the current event index by ID, accounts for
+the monitoring and heading items, and animates an offscreen row into view. Consume
+the request after handling it; data refreshes and layout changes alone must not
+repeatedly override manual scrolling. A fresh revision can reveal the same event
+again. Clearing selection synchronizes the two destinations without scrolling.
 
-Keep `rememberCameraPositionState` and `rememberLazyListState` above the layout
-branch so changing views or resizing does not discard them. These are UI-owned
-layout states; the ViewModel owns the compact presentation, panel visibility,
-and selected ID.
-The list fills compact windows. Rows wrap rather than truncate event locations
-or times. Reserve the expanded panel's width plus its outer spacing in the map's
-start content padding while the panel is visible so the camera center and
-attribution stay in the visible map area. Minimizing removes that reserved width,
-keeps the existing native map and camera, and shows a floating Show list button
-at the start edge. Resizing to compact ignores the visibility preference;
-returning to expanded restores it. These overlay transitions are screen state,
-not Navigation 3 back-stack changes. Material surfaces and buttons render them;
-the explorer explicitly controls their visibility and placement.
+Keep camera state in the Map entry and list state in the List entry. Minimize and
+Show list change the expanded navigation presentation without changing the saved
+compact view preference. The selected row is highlighted without a duplicate
+map selection card while the list is open. Reserve the panel width and outer
+spacing in map content padding to keep camera focus and attribution visible.
+Minimizing removes that reservation. List rows wrap locations and times.
 
 [EarthquakeSelectionCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionCard.kt)
 shows the selected event's title, available time, and coordinates. Use the same
@@ -374,22 +387,40 @@ dispatchers into feature logic.
 
 ## Navigation
 
-Use Navigation 3. Add serializable destination keys to
-[Destination](../app/src/main/kotlin/com/johnturkson/sandbox/ui/Destination.kt),
-which is a sealed `NavKey` interface. Existing destinations are `@Serializable`
-data objects; the current destination is `EarthquakeRoute`.
-
+Use Navigation 3 and serializable keys in
+[Destination](../app/src/main/kotlin/com/johnturkson/sandbox/ui/Destination.kt).
+The explorer has `MapRoute`, `ListRoute`, and `NotificationsRoute`.
 [EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
-owns `rememberNavBackStack(EarthquakeRoute)`, `NavDisplay`, and the typed
-`entryProvider` entries. It installs the saveable state holder, ViewModel store,
-and result event bus entry decorators. Preserve these entry scopes when adding
-destinations; pass the entry's route to the screen and its assisted ViewModel
-factory when needed.
+owns the back stack, entry provider, Material scene strategy, and navigation
+callbacks. Preserve the saveable state holder, ViewModel store, and result event
+bus decorators. Hilt creates a separate assisted ViewModel in each entry scope.
+Do not share a ViewModel instance between these destinations.
 
-Keep back stack changes in `EarthquakeApp`. Preserve the event/handler boundary
-when adding earthquake destinations: screens emit actions and `EarthquakeApp`
-changes the back stack. Keep navigation infrastructure out of rendered components
-and data code.
+Keep one Map key and one List key in the stack, reordering them to choose the
+compact destination or place the expanded floating list above Map. Do not append
+another Map/List entry on every toggle. This preserves entry scopes and their
+saved UI state. Add Notifications above them when opened and remove that entry
+when closed. Back closes Notifications, minimizes an open expanded list, or
+returns compact List to Map; Back from the Map root exits the activity.
+The notification and expanded-list choices restore independently of the compact
+view preference.
+
+Selection results use `map_selection` and `list_selection` keys with
+[EarthquakeSelectionResult](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionResult.kt)
+payloads containing an optional earthquake ID and increasing revision. Publish
+once from the source action. The host keeps only the latest unacknowledged
+payload for each recipient in saveable state and clears obsolete delivery to
+the source. This preserves updates for hidden destinations and through process
+recreation; Navigation 3's in-memory bus alone does not provide that persistence.
+
+[EarthquakeSelectionEffect](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionEffect.kt)
+sends a pending payload through the result bus when the receiver is composed,
+handles it with `ResultEffect`, and acknowledges the matching revision. Keep one
+receiver per addressed result key. ViewModel revision checks make redelivery
+idempotent. UI focus requests remain pending in the destination until the UI
+can perform them. Keep navigation infrastructure out of rendered components and
+data code; `EarthquakeNavigationActions` passes values and callbacks to entry
+wrappers and provides the fixture seam for host navigation tests.
 
 ## Networking and data models
 
@@ -529,11 +560,15 @@ The database commit and Android notification post are separate operations;
 there is no exactly-once transaction spanning both. Late USGS reports and older
 events found after reconnection are deliberately excluded by the one-minute
 freshness policy. Notification intents have distinct event URIs and open the
-shared selection; an event no longer in the database shows an availability message.
+Map destination and publish the resolved selection to List; an event no longer
+in the database shows an availability message.
 
 `EarthquakeMonitoringState` and `EarthquakeNotificationState` are immutable
-rendering values exposed by `EarthquakeState`. The ViewModel maps worker,
-repository, connectivity, and preference observations into those values.
+rendering values exposed by the relevant destination's read-only contract.
+[EarthquakeMonitoringObserver](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMonitoringObserver.kt)
+combines worker, repository, and connectivity observations without owning event
+selection. Each destination collects it independently. Notifications observes
+preferences and system capabilities in its own ViewModel and screen entry.
 `EarthquakeMonitoringState.status` uses its nested `Status` enum for the monitoring
 session; `refresh` describes the separate refresh operation.
 `EarthquakeMonitoringCard` is the first keyed item of `EarthquakeList`'s existing
@@ -542,16 +577,17 @@ hoisted list state when switching layouts or minimizing. Expanded list headers
 remain fixed. Minimized maps show the same card as an overlay. A refresh keeps
 the old data and timestamp until storage succeeds.
 
-The bell is independent of the Map/List switcher and has no badge. Align it to
-the top end edge in compact and expanded layouts. Center the compact switcher
-independently, reserving equal space on both sides so the bell does not shift
-its center or overlap it. `EarthquakeExplorerControls` owns both placements.
-Notification page visibility is restorable explorer state, like the expanded
-list panel.
-Closing it restores the existing compact view and expanded panel preference;
-opening it in expanded windows uses the right pane and temporarily hides the
-list. Keep the camera, list state, location flow, and selection owners above
-these layout branches. List rows retain selected semantics and background
+The bell has no badge and aligns to the top end edge in both layouts. Center
+the compact switcher independently, reserving equal space on both sides so the
+bell does not shift its center or overlap it. `EarthquakeExplorerControls` owns
+both placements. The bell opens `NotificationsRoute`, independently of the Map/List switcher.
+Closing it restores the compact view and expanded panel preference. Opening it
+in expanded windows uses a floating right pane and temporarily hides List.
+[EarthquakeNotificationsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsScreen.kt)
+owns notification permission launchers, rationale, settings actions, and resume
+capability checks. Map retains location lifecycle integration in its own entry.
+Camera, list scroll, and selection remain in their decorated entry scopes.
+List rows retain selected semantics and background
 highlight without repeating the selection label used by the map's detail card.
 
 `EarthquakeRefreshRepository` reuses the shared `EarthquakeApi` and network-to-Room

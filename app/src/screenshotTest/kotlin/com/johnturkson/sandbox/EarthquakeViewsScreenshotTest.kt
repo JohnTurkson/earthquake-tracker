@@ -11,10 +11,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.tools.screenshot.PreviewTest
 import com.johnturkson.sandbox.theme.EarthquakeTheme
+import com.johnturkson.sandbox.ui.EarthquakeListPreviewState
 import com.johnturkson.sandbox.ui.EarthquakeListRow
+import com.johnturkson.sandbox.ui.EarthquakeListScreen
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
-import com.johnturkson.sandbox.ui.EarthquakePreviewState
-import com.johnturkson.sandbox.ui.EarthquakeScreen
 import com.johnturkson.sandbox.ui.EarthquakeSelectionCard
 import com.johnturkson.sandbox.ui.EarthquakeView
 import com.johnturkson.sandbox.ui.EarthquakeViewSwitcher
@@ -201,15 +201,13 @@ class EarthquakeViewsScreenshotTest {
         dark: Boolean = false,
     ) {
         EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
-            EarthquakeScreen(
+            EarthquakeListScreen(
                 state =
-                    EarthquakePreviewState(
+                    EarthquakeListPreviewState(
                         mapItems = items,
                         selectedMapItemId = selectedId,
-                        selectedView = EarthquakeView.List,
                     ),
-                onMapItemClick = {},
-                onMapClick = {},
+                onItemClick = {},
             )
         }
     }

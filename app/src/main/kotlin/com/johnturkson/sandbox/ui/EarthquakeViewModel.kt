@@ -8,14 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.serialization.saved
 import androidx.lifecycle.viewModelScope
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
-import androidx.work.WorkInfo
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeLocation
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
-import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakeRepository
-import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.ui.EarthquakeViewModel.Factory
 import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
 import dagger.assisted.Assisted
@@ -23,9 +19,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
-import java.util.Locale
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -33,18 +27,14 @@ import kotlinx.coroutines.launch
 class EarthquakeViewModel
 @AssistedInject
 constructor(
-    @Assisted override val navKey: Destination.EarthquakeRoute,
-    private val savedStateHandle: SavedStateHandle,
+    @Assisted override val navKey: Destination.MapRoute,
+    savedStateHandle: SavedStateHandle,
     private val locationRepository: EarthquakeLocationRepository,
     private val locationProvider: EarthquakeLocationProvider,
     private val repository: EarthquakeRepository,
-    private val settingsRepository: EarthquakeSettingsRepository,
-    private val notificationManager: EarthquakeNotifications,
+    monitoringObserver: EarthquakeMonitoringObserver,
     private val workScheduler: EarthquakeWorkScheduler,
-    private val connectivity: EarthquakeConnection,
 ) : ViewModel(), EarthquakeState {
-    private var settingsLoaded = false
-    private var capabilitiesLoaded = false
     private var locationUpdates: Job? = null
     override var initialMapLocation: EarthquakeLocation? by mutableStateOf(null)
         private set
@@ -58,36 +48,22 @@ constructor(
         )
         private set
 
-    override var notifications by mutableStateOf(EarthquakeNotificationState())
-        private set
-
-    override var requestedMapFocusId: String? by mutableStateOf(null)
+    override var mapItems: List<EarthquakeMapItem> by mutableStateOf(emptyList())
         private set
 
     override var unavailableNotificationEvent by mutableStateOf(false)
         private set
 
-    override var notificationsVisible: Boolean by
+    override var requestedMapFocusId: String? by
         savedStateHandle
-            .saved(serializer = MutableStateSerializer<Boolean>()) { mutableStateOf(false) }
-            .getValue(this, this::notificationsVisible)
-        private set
-
-    override var mapItems: List<EarthquakeMapItem> by mutableStateOf(emptyList())
+            .saved(serializer = MutableStateSerializer<String?>()) { mutableStateOf(null) }
+            .getValue(this, this::requestedMapFocusId)
         private set
 
     override var selectedMapItemId: String? by
         savedStateHandle
             .saved(serializer = MutableStateSerializer<String?>()) { mutableStateOf(null) }
             .getValue(this, this::selectedMapItemId)
-        private set
-
-    override var selectedView: EarthquakeView by
-        savedStateHandle
-            .saved(serializer = MutableStateSerializer<EarthquakeView>()) {
-                mutableStateOf(EarthquakeView.Map)
-            }
-            .getValue(this, this::selectedView)
         private set
 
     override var selectedClusterItemIds: List<String> by
@@ -98,11 +74,10 @@ constructor(
             .getValue(this, this::selectedClusterItemIds)
         private set
 
-    override var isListPanelVisible: Boolean by
+    private var selectionRevision: Long by
         savedStateHandle
-            .saved(serializer = MutableStateSerializer<Boolean>()) { mutableStateOf(true) }
-            .getValue(this, this::isListPanelVisible)
-        private set
+            .saved(serializer = MutableStateSerializer<Long>()) { mutableStateOf(0L) }
+            .getValue(this, this::selectionRevision)
 
     init {
         viewModelScope.launch {
@@ -117,77 +92,19 @@ constructor(
                         selectedMapItemId = it.id
                     }
                 }
-                mapItems = items.map { item ->
-                    val magnitude =
-                        item.magnitude?.let { String.format(Locale.ROOT, "%.1f", it) } ?: "?"
-                    EarthquakeMapItem(
-                        item.id,
-                        item.latitude,
-                        item.longitude,
-                        item.title ?: "M $magnitude – ${item.place ?: "Unknown location"}",
-                        eventTime = item.time,
-                        magnitude = item.magnitude,
-                    )
-                }
-                monitoring = monitoring.copy(hasStoredData = items.isNotEmpty())
+                mapItems = items.map { it.toMapItem() }
             }
         }
-        viewModelScope.launch {
-            repository.getRefreshFlow().collect { metadata ->
-                monitoring = monitoring.copy(lastUpdated = metadata?.updatedAt)
-            }
-        }
-        viewModelScope.launch {
-            settingsRepository.settings.collect { settings ->
-                settingsLoaded = true
-                notifications =
-                    notifications.copy(
-                        isChecking = !capabilitiesLoaded,
-                        alertsEnabled = settings.alertsEnabled,
-                        minimumMagnitude = settings.minimumMagnitude,
-                        hasRequestedPermission = settings.hasRequestedNotifications,
-                    )
-            }
-        }
-        viewModelScope.launch {
-            combine(
-                    workScheduler.monitoringWork,
-                    workScheduler.refreshWork,
-                    connectivity.online,
-                ) { monitor, refresh, online ->
-                    val status =
-                        when (monitor?.state) {
-                            WorkInfo.State.ENQUEUED,
-                            WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Status.Starting
-                            WorkInfo.State.RUNNING ->
-                                if (online) EarthquakeMonitoringState.Status.Running
-                                else EarthquakeMonitoringState.Status.Offline
-                            WorkInfo.State.FAILED -> EarthquakeMonitoringState.Status.Failed
-                            else -> EarthquakeMonitoringState.Status.Stopped
-                        }
-                    val refreshing =
-                        when (refresh?.state) {
-                            WorkInfo.State.RUNNING -> EarthquakeMonitoringState.Refresh.Running
-                            WorkInfo.State.ENQUEUED,
-                            WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Refresh.Queued
-                            WorkInfo.State.FAILED -> EarthquakeMonitoringState.Refresh.Failed
-                            else -> EarthquakeMonitoringState.Refresh.Idle
-                        }
-                    status to refreshing
-                }
-                .collect { (status, refresh) ->
-                    monitoring = monitoring.copy(status = status, refresh = refresh)
-                }
-        }
+        viewModelScope.launch { monitoringObserver.states.collect { monitoring = it } }
         workScheduler.refresh()
     }
 
-    fun updateListPanelVisibility(visible: Boolean) {
-        isListPanelVisible = visible
-    }
-
-    fun selectView(view: EarthquakeView) {
-        selectedView = view
+    fun applySelection(result: EarthquakeSelectionResult, focus: Boolean = true) {
+        if (result.revision <= selectionRevision) return
+        selectionRevision = result.revision
+        selectedMapItemId = result.earthquakeId
+        if (result.earthquakeId == null) dismissMapCluster()
+        requestedMapFocusId = if (focus) result.earthquakeId else null
     }
 
     fun selectMapItem(item: EarthquakeMapItem) {
@@ -230,65 +147,15 @@ constructor(
         workScheduler.refresh()
     }
 
-    fun setMonitoring(enabled: Boolean) {
-        if (enabled) workScheduler.startMonitoring() else workScheduler.stopMonitoring()
-    }
-
-    fun showNotifications(visible: Boolean) {
-        notificationsVisible = visible
-    }
-
-    fun refreshNotificationCapabilities() {
-        val capabilities = notificationManager.capabilities()
-        capabilitiesLoaded = true
-        notifications =
-            notifications.copy(
-                isChecking = !settingsLoaded,
-                permissionGranted = capabilities.permissionGranted,
-                appEnabled = capabilities.appEnabled,
-                monitoringChannelEnabled = capabilities.monitoringEnabled,
-                alertsChannelEnabled = capabilities.alertsEnabled,
-            )
-    }
-
-    fun setAlertsEnabled(enabled: Boolean) = saveSettings {
-        settingsRepository.setAlertsEnabled(enabled)
-    }
-
-    fun setMinimumMagnitude(magnitude: Int) = saveSettings {
-        settingsRepository.setMagnitude(magnitude)
-    }
-
-    fun recordNotificationPermissionRequest() = saveSettings {
-        settingsRepository.recordPermissionRequest()
-    }
-
-    fun previewNotification() {
-        if (notifications.canPostAlerts) notificationManager.previewAlert()
-        refreshNotificationCapabilities()
-    }
-
-    private fun saveSettings(update: suspend () -> Unit) {
-        viewModelScope.launch {
-            try {
-                update()
-                notifications = notifications.copy(settingsError = false)
-            } catch (_: IOException) {
-                notifications = notifications.copy(settingsError = true)
-            }
-        }
-    }
-
-    fun openNotificationEvent(eventId: String) {
+    fun openNotificationEvent(eventId: String, onSelected: (String) -> Unit = {}) {
         viewModelScope.launch {
             val item = repository.getEarthquakeFlow(eventId).first()
             if (item != null) {
                 dismissMapCluster()
                 selectedMapItemId = item.id
                 requestedMapFocusId = item.id
-                selectedView = EarthquakeView.Map
-                notificationsVisible = false
                 unavailableNotificationEvent = false
+                onSelected(item.id)
             } else unavailableNotificationEvent = true
         }
     }
@@ -303,6 +170,6 @@ constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(navKey: Destination.EarthquakeRoute): EarthquakeViewModel
+        fun create(navKey: Destination.MapRoute): EarthquakeViewModel
     }
 }

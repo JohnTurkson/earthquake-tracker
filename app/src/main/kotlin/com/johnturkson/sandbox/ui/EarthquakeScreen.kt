@@ -3,9 +3,7 @@ package com.johnturkson.sandbox.ui
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.provider.Settings
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,11 +53,17 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.johnturkson.sandbox.R
 import com.johnturkson.sandbox.data.EarthquakeLocation
-import com.johnturkson.sandbox.data.EarthquakeNotifications
 
 @Composable
 fun EarthquakeScreen(
-    navKey: Destination.EarthquakeRoute,
+    navKey: Destination.MapRoute,
+    onSelectionChanged: (String?) -> EarthquakeSelectionResult,
+    onViewSelected: (EarthquakeView) -> Unit,
+    onListPanelVisibilityChanged: (Boolean) -> Unit,
+    onNotificationsClick: () -> Unit,
+    onClusterVisibilityChanged: (Boolean) -> Unit,
+    isListPanelVisible: Boolean,
+    notificationsVisible: Boolean,
     modifier: Modifier = Modifier,
     notificationEventId: String? = null,
     onNotificationEventConsumed: () -> Unit = {},
@@ -103,51 +107,11 @@ fun EarthquakeScreen(
         if (isLocationGranted) viewModel.startLocationUpdates()
         onStopOrDispose { viewModel.stopLocationUpdates() }
     }
-    var notificationRationale by rememberSaveable { mutableStateOf(false) }
-    var shouldExplainNotifications by remember { mutableStateOf(false) }
-    fun updateNotificationPermission() {
-        viewModel.refreshNotificationCapabilities()
-        shouldExplainNotifications =
-            Build.VERSION.SDK_INT >= 33 &&
-                activity != null &&
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.POST_NOTIFICATIONS,
-                )
-    }
-    val notificationLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-            updateNotificationPermission()
-        }
-    LifecycleResumeEffect(Unit) {
-        updateNotificationPermission()
-        onPauseOrDispose {}
-    }
-    val notificationState = viewModel.notifications
-    val notificationSettingsRequired =
-        notificationState.permissionGranted && !notificationState.appEnabled ||
-            notificationState.hasRequestedPermission && !shouldExplainNotifications
-    fun launchNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= 33) {
-            viewModel.recordNotificationPermissionRequest()
-            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
-    fun enableNotifications() {
-        when {
-            notificationSettingsRequired || Build.VERSION.SDK_INT < 33 ->
-                context.startActivity(
-                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                )
-            shouldExplainNotifications -> notificationRationale = true
-            else -> launchNotificationPermission()
-        }
-    }
-    BackHandler(viewModel.notificationsVisible) { viewModel.showNotifications(false) }
     LaunchedEffect(notificationEventId) {
         if (notificationEventId != null) {
-            viewModel.openNotificationEvent(notificationEventId)
+            viewModel.openNotificationEvent(notificationEventId) { id ->
+                viewModel.applySelection(onSelectionChanged(id))
+            }
             onNotificationEventConsumed()
         }
     }
@@ -159,50 +123,26 @@ fun EarthquakeScreen(
             viewModel.dismissUnavailableEvent()
         }
     }
+    LaunchedEffect(viewModel.selectedClusterItemIds) {
+        onClusterVisibilityChanged(viewModel.selectedClusterItemIds.isNotEmpty())
+    }
     val requiresSettings = hasRequestedLocation && !shouldShowRationale
     EarthquakeScreen(
         state = viewModel,
-        onMapItemClick = viewModel::selectMapItem,
-        onMapClick = viewModel::clearMapSelection,
+        onMapItemClick = { item ->
+            viewModel.applySelection(onSelectionChanged(item.id), focus = false)
+        },
+        onMapClick = { viewModel.applySelection(onSelectionChanged(null), focus = false) },
         onClusterClick = viewModel::selectMapCluster,
         onClusterDismiss = viewModel::dismissMapCluster,
-        onViewSelected = viewModel::selectView,
-        onListPanelVisibilityChanged = viewModel::updateListPanelVisibility,
+        onViewSelected = onViewSelected,
+        onListPanelVisibilityChanged = onListPanelVisibilityChanged,
+        onNotificationsClick = onNotificationsClick,
+        isListPanelVisible = isListPanelVisible,
+        notificationsVisible = notificationsVisible,
+        renderListContent = false,
         onRefresh = viewModel::refresh,
-        onNotificationsClick = { viewModel.showNotifications(true) },
-        onNotificationsClose = { viewModel.showNotifications(false) },
         onMapFocusHandled = viewModel::consumeMapFocus,
-        notificationContent = { pageModifier ->
-            EarthquakeNotificationPage(
-                state = notificationState.copy(requiresSettings = notificationSettingsRequired),
-                monitoring = viewModel.monitoring,
-                onClose = { viewModel.showNotifications(false) },
-                onEnableNotifications = ::enableNotifications,
-                onAlertsEnabled = { enabled ->
-                    viewModel.setAlertsEnabled(enabled)
-                    if (
-                        enabled &&
-                            (!notificationState.permissionGranted || !notificationState.appEnabled)
-                    )
-                        enableNotifications()
-                },
-                onMagnitudeSelected = viewModel::setMinimumMagnitude,
-                onMonitoringEnabled = viewModel::setMonitoring,
-                onChannelSettings = { alerts ->
-                    context.startActivity(
-                        Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
-                            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                            .putExtra(
-                                Settings.EXTRA_CHANNEL_ID,
-                                if (alerts) EarthquakeNotifications.AlertsChannel
-                                else EarthquakeNotifications.MonitoringChannel,
-                            )
-                    )
-                },
-                onPreviewAlert = viewModel::previewNotification,
-                modifier = pageModifier,
-            )
-        },
         modifier = modifier,
         isLocationGranted = isLocationGranted,
         requiresLocationSettings = !isLocationGranted && requiresSettings,
@@ -233,15 +173,6 @@ fun EarthquakeScreen(
             Modifier.align(Alignment.BottomCenter)
                 .padding(WindowInsets.safeDrawing.asPaddingValues()),
             snackbar = { EarthquakeEventSnackbar(it) },
-        )
-    }
-    if (notificationRationale) {
-        EarthquakeNotificationRationale(
-            onContinue = {
-                notificationRationale = false
-                launchNotificationPermission()
-            },
-            onDismiss = { notificationRationale = false },
         )
     }
     if (showLocationRationale && !isLocationGranted) {
@@ -278,20 +209,11 @@ fun EarthquakeScreen(
     onNotificationsClick: () -> Unit = {},
     onNotificationsClose: () -> Unit = {},
     onMapFocusHandled: () -> Unit = {},
-    notificationContent: @Composable (Modifier) -> Unit = { pageModifier ->
-        EarthquakeNotificationPage(
-            state.notifications,
-            state.monitoring,
-            onNotificationsClose,
-            {},
-            {},
-            {},
-            {},
-            {},
-            {},
-            pageModifier,
-        )
-    },
+    selectedView: EarthquakeView = EarthquakeView.Map,
+    isListPanelVisible: Boolean = true,
+    notificationsVisible: Boolean = false,
+    renderListContent: Boolean = true,
+    notificationContent: @Composable (Modifier) -> Unit = {},
     cameraPositionState: CameraPositionState = rememberCameraPositionState {
         val location = EarthquakeLocation.Default
         position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 10f)
@@ -365,12 +287,9 @@ fun EarthquakeScreen(
 
     BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
-        val showListPanel =
-            expanded && state.isListPanelVisible && !state.notificationsVisible && !showCluster
+        val showListPanel = expanded && isListPanelVisible && !notificationsVisible && !showCluster
         if (
-            showCluster ||
-                expanded ||
-                state.selectedView == EarthquakeView.Map && !state.notificationsVisible
+            showCluster || expanded || selectedView == EarthquakeView.Map && !notificationsVisible
         ) {
             EarthquakeMap(
                 items = state.mapItems,
@@ -397,7 +316,7 @@ fun EarthquakeScreen(
                                 if (showListPanel) earthquakeListPaneWidth + 32.dp else 0.dp,
                         end =
                             safePadding.calculateEndPadding(layoutDirection) +
-                                if (expanded && state.notificationsVisible && !showCluster)
+                                if (expanded && notificationsVisible && !showCluster)
                                     earthquakeListPaneWidth + 32.dp
                                 else 0.dp,
                         top =
@@ -411,7 +330,7 @@ fun EarthquakeScreen(
                             safePadding.calculateBottomPadding() +
                                 when {
                                     showCluster -> clusterSheetHeight + 48.dp
-                                    selectedItem != null || !state.notificationsVisible ->
+                                    selectedItem != null || !notificationsVisible ->
                                         mapBottomControlsHeight + 32.dp
                                     else -> 0.dp
                                 },
@@ -422,9 +341,9 @@ fun EarthquakeScreen(
             EarthquakeExplorerControls(
                 items = state.mapItems,
                 selectedItemId = state.selectedMapItemId,
-                selectedView = state.selectedView,
+                selectedView = selectedView,
                 expanded = expanded,
-                isListPanelVisible = state.isListPanelVisible,
+                isListPanelVisible = isListPanelVisible,
                 onListPanelVisibilityChanged = onListPanelVisibilityChanged,
                 onItemClick = { item ->
                     onMapItemClick(item)
@@ -440,6 +359,7 @@ fun EarthquakeScreen(
                 onViewSelected = onViewSelected,
                 contentPadding = safePadding,
                 listState = listState,
+                renderListContent = renderListContent,
                 onMapBottomControlsSizeChanged = {
                     mapBottomControlsHeight = with(density) { it.toDp() }
                 },
@@ -448,7 +368,7 @@ fun EarthquakeScreen(
                 onLocationClick = onLocationClick,
                 monitoring = state.monitoring,
                 onRefresh = onRefresh,
-                notificationsVisible = state.notificationsVisible,
+                notificationsVisible = notificationsVisible,
                 onNotificationsClick = onNotificationsClick,
                 onNotificationsClose = onNotificationsClose,
                 notificationContent = notificationContent,

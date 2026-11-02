@@ -132,17 +132,16 @@ class EarthquakeViewsTest {
     @Test
     fun listSelectionAndViewSwitchingKeepTheSameEarthquake() {
         val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M 6.0 - Shima, Japan")
-        var state by
-            mutableStateOf(
-                EarthquakePreviewState(mapItems = listOf(item), selectedView = EarthquakeView.List)
-            )
+        var state by mutableStateOf(EarthquakePreviewState(mapItems = listOf(item)))
+        var selectedView by mutableStateOf(EarthquakeView.List)
         composeRule.setContent {
             EarthquakeTheme {
                 EarthquakeScreen(
                     state = state,
                     onMapItemClick = { state = state.copy(selectedMapItemId = it.id) },
                     onMapClick = { state = state.copy(selectedMapItemId = null) },
-                    onViewSelected = { state = state.copy(selectedView = it) },
+                    selectedView = selectedView,
+                    onViewSelected = { selectedView = it },
                 )
             }
         }

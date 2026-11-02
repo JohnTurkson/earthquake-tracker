@@ -366,15 +366,27 @@ bell's logical end alignment and click action in compact, expanded, minimized,
 and right-to-left layouts.
 
 [EarthquakeViewsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsTest.kt)
-checks selecting an event from List, opening it on Map, retaining its highlight
-when switching back, and clearing the shared selection. It also checks the
-expanded controls' shared selection and absence of a view toggle, plus
-minimize/restore behavior without duplicated selection details or view changes.
-Reserve the shared Earthquake Project emulator and use Android CLI to verify the
-real screen across the 840 dp width breakpoint, including selection retention,
-the compact view choice, and unobscured native-map attribution in open and
-minimized panel states.
-Exercise activity recreation as well as switching presentations.
+checks deterministic explorer component selection, compact switching, and
+expanded panel minimize/restore behavior.
+[EarthquakeNavigationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeNavigationTest.kt)
+renders the real Nav3 host and Material adaptive scene with deterministic
+entry content. Use separate entry-scoped test ViewModels to verify result
+delivery, hidden-recipient restoration, row reveal, Notifications return, and
+compact/expanded resizing without substituting for native map coverage.
+[EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDestinationStateTest.kt)
+uses the real Map and List ViewModels with test-local Room data to check
+independent selection, saved result revisions, pending scroll restoration,
+stale-result rejection, clearing, and repeated selection of the same event.
+Receiving a result must not publish another one or erase a newer request.
+
+Reserve the shared Earthquake Project emulator and use Android CLI to verify
+the runtime destinations across the 840 dp width breakpoint. Include selection
+and camera retention, automatic row reveal, list scroll restoration, the compact
+view preference, notification Back/Close behavior, and unobscured native-map
+attribution in open and minimized panel states. Exercise activity recreation as
+well as switching destinations. The ordinary Compose screenshot fixtures render
+the real `EarthquakeListScreen`, `EarthquakeListPanel`, controls, and notification
+page; keep their full supported-state coverage when changing entry wrappers.
 
 Generate references only for an intentional visual change:
 

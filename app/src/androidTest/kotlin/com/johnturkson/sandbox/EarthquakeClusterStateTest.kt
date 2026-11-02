@@ -12,12 +12,11 @@ import com.google.android.gms.location.LocationServices
 import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
-import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakeRepository
-import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.ui.Destination
 import com.johnturkson.sandbox.ui.EarthquakeMapFixtures
+import com.johnturkson.sandbox.ui.EarthquakeMonitoringObserver
 import com.johnturkson.sandbox.ui.EarthquakeViewModel
 import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
 import kotlin.test.assertEquals
@@ -49,8 +48,6 @@ class EarthquakeClusterStateTest {
             )
         val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
         val repository = EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
-        val settings = EarthquakeSettingsRepository(store)
-        val notifications = EarthquakeNotifications(context)
         val scheduler = EarthquakeWorkScheduler(WorkManager.getInstance(context))
         val connection =
             object : EarthquakeConnection {
@@ -60,15 +57,13 @@ class EarthquakeClusterStateTest {
             }
         fun create(handle: SavedStateHandle) =
             EarthquakeViewModel(
-                Destination.EarthquakeRoute,
+                Destination.MapRoute,
                 handle,
                 locationRepository,
                 provider,
                 repository,
-                settings,
-                notifications,
+                EarthquakeMonitoringObserver(repository, scheduler, connection),
                 scheduler,
-                connection,
             )
         val stored = EarthquakeMonitoringFixtures.item(magnitude = 3.7)
         database.earthquakeDao().mergeEarthquakes(listOf(stored))
