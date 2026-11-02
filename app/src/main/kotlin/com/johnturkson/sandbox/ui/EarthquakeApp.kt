@@ -32,9 +32,9 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.johnturkson.sandbox.theme.EarthquakeTheme
-import com.johnturkson.sandbox.ui.Destination.ListRoute
-import com.johnturkson.sandbox.ui.Destination.MapRoute
-import com.johnturkson.sandbox.ui.Destination.NotificationsRoute
+import com.johnturkson.sandbox.ui.Destination.EarthquakeListRoute
+import com.johnturkson.sandbox.ui.Destination.EarthquakeMapRoute
+import com.johnturkson.sandbox.ui.Destination.EarthquakeNotificationsRoute
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -49,7 +49,7 @@ fun EarthquakeApp(
 ) {
     EarthquakeTheme {
         val activity = LocalActivity.current
-        val backStack = rememberNavBackStack(ListRoute, MapRoute)
+        val backStack = rememberNavBackStack(EarthquakeListRoute, EarthquakeMapRoute)
         var compactView by rememberSaveable { mutableStateOf(EarthquakeView.Map) }
         var panelVisible by rememberSaveable { mutableStateOf(true) }
         var notificationsVisible by rememberSaveable { mutableStateOf(false) }
@@ -87,10 +87,11 @@ fun EarthquakeApp(
                 else compactView == EarthquakeView.List
             LaunchedEffect(showList, notificationsVisible) {
                 val entries =
-                    if (showList) listOf(MapRoute, ListRoute) else listOf(ListRoute, MapRoute)
+                    if (showList) listOf(EarthquakeMapRoute, EarthquakeListRoute)
+                    else listOf(EarthquakeListRoute, EarthquakeMapRoute)
                 backStack.clear()
                 backStack.addAll(entries)
-                if (notificationsVisible) backStack.add(NotificationsRoute)
+                if (notificationsVisible) backStack.add(EarthquakeNotificationsRoute)
             }
             val directive =
                 calculatePaneScaffoldDirective(currentWindowAdaptiveInfoV2())
@@ -161,11 +162,12 @@ fun EarthquakeApp(
                 },
                 entryProvider =
                     entryProvider {
-                        entry<MapRoute>(metadata = SupportingPaneSceneStrategy.mainPane()) { navKey
-                            ->
+                        entry<EarthquakeMapRoute>(
+                            metadata = SupportingPaneSceneStrategy.mainPane()
+                        ) { navKey ->
                             destinationContent(navKey, actions)
                         }
-                        entry<ListRoute>(
+                        entry<EarthquakeListRoute>(
                             metadata =
                                 SupportingPaneSceneStrategy.supportingPane() +
                                     SupportingPaneSceneStrategy.preferredPaneSize(
@@ -175,7 +177,7 @@ fun EarthquakeApp(
                         ) { navKey ->
                             destinationContent(navKey, actions)
                         }
-                        entry<NotificationsRoute>(
+                        entry<EarthquakeNotificationsRoute>(
                             metadata =
                                 SupportingPaneSceneStrategy.extraPane() +
                                     SupportingPaneSceneStrategy.preferredPaneSize(
@@ -207,10 +209,10 @@ private fun EarthquakeDestination(
     onNotificationEventConsumed: () -> Unit,
 ) {
     when (navKey) {
-        MapRoute -> {
+        EarthquakeMapRoute -> {
             val viewModel =
                 hiltViewModel<EarthquakeViewModel, EarthquakeViewModel.Factory>(
-                    creationCallback = { it.create(MapRoute) }
+                    creationCallback = { it.create(EarthquakeMapRoute) }
                 )
             EarthquakeSelectionEffect(
                 resultKey = "map_selection",
@@ -219,7 +221,7 @@ private fun EarthquakeDestination(
                 onConsumed = actions.onMapSelectionConsumed,
             )
             EarthquakeScreen(
-                navKey = MapRoute,
+                navKey = EarthquakeMapRoute,
                 viewModel = viewModel,
                 notificationEventId = notificationEventId,
                 onNotificationEventConsumed = onNotificationEventConsumed,
@@ -232,10 +234,10 @@ private fun EarthquakeDestination(
                 notificationsVisible = actions.notificationsVisible,
             )
         }
-        ListRoute -> {
+        EarthquakeListRoute -> {
             val viewModel =
                 hiltViewModel<EarthquakeListViewModel, EarthquakeListViewModel.Factory>(
-                    creationCallback = { it.create(ListRoute) }
+                    creationCallback = { it.create(EarthquakeListRoute) }
                 )
             EarthquakeSelectionEffect(
                 resultKey = "list_selection",
@@ -257,9 +259,9 @@ private fun EarthquakeDestination(
                 onScrollHandled = viewModel::consumeScrollRequest,
             )
         }
-        NotificationsRoute -> {
+        EarthquakeNotificationsRoute -> {
             EarthquakeNotificationsScreen(
-                navKey = NotificationsRoute,
+                navKey = EarthquakeNotificationsRoute,
                 onClose = actions.onNotificationsClose,
                 expanded = actions.expanded,
             )

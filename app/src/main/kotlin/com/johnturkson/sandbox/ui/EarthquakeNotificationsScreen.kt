@@ -31,7 +31,7 @@ import com.johnturkson.sandbox.data.EarthquakeNotifications
 
 @Composable
 fun EarthquakeNotificationsScreen(
-    navKey: Destination.NotificationsRoute,
+    navKey: Destination.EarthquakeNotificationsRoute,
     onClose: () -> Unit,
     expanded: Boolean = false,
     modifier: Modifier = Modifier,

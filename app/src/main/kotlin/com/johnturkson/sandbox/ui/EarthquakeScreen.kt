@@ -56,7 +56,7 @@ import com.johnturkson.sandbox.data.EarthquakeLocation
 
 @Composable
 fun EarthquakeScreen(
-    navKey: Destination.MapRoute,
+    navKey: Destination.EarthquakeMapRoute,
     onSelectionChanged: (String?) -> EarthquakeSelectionResult,
     onViewSelected: (EarthquakeView) -> Unit,
     onListPanelVisibilityChanged: (Boolean) -> Unit,

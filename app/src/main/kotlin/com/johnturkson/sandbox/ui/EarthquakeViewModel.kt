@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 class EarthquakeViewModel
 @AssistedInject
 constructor(
-    @Assisted override val navKey: Destination.MapRoute,
+    @Assisted override val navKey: Destination.EarthquakeMapRoute,
     savedStateHandle: SavedStateHandle,
     private val locationRepository: EarthquakeLocationRepository,
     private val locationProvider: EarthquakeLocationProvider,
@@ -170,6 +170,6 @@ constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(navKey: Destination.MapRoute): EarthquakeViewModel
+        fun create(navKey: Destination.EarthquakeMapRoute): EarthquakeViewModel
     }
 }

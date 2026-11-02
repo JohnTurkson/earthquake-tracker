@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 class EarthquakeListViewModel
 @AssistedInject
 constructor(
-    @Assisted val navKey: Destination.ListRoute,
+    @Assisted val navKey: Destination.EarthquakeListRoute,
     savedStateHandle: SavedStateHandle,
     repository: EarthquakeRepository,
     monitoringObserver: EarthquakeMonitoringObserver,
@@ -87,6 +87,6 @@ constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(navKey: Destination.ListRoute): EarthquakeListViewModel
+        fun create(navKey: Destination.EarthquakeListRoute): EarthquakeListViewModel
     }
 }

@@ -389,7 +389,7 @@ dispatchers into feature logic.
 
 Use Navigation 3 and serializable keys in
 [Destination](../app/src/main/kotlin/com/johnturkson/sandbox/ui/Destination.kt).
-The explorer has `MapRoute`, `ListRoute`, and `NotificationsRoute`.
+The explorer has `EarthquakeMapRoute`, `EarthquakeListRoute`, and `EarthquakeNotificationsRoute`.
 [EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
 owns the back stack, entry provider, Material scene strategy, and navigation
 callbacks. Preserve the saveable state holder, ViewModel store, and result event
@@ -580,7 +580,7 @@ the old data and timestamp until storage succeeds.
 The bell has no badge and aligns to the top end edge in both layouts. Center
 the compact switcher independently, reserving equal space on both sides so the
 bell does not shift its center or overlap it. `EarthquakeExplorerControls` owns
-both placements. The bell opens `NotificationsRoute`, independently of the Map/List switcher.
+both placements. The bell opens `EarthquakeNotificationsRoute`, independently of the Map/List switcher.
 Closing it restores the compact view and expanded panel preference. Opening it
 in expanded windows uses a floating right pane and temporarily hides List.
 [EarthquakeNotificationsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsScreen.kt)

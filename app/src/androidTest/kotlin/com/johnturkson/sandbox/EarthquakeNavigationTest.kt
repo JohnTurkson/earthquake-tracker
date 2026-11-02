@@ -18,11 +18,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
@@ -58,8 +60,8 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Select last earthquake").performClick()
         composeRule.onNodeWithText("Open list").performClick()
         composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
-        val mapOwner = owners.getValue(Destination.MapRoute)
-        val listOwner = owners.getValue(Destination.ListRoute)
+        val mapOwner = owners.getValue(Destination.EarthquakeMapRoute)
+        val listOwner = owners.getValue(Destination.EarthquakeListRoute)
         assertNotSame(mapOwner, listOwner)
         composeRule.onNodeWithText("Earthquake 79").performClick()
         composeRule.onNodeWithText("Map selection: event-79").assertIsDisplayed()
@@ -72,8 +74,8 @@ class EarthquakeNavigationTest {
         composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
         composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.runOnIdle {
-            assertSame(mapOwner, owners.getValue(Destination.MapRoute))
-            assertSame(listOwner, owners.getValue(Destination.ListRoute))
+            assertSame(mapOwner, owners.getValue(Destination.EarthquakeMapRoute))
+            assertSame(listOwner, owners.getValue(Destination.EarthquakeListRoute))
         }
         composeRule.onNodeWithText("Map").performClick()
         composeRule.onNodeWithText("Notifications shortcut").performClick()
@@ -88,10 +90,13 @@ class EarthquakeNavigationTest {
     fun resizingKeepsIndependentOwnersAndDisplaysBothDestinations() {
         composeRule.setContent { Content() }
         composeRule.onNodeWithText("Open list").performClick()
-        val listOwner = owners.getValue(Destination.ListRoute)
+        val listOwner = owners.getValue(Destination.EarthquakeListRoute)
         composeRule.runOnIdle { expanded = true }
         composeRule.onNodeWithText("Map destination").assertIsDisplayed()
         composeRule.onNodeWithText("Recent earthquakes").assertIsDisplayed()
+        composeRule.onNodeWithText("Select last earthquake").performClick()
+        composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(0)
         composeRule.onNodeWithText("Select last earthquake").performClick()
         composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
         composeRule.onNodeWithText("Notifications shortcut").performClick()
@@ -109,7 +114,9 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.onNodeWithText("Map destination").assertDoesNotExist()
         composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
-        composeRule.runOnIdle { assertSame(listOwner, owners.getValue(Destination.ListRoute)) }
+        composeRule.runOnIdle {
+            assertSame(listOwner, owners.getValue(Destination.EarthquakeListRoute))
+        }
     }
 
     @Test
@@ -121,7 +128,10 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Open list").performClick()
         composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
         composeRule.runOnIdle {
-            assertEquals("event-79", owners.getValue(Destination.ListRoute).selectedMapItemId)
+            assertEquals(
+                "event-79",
+                owners.getValue(Destination.EarthquakeListRoute).selectedMapItemId,
+            )
         }
     }
 
@@ -142,7 +152,7 @@ class EarthquakeNavigationTest {
         val owner = viewModel { EarthquakeNavigationTestViewModel(createSavedStateHandle()) }
         owners[route] = owner
         when (route) {
-            Destination.MapRoute -> {
+            Destination.EarthquakeMapRoute -> {
                 EarthquakeSelectionEffect(
                     "map_selection",
                     actions.pendingMapSelection,
@@ -180,7 +190,7 @@ class EarthquakeNavigationTest {
                     }
                 }
             }
-            Destination.ListRoute -> {
+            Destination.EarthquakeListRoute -> {
                 EarthquakeSelectionEffect(
                     "list_selection",
                     actions.pendingListSelection,
@@ -200,7 +210,7 @@ class EarthquakeNavigationTest {
                     onScrollHandled = { owner.scrollRequest = null },
                 )
             }
-            Destination.NotificationsRoute ->
+            Destination.EarthquakeNotificationsRoute ->
                 Column {
                     Text("Notification destination")
                     TextButton(onClick = actions.onNotificationsClose) {

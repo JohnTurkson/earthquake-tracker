@@ -8,7 +8,7 @@ interface EarthquakeState {
     val monitoring: EarthquakeMonitoringState
     val requestedMapFocusId: String?
     val unavailableNotificationEvent: Boolean
-    val navKey: Destination.MapRoute
+    val navKey: Destination.EarthquakeMapRoute
     val mapItems: List<EarthquakeMapItem>
     val selectedMapItemId: String?
     val selectedClusterItemIds: List<String>

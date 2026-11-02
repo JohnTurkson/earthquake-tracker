@@ -6,7 +6,7 @@ data class EarthquakePreviewState(
     override val monitoring: EarthquakeMonitoringState = EarthquakeMonitoringState(),
     override val requestedMapFocusId: String? = null,
     override val unavailableNotificationEvent: Boolean = false,
-    override val navKey: Destination.MapRoute = Destination.MapRoute,
+    override val navKey: Destination.EarthquakeMapRoute = Destination.EarthquakeMapRoute,
     override val mapItems: List<EarthquakeMapItem> = EarthquakeMapFixtures.items,
     override val selectedMapItemId: String? = null,
     override val selectedClusterItemIds: List<String> = emptyList(),

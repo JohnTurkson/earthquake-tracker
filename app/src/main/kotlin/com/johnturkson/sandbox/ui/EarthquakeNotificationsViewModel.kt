@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class EarthquakeNotificationsViewModel
 @AssistedInject
 constructor(
-    @Assisted val navKey: Destination.NotificationsRoute,
+    @Assisted val navKey: Destination.EarthquakeNotificationsRoute,
     private val settingsRepository: EarthquakeSettingsRepository,
     private val notificationManager: EarthquakeNotifications,
     private val workScheduler: EarthquakeWorkScheduler,
@@ -100,6 +100,8 @@ constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(navKey: Destination.NotificationsRoute): EarthquakeNotificationsViewModel
+        fun create(
+            navKey: Destination.EarthquakeNotificationsRoute
+        ): EarthquakeNotificationsViewModel
     }
 }

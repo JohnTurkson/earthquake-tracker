@@ -57,7 +57,7 @@ class EarthquakeClusterStateTest {
             }
         fun create(handle: SavedStateHandle) =
             EarthquakeViewModel(
-                Destination.MapRoute,
+                Destination.EarthquakeMapRoute,
                 handle,
                 locationRepository,
                 provider,

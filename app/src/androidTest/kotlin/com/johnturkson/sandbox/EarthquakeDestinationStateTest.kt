@@ -58,7 +58,7 @@ class EarthquakeDestinationStateTest {
             }
         fun create(handle: SavedStateHandle) =
             EarthquakeViewModel(
-                Destination.MapRoute,
+                Destination.EarthquakeMapRoute,
                 handle,
                 locationRepository,
                 provider,
@@ -72,11 +72,10 @@ class EarthquakeDestinationStateTest {
             composeRule.runOnUiThread {
                 val map = create(SavedStateHandle())
                 val listHandle = SavedStateHandle()
-                val observer =
-                    EarthquakeMonitoringObserver(repository, scheduler, connection)
+                val observer = EarthquakeMonitoringObserver(repository, scheduler, connection)
                 val list =
                     EarthquakeListViewModel(
-                        Destination.ListRoute,
+                        Destination.EarthquakeListRoute,
                         listHandle,
                         repository,
                         observer,
@@ -94,7 +93,7 @@ class EarthquakeDestinationStateTest {
                     SavedStateHandle.createHandle(listHandle.savedStateProvider().saveState(), null)
                 val restored =
                     EarthquakeListViewModel(
-                        Destination.ListRoute,
+                        Destination.EarthquakeListRoute,
                         restoredHandle,
                         repository,
                         observer,

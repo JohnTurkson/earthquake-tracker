@@ -4,9 +4,9 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 sealed interface Destination : NavKey {
-    @Serializable data object MapRoute : Destination
+    @Serializable data object EarthquakeMapRoute : Destination
 
-    @Serializable data object ListRoute : Destination
+    @Serializable data object EarthquakeListRoute : Destination
 
-    @Serializable data object NotificationsRoute : Destination
+    @Serializable data object EarthquakeNotificationsRoute : Destination
 }
