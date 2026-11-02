@@ -4,24 +4,32 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import androidx.work.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 @Singleton
 class EarthquakeWorkScheduler @Inject constructor(private val manager: WorkManager) {
-    val refreshWork = manager.getWorkInfosForUniqueWorkFlow(RefreshWork).map(::latest)
+    val refreshWork = manager.getWorkInfosForUniqueWorkFlow(RefreshWork).map { it.singleOrNull() }
     val monitoringWork = manager.getWorkInfosForUniqueWorkFlow(MonitoringWork).map(::latest)
 
-    fun refresh() {
+    fun refresh() =
         manager.enqueueUniqueWork(
             RefreshWork,
             ExistingWorkPolicy.KEEP,
-            OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>()
-                .addTag("requested:${System.currentTimeMillis()}")
-                .build(),
+            OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>().build(),
         )
+
+    suspend fun refreshAndAwait(): WorkInfo {
+        currentCoroutineContext().ensureActive()
+        refresh().await()
+        return refreshWork.filterNotNull().first { it.state.isFinished }
     }
 
     fun startMonitoring() {

@@ -437,15 +437,29 @@ limits. WorkManager scheduling and screen integration should reuse this layer.
 
 ## Refresh, monitoring, and notifications
 
-`EarthquakeRefreshCoordinator` serializes refreshes and coalesces overlapping
-manual and monitoring requests. It checks validated connectivity inside the
-operation, fetches before merging stored earthquakes, and publishes alerts after commit.
-Expose typed offline, network, decode, and storage results. Cancellation must
-propagate and release the coordinator. Notification failures must not roll back
-saved earthquake data.
+[`EarthquakeRefreshRepository`](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeRefreshRepository.kt)
+checks validated connectivity, fetches before merging stored earthquakes, and
+publishes alerts after commit. It returns `EarthquakeRefreshResult` outcomes for
+success, offline, network, decode, and storage failures. Cancellation propagates;
+notification failures must not roll back saved earthquake data. The repository
+does not own work status or deduplicate refresh requests.
 
-`EarthquakeWorkScheduler` uses unique one-time work with `KEEP` for both manual
-refresh and a monitoring session. Neither request has a network constraint:
+[`EarthquakeWorkScheduler`](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeWorkScheduler.kt)
+routes manual refresh and every monitoring tick through the same unique one-time
+`EarthquakeRefreshWorker` with `KEEP`. Enqueue directly instead of checking for
+running work first; WorkManager owns deduplication. `refreshAndAwait` awaits the
+enqueue operation, then observes the unique work until it finishes. `KEEP` can
+discard a new request, so never await the newly constructed request's ID. The
+enqueue operation's completion is not the refresh result.
+
+Observe `refreshWork` for queued/running state and terminal `WorkInfo.outputData`
+for the typed result. Do not combine it with a second in-memory repository status
+or the monitoring worker's last refresh result. Room independently supplies the
+stored earthquakes and last-successful-refresh timestamp.
+
+The monitoring session is separate unique one-time work with `KEEP`. Stopping it
+cancels its polling and result observation, leaving any shared refresh already
+queued or running to finish. Neither request has a network constraint:
 manual offline work must fail instead of waiting, and a monitoring session must
 retain its foreground status while paused offline. Workers receive dependencies
 through `@HiltWorker` and the application's injected `HiltWorkerFactory`.
@@ -453,7 +467,8 @@ through `@HiltWorker` and the application's injected `HiltWorkerFactory`.
 only WorkManager's initializer from AndroidX Startup.
 
 `EarthquakeMonitoringWorker` calls `setForeground` with the `dataSync` service
-type. `EarthquakePollingLoop` owns cancellable minute pacing, skips catch-up
+type and uses `refreshAndAwait` instead of calling the repository directly.
+`EarthquakePollingLoop` owns cancellable minute pacing, skips catch-up
 bursts after slow requests, and wakes on reconnection. WorkManager owns
 execution and rescheduling. Do not add UI timers, restart work on recomposition,
 or re-enqueue after explicit cancellation. Observe `WorkInfo` to distinguish

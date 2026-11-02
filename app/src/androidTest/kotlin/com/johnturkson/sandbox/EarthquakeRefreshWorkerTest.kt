@@ -6,7 +6,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
-import com.johnturkson.sandbox.data.EarthquakeRefreshCoordinator
+import com.johnturkson.sandbox.data.EarthquakeRefreshResult
 import com.johnturkson.sandbox.data.EarthquakeRefresher
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
 import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
@@ -19,11 +19,11 @@ class EarthquakeRefreshWorkerTest {
     fun workerReturnsTypedFailureForEveryRefreshError() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         listOf(
-                EarthquakeRefreshCoordinator.Result.Offline,
-                EarthquakeRefreshCoordinator.Result.NetworkError,
-                EarthquakeRefreshCoordinator.Result.DataError,
-                EarthquakeRefreshCoordinator.Result.StorageError,
-                EarthquakeRefreshCoordinator.Result.Success,
+                EarthquakeRefreshResult.Offline,
+                EarthquakeRefreshResult.NetworkError,
+                EarthquakeRefreshResult.DataError,
+                EarthquakeRefreshResult.StorageError,
+                EarthquakeRefreshResult.Success,
             )
             .forEach { result ->
                 val factory =
@@ -49,7 +49,7 @@ class EarthquakeRefreshWorkerTest {
                 val data =
                     androidx.work.workDataOf(EarthquakeWorkScheduler.ResultKey to result.name)
                 assertEquals(
-                    if (result == EarthquakeRefreshCoordinator.Result.Success)
+                    if (result == EarthquakeRefreshResult.Success)
                         ListenableWorker.Result.success(data)
                     else ListenableWorker.Result.failure(data),
                     output,

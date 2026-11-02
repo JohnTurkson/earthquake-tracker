@@ -398,9 +398,18 @@ changes before staging. Follow the [source control guide](source-control.md).
 
 ## Notification and refresh coverage
 
-Use `EarthquakeRefreshCoordinatorTest` for offline, fetch/decode/storage errors,
-coalescing, commit-before-alert order, cancellation, and notification failure
-isolation. `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
+`EarthquakeRefreshRepositoryTest` uses real Room and Ktor MockEngine for offline,
+fetch/decode/storage errors, commit-before-alert order, cancellation, and alert
+failure isolation. Its transaction-failure fixture verifies that both event rows
+and refresh metadata roll back. `EarthquakeWorkSchedulerTest` uses the real
+WorkManager with delayed refresh work to verify overlapping requests join the
+retained request and receive its terminal state, and cancelling monitoring's
+wait preserves the shared refresh. It also checks that a new offline refresh
+replaces the previous result and returns typed output, and that a monitoring
+tick enqueues the shared worker and receives its result. Run these tests with
+device internet disabled under the shared reservation; controlled repository
+connectivity and MockEngine responses do not require live USGS requests.
+`EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
 `EarthquakePollingLoopTest` advances a coroutine test scheduler through minute
 boundaries, slow requests, offline pauses, reconnection, and cancellation;
 no real-minute sleeps are needed. Supply its monotonic clock from that scheduler.

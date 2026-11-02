@@ -14,7 +14,6 @@ import com.johnturkson.sandbox.data.EarthquakeLocation
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import com.johnturkson.sandbox.data.EarthquakeNotifications
-import com.johnturkson.sandbox.data.EarthquakeRefreshCoordinator
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
@@ -156,9 +155,8 @@ constructor(
             combine(
                     workScheduler.monitoringWork,
                     workScheduler.refreshWork,
-                    refreshRepository.refreshStatus,
                     connectivity.online,
-                ) { monitor, refresh, refreshStatus, online ->
+                ) { monitor, refresh, online ->
                     val status =
                         when (monitor?.state) {
                             WorkInfo.State.ENQUEUED,
@@ -170,15 +168,10 @@ constructor(
                             else -> EarthquakeMonitoringState.Status.Stopped
                         }
                     val latestResult =
-                        if (refreshStatus != EarthquakeRefreshCoordinator.Result.Idle)
-                            refreshStatus.name
-                        else
-                            refresh?.outputData?.getString(EarthquakeWorkScheduler.ResultKey)
-                                ?: monitor?.progress?.getString(EarthquakeWorkScheduler.ResultKey)
+                        refresh?.outputData?.getString(EarthquakeWorkScheduler.ResultKey)
                     val refreshing =
                         when {
-                            refreshStatus == EarthquakeRefreshCoordinator.Result.Running ||
-                                refresh?.state == WorkInfo.State.RUNNING ->
+                            refresh?.state == WorkInfo.State.RUNNING ->
                                 EarthquakeMonitoringState.Refresh.Running
                             refresh?.state == WorkInfo.State.ENQUEUED ||
                                 refresh?.state == WorkInfo.State.BLOCKED ->
@@ -245,7 +238,9 @@ constructor(
         locationUpdates = null
     }
 
-    fun refresh() = workScheduler.refresh()
+    fun refresh() {
+        workScheduler.refresh()
+    }
 
     fun setMonitoring(enabled: Boolean) {
         if (enabled) workScheduler.startMonitoring() else workScheduler.stopMonitoring()

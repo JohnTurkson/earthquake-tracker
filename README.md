@@ -34,11 +34,13 @@ select an event to highlight it in blue on the map. Events at identical
 coordinates remain accessible through the cluster list.
 
 The screen observes a Room database populated from the USGS all-day GeoJSON feed.
-Manual refresh uses a one-time WorkManager request and preserves stored data on
-failure. Live monitoring uses a foreground WorkManager worker that checks every
-minute while active, pauses offline, and resumes on reconnection. Android can
-stop or delay work; the screen observes the actual worker state. Stopping a
-session cancels it without scheduling a replacement.
+Manual refresh and live-monitoring checks share one unique one-time WorkManager
+refresh request and preserve stored data on failure. Manual refresh reports an
+offline result instead of waiting for connectivity. Live monitoring uses a
+foreground WorkManager worker that checks every minute while active, pauses
+offline, and resumes on reconnection. Android can stop or delay work; the screen
+observes the actual worker state and refresh result. Stopping a session cancels
+future checks while letting an already queued or running refresh finish.
 
 The separate bell opens the notification page in compact windows and a right
 pane in expanded windows. The monitoring card is the first scrolling list item;

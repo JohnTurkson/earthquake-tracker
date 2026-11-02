@@ -5,7 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.johnturkson.sandbox.data.EarthquakeRefreshCoordinator
+import com.johnturkson.sandbox.data.EarthquakeRefreshResult
 import com.johnturkson.sandbox.data.EarthquakeRefresher
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -19,15 +19,9 @@ constructor(
     private val repository: EarthquakeRefresher,
 ) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
-        setProgress(
-            workDataOf(
-                EarthquakeWorkScheduler.ResultKey to
-                    EarthquakeRefreshCoordinator.Result.Running.name
-            )
-        )
         val result = repository.refresh()
         val output = workDataOf(EarthquakeWorkScheduler.ResultKey to result.name)
-        return if (result == EarthquakeRefreshCoordinator.Result.Success) Result.success(output)
+        return if (result == EarthquakeRefreshResult.Success) Result.success(output)
         else Result.failure(output)
     }
 }

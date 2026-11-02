@@ -1,5 +1,5 @@
 package com.johnturkson.sandbox.data
 
 interface EarthquakeRefresher {
-    suspend fun refresh(): EarthquakeRefreshCoordinator.Result
+    suspend fun refresh(): EarthquakeRefreshResult
 }
