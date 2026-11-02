@@ -86,7 +86,7 @@ On the shared development host, device validation uses the reserved
 
 ## Architecture
 
-The app uses MVVM in a single `:app` module. Packages group the Map, List,
+The app currently uses MVVM across a single `:app` module. Packages group the Map, List,
 Details, and Notifications features, with separate packages for navigation,
 shared presentation, repositories, networking, persistence, notifications, and
 background work.
@@ -129,7 +129,7 @@ sources. Database observations and screen state propagate back up those paths.
 
 ```mermaid
 flowchart TB
-    subgraph PRESENTATION["Presentation"]
+    subgraph PRESENTATION["UI"]
         UI["Compose destinations<br/>Map, List, Details, Notifications"]
         VM["Destination-scoped ViewModels<br/>Read-only screen state contracts"]
         UI -->|Actions| VM
@@ -368,17 +368,13 @@ would help establish how much latency comes from WorkManager.
 
 ## Future Improvements
 
-### Clear older earthquake data
+### Migrate long-term monitoring into a dedicated foreground service
 
-Clear earthquake records more than 30 days old when new data is saved. Clear
-older records sooner if the amount of stored data grows too large.
-
-### Monitoring lifetime
-
-Move the long-running monitoring loop to a dedicated foreground service to avoid
-holding a WorkManager job for the whole session. This requires updating session
-observation, Stop actions, and lifecycle handling while preserving the shared
-refresh behavior.
+We currently use WorkManager with `setForeground` to manage long-term updates, even when the app
+might not be active. This was originally done to avoid additional configuration, as we already
+planned to use WorkManager to handle background/unique work when a refresh is triggered. Even though
+this is backed by a notification foreground service internally, it is still subject to work quotas,
+starting on Android 16.
 
 Android 16 applies job quotas to long-running WorkManager workers, including
 workers running in the foreground. A directly managed service can move the
@@ -387,7 +383,7 @@ use WorkManager. A `dataSync` service also remains subject to foreground-service
 runtime limits. See Android's [long-running worker guidance](https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running)
 and [foreground-service timeouts](https://developer.android.com/develop/background-work/services/fgs/timeout).
 
-### More specific error feedback
+### Surface more specific error feedback
 
 Refresh failures currently share generic messaging. Add distinct feedback and
 recovery actions for offline access, API unavailability, and Android scheduling
@@ -396,7 +392,7 @@ stop or delay work; they should be identified from available scheduling and
 [stop-reason information](https://developer.android.com/reference/androidx/work/WorkInfo),
 rather than inferred from any queued or failed request.
 
-### End-to-end app flows
+### Testing more end-to-end app flows
 
 Add tests that launch the production app and follow complete journeys with
 controlled feed responses: refresh to Map/List to Details, resize while an event
@@ -445,9 +441,9 @@ and add focused keep rules where needed. Check that the optimized build can
 start workers, read Room data, and decode API responses. Run app performance
 benchmarks against a build with the same release optimizations.
 
-### Improve AI instructions and skills
+### Continue to improve and optimize AI instructions and skills
 
-Make the instructions more specific so multiple AI agents can develop features
+Make instructions more specific so multiple AI agents can develop features
 and run independent checks in parallel. Define task ownership, separate
 worktrees, isolated test data and build outputs, and how changes are reviewed
 and integrated. Investigate isolated device-test environments so app flows can
@@ -481,9 +477,10 @@ enforced by the build.
 
 Add search and filters to explore earthquakes in more detail. Filter by
 magnitude, show earthquakes closest to the user, or limit results to the current
-map viewport. Keep the results consistent between Map and List.
+map viewport. These will all provide useful, contextual information to the user, especially
+in combination with their current location data.
 
-### Improve the expanded top app bar
+### Optimize foldable/expanded layout
 
 Revisit the top app bar for expanded windows on foldable and resizable devices.
 Showing List over Map led us to replace the compact Map/List toggle with separate
@@ -492,7 +489,7 @@ different presentations have made the layout code more complex. Find a clearer
 way to show and hide the list while keeping the map visible, and simplify the
 code that handles the two layouts.
 
-## Contributing
+## Other helpful documents
 
 The [project instructions](AGENTS.md) link to formatting, coding, architecture,
 source control, and testing conventions. Use the [build guide](docs/building.md)
