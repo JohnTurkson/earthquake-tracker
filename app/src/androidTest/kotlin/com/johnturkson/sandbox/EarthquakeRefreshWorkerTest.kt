@@ -50,14 +50,15 @@ class EarthquakeRefreshWorkerTest {
     }
 
     @Test
-    fun cancellationPropagatesFromRefreshAndAlertDelivery() = runBlocking {
-        assertFailsWith<CancellationException> {
-            worker(onRefresh = { throw CancellationException() }).doWork()
+    fun cancellationPropagatesFromRefreshAndAlertDelivery() =
+        runBlocking<Unit> {
+            assertFailsWith<CancellationException> {
+                worker(onRefresh = { throw CancellationException() }).doWork()
+            }
+            assertFailsWith<CancellationException> {
+                worker(onAlerts = { throw CancellationException() }).doWork()
+            }
         }
-        assertFailsWith<CancellationException> {
-            worker(onAlerts = { throw CancellationException() }).doWork()
-        }
-    }
 
     private fun worker(
         onRefresh: suspend () -> Unit = {},
