@@ -31,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
@@ -342,11 +343,29 @@ fun EarthquakeScreen(
     val selectedItem = state.mapItems.find { it.id == state.selectedMapItemId }
     val showCluster = state.selectedClusterItemIds.isNotEmpty()
     val clusterItems = state.mapItems.filter { it.id in state.selectedClusterItemIds }
+    LaunchedEffect(state.selectedClusterItemIds, clusterSheetHeight) {
+        if (!showCluster) {
+            clusterSheetHeight = 0.dp
+        } else if (clusterSheetHeight > 0.dp) {
+            withFrameNanos {}
+            val item =
+                clusterItems.find { it.id == state.selectedMapItemId } ?: clusterItems.firstOrNull()
+            if (item != null) {
+                hasInitializedCamera = true
+                cameraPositionState.position =
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(item.latitude, item.longitude),
+                        cameraPositionState.position.zoom,
+                    )
+            }
+        }
+    }
 
     BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
-        val showListPanel = expanded && state.isListPanelVisible && !state.notificationsVisible
-        if (expanded || state.selectedView == EarthquakeView.Map && !state.notificationsVisible) {
+        val showListPanel =
+            expanded && state.isListPanelVisible && !state.notificationsVisible && !showCluster
+        if (showCluster || expanded || state.selectedView == EarthquakeView.Map && !state.notificationsVisible) {
             EarthquakeMap(
                 items = state.mapItems,
                 onItemClick = onMapItemClick,
@@ -369,7 +388,8 @@ fun EarthquakeScreen(
                                 else 0.dp,
                         top =
                             safePadding.calculateTopPadding() +
-                                if (showListPanel) 80.dp
+                                if (showCluster) 16.dp
+                                else if (showListPanel) 80.dp
                                 else
                                     (if (!expanded && !isLocationGranted) 160.dp else 100.dp) +
                                         monitoringCardHeight,
@@ -381,39 +401,41 @@ fun EarthquakeScreen(
                     ),
             )
         }
-        EarthquakeExplorerControls(
-            items = state.mapItems,
-            selectedItemId = state.selectedMapItemId,
-            selectedView = state.selectedView,
-            expanded = expanded,
-            isListPanelVisible = state.isListPanelVisible,
-            onListPanelVisibilityChanged = onListPanelVisibilityChanged,
-            onItemClick = { item ->
-                onMapItemClick(item)
-                hasInitializedCamera = true
-                cameraPositionState.position =
-                    CameraPosition.fromLatLngZoom(
-                        LatLng(item.latitude, item.longitude),
-                        maxOf(5f, cameraPositionState.position.zoom),
-                    )
-                if (!expanded) onViewSelected(EarthquakeView.Map)
-            },
-            onClearSelection = onMapClick,
-            onViewSelected = onViewSelected,
-            contentPadding = safePadding,
-            listState = listState,
-            onSelectionCardSizeChanged = { selectedCardHeight = with(density) { it.toDp() } },
-            showLocationButton = !isLocationGranted,
-            requiresLocationSettings = requiresLocationSettings,
-            onLocationClick = onLocationClick,
-            monitoring = state.monitoring,
-            onRefresh = onRefresh,
-            notificationsVisible = state.notificationsVisible,
-            onNotificationsClick = onNotificationsClick,
-            onNotificationsClose = onNotificationsClose,
-            notificationContent = notificationContent,
-            onMonitoringCardSizeChanged = { monitoringCardHeight = with(density) { it.toDp() } },
-        )
+        if (!showCluster) {
+            EarthquakeExplorerControls(
+                items = state.mapItems,
+                selectedItemId = state.selectedMapItemId,
+                selectedView = state.selectedView,
+                expanded = expanded,
+                isListPanelVisible = state.isListPanelVisible,
+                onListPanelVisibilityChanged = onListPanelVisibilityChanged,
+                onItemClick = { item ->
+                    onMapItemClick(item)
+                    hasInitializedCamera = true
+                    cameraPositionState.position =
+                        CameraPosition.fromLatLngZoom(
+                            LatLng(item.latitude, item.longitude),
+                            maxOf(5f, cameraPositionState.position.zoom),
+                        )
+                    if (!expanded) onViewSelected(EarthquakeView.Map)
+                },
+                onClearSelection = onMapClick,
+                onViewSelected = onViewSelected,
+                contentPadding = safePadding,
+                listState = listState,
+                onSelectionCardSizeChanged = { selectedCardHeight = with(density) { it.toDp() } },
+                showLocationButton = !isLocationGranted,
+                requiresLocationSettings = requiresLocationSettings,
+                onLocationClick = onLocationClick,
+                monitoring = state.monitoring,
+                onRefresh = onRefresh,
+                notificationsVisible = state.notificationsVisible,
+                onNotificationsClick = onNotificationsClick,
+                onNotificationsClose = onNotificationsClose,
+                notificationContent = notificationContent,
+                onMonitoringCardSizeChanged = { monitoringCardHeight = with(density) { it.toDp() } },
+            )
+        }
         if (showCluster) {
             EarthquakeClusterSheet(
                 items = clusterItems,

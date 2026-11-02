@@ -184,6 +184,12 @@ become idle before saving; Compose idle alone does not await SDK camera events.
 `MapType.NONE` avoids relying on live geographic tiles for these behavior checks;
 the native SDK checks still require online access on the shared emulator.
 `EarthquakeActivityTest` separately checks real destination startup and recreation.
+Maps Utils creates offscreen Compose roots to render marker bitmaps. Target the
+native `MapView` with Espresso for startup assertions and projected map taps;
+`onRoot()` is ambiguous once these rendering roots exist. Convert projected
+coordinates to screen coordinates using the view's origin before injecting a tap.
+Cover cluster focus after sheet measurement: the focused member must project
+above the sheet, and inactive explorer controls must be absent while it is open.
 
 ## Compose screenshot tests
 

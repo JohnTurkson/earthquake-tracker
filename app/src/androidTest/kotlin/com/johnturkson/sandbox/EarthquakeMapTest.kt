@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox
 
+import android.view.InputDevice
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
@@ -8,12 +9,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.onNodeWithText
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.GeneralClickAction
+import androidx.test.espresso.action.Press
+import androidx.test.espresso.action.Tap
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
@@ -271,6 +274,40 @@ class EarthquakeMapTest {
         composeRule.runOnIdle { assertEquals("second", selected) }
     }
 
+    @Test
+    fun openingClusterCentersAMemberAboveTheMeasuredSheet() {
+        val first = EarthquakeMapItem("vancouver", 49.2827, -123.1207, "Vancouver first")
+        val items = listOf(first, first.copy(id = "second", title = "Vancouver second"))
+        composeRule.setContent {
+            EarthquakeScreen(
+                state =
+                    EarthquakePreviewState(
+                        mapItems = items,
+                        selectedClusterItemIds = items.map { it.id },
+                    ),
+                onMapItemClick = {},
+                onMapClick = {},
+            )
+        }
+        val map = awaitMap()
+        composeRule.onNodeWithText("Map").assertDoesNotExist()
+        composeRule.onNodeWithText("Use my location").assertDoesNotExist()
+        val heading =
+            composeRule
+                .onNodeWithText("2 earthquakes in this area")
+                .fetchSemanticsNode()
+                .boundsInWindow
+        composeRule.runOnIdle {
+            assertEquals(first.latitude, map.cameraPosition.target.latitude, 0.0001)
+            assertEquals(first.longitude, map.cameraPosition.target.longitude, 0.0001)
+            val point = map.projection.toScreenLocation(LatLng(first.latitude, first.longitude))
+            assertTrue(point.y > 0)
+            assertTrue(
+                point.y < heading.top - 48 * composeRule.activity.resources.displayMetrics.density
+            )
+        }
+    }
+
     private fun awaitMap(): GoogleMap {
         var map: GoogleMap? = null
         composeRule.runOnIdle {
@@ -290,9 +327,23 @@ class EarthquakeMapTest {
         val point = composeRule.runOnIdle { map.projection.toScreenLocation(location) }
         val verticalOffset =
             verticalOffsetDp * composeRule.activity.resources.displayMetrics.density
-        composeRule.onRoot().performTouchInput {
-            click(Offset(point.x.toFloat(), point.y + verticalOffset))
-        }
+        onView(isAssignableFrom(MapView::class.java))
+            .perform(
+                GeneralClickAction(
+                    Tap.SINGLE,
+                    { view ->
+                        val origin = IntArray(2)
+                        view.getLocationOnScreen(origin)
+                        floatArrayOf(
+                            origin[0] + point.x.toFloat(),
+                            origin[1] + point.y + verticalOffset,
+                        )
+                    },
+                    Press.FINGER,
+                    InputDevice.SOURCE_TOUCHSCREEN,
+                    0,
+                )
+            )
     }
 
     private fun findMapView(view: View): MapView? {

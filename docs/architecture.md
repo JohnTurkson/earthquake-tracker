@@ -280,8 +280,20 @@ height, or 45% in windows shorter than 600 dp, and allow every member to scroll;
 do not paginate a cluster. Read `LocalWindowInfo` for the actual window bounds. Keep
 the explanation and magnitude summary inside the scrolling content so large
 text in a short window cannot consume the entire list viewport. Sheet
-expansion and list scroll position remain UI-owned. Selecting a member updates
-the shared selected ID and centers its map location while keeping the sheet open.
+expansion and list scroll position remain UI-owned.
+
+Hide `EarthquakeExplorerControls` while the modal sheet is open and remove its
+reserved map padding. These inactive controls must not cover cluster counts or
+the selected marker at large font sizes. Restore them when the sheet closes;
+their screen state and hoisted list scroll state remain independent of the sheet.
+
+After measuring the sheet, center a current member in the padded map viewport
+on the next Compose frame. Repeat that focus when the sheet's height changes so
+its members remain visible above the sheet after a window or font-size change.
+Keep this camera integration in the UI, including the initialization flag that
+prevents a pending location read from replacing an explicit cluster focus.
+Selecting a member updates the shared selected ID and centers its map location
+while keeping the sheet open.
 Closing, back, or scrim dismissal removes the sheet from composition. Measure
 its content in the UI and reserve bottom map padding for it and the drag handle
 so native attribution and the selected marker remain above the sheet.
