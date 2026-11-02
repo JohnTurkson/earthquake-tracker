@@ -58,11 +58,12 @@ workScheduler.refresh()
 `EarthquakeRefreshWorker` alone calls `EarthquakeRefreshRepository.refresh()`.
 The repository fetches the all-day summary, validates the complete response, and
 merges records and the successful-refresh timestamp in one Room transaction.
-The foreground monitoring worker requests and awaits that same unique one-time
-work through `refreshAndAwait` every minute while active. `KEEP` coalesces manual
-and monitoring requests. Stopping monitoring cancels future polling and its wait,
-leaving an already queued or running shared refresh to finish. Android can delay
-or stop work; the minute interval is a requested cadence.
+The foreground monitoring worker enqueues that same unique one-time work every
+minute while active. It awaits only the enqueue operation; it does not wait for
+the refresh or copy its result. `KEEP` coalesces manual and monitoring requests.
+Stopping monitoring cancels future polling, leaving an already queued or running
+refresh to finish. Android can delay or stop work; the minute interval is a
+requested cadence.
 
 Observe WorkManager for queued/running state and typed success/offline/failure
 results. Observe Room independently for earthquake records and successful-refresh
