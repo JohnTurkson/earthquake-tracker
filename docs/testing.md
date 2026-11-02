@@ -646,8 +646,10 @@ notification permission granted and denied. Platform notification assertions
 wait for the expected active tags because Android enqueues posts asynchronously.
 
 `EarthquakeReportImageTest` uses Ktor MockEngine and a generated PNG to verify
-that reopening an image downloads it again, both caches remain absent, a failed
-load can retry, and the full-size source action receives the correct URL.
+memory reuse and disk reuse across loader recreation without additional network
+requests. Unique fixture URLs isolate cache entries; remove only those entries
+after each test. Cover a failed load followed by retry, reopening the actual
+component from memory and disk, and the full-size source action's URL.
 `EarthquakeReportScreenshotTest` uses Coil's inspection-mode preview handler for
 deterministic loading, error, and success fixtures. Its synthetic image verifies
 component layout rather than a particular USGS report's pixels. Include dark and

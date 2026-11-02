@@ -489,9 +489,12 @@ not establish that a published image is available.
 `EarthquakeReportImage` uses Coil for a supplied published USGS image URL, with
 loading, retryable failure, and loaded states. The application's single Coil
 loader reuses the injected Ktor client through `earthquakeReportImageLoader`.
-Memory and disk caches are null, and both request cache policies are disabled.
-Reopening a report can therefore download it again. Image loading is transient
-presentation work; it does not update Room or start a second earthquake writer.
+Keep Coil's default memory and disk caches and request policies enabled so
+reopening a report can reuse decoded images or downloaded content. Coil owns
+these evictable presentation caches; they do not guarantee offline report
+availability or replace Room's earthquake metadata. Use published versioned image
+URLs as cache identities, following the [network instructions](networking.md#published-report-images).
+Image loading does not update Room or start a second earthquake writer.
 Keep product discovery separate from this component, which accepts a URL and
 source-opening callback. The debug-only `EarthquakeReportPrototypeActivity`
 provides a fixed real event and versioned USGS images for manual verification;

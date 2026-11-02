@@ -85,11 +85,18 @@ The feed's numeric wire representation does not determine the storage format.
 
 ## Published report images
 
-Coil loads report images as transient presentation content through the shared
-Ktor client. `EarthquakeApplication` supplies the singleton loader using
-`earthquakeReportImageLoader`; UI report components accept published image URLs
-and source callbacks. Both memory and disk caching are disabled for this
-prototype, with no separate image downloader or stored image files. This does
-not change Room's source-of-truth role for earthquake metadata or introduce
-network requests from database reads. Product discovery is independent of image
-rendering and is not implemented by the debug report prototype.
+Coil loads report images through the shared Ktor client. `EarthquakeApplication`
+supplies the singleton loader using
+[`earthquakeReportImageLoader`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/details/reports/EarthquakeReportImageLoader.kt).
+Keep Coil's default memory and disk caching enabled on the loader and its image
+requests. Memory caching reuses decoded images; disk caching reuses downloaded
+image content across loader recreation. Use published versioned image URLs so a
+new product revision has a distinct cache identity. Cache entries can be evicted;
+they do not guarantee offline report availability.
+
+[`EarthquakeReportImage`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/details/reports/EarthquakeReportImage.kt)
+accepts a published image URL and source callback. Coil owns the image cache;
+there is no separate image downloader or application-managed image store. Room
+remains the source of truth for earthquake metadata, and database reads do not
+initiate image requests. Product discovery is independent of image rendering and
+is not implemented by the debug report prototype.

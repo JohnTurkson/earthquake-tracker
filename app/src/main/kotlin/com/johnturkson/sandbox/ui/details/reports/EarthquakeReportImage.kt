@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.compose.SubcomposeAsyncImage
-import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import com.johnturkson.sandbox.R
 
@@ -39,11 +38,7 @@ fun EarthquakeReportImage(
     val context = LocalContext.current
     val request =
         remember(context, url, attempt) {
-            ImageRequest.Builder(context)
-                .data(url)
-                .memoryCachePolicy(CachePolicy.DISABLED)
-                .diskCachePolicy(CachePolicy.DISABLED)
-                .build()
+            ImageRequest.Builder(context).data(url).build()
         }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         key(attempt) {

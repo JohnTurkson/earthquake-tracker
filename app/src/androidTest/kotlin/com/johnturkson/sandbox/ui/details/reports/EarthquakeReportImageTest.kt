@@ -3,6 +3,7 @@ package com.johnturkson.sandbox.ui.details.reports
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -20,10 +21,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import java.io.ByteArrayOutputStream
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +33,7 @@ class EarthquakeReportImageTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun reopeningAnImageDownloadsAgainWithoutMemoryOrDiskCaches(): Unit = runBlocking {
+    fun reopeningAnImageUsesMemoryThenDiskAcrossLoaders(): Unit = runBlocking {
         val calls = AtomicInteger()
         val bytes = imageBytes()
         val client =
@@ -43,27 +44,34 @@ class EarthquakeReportImageTest {
                 }
             )
         val loader = earthquakeReportImageLoader(composeRule.activity, client)
+        val reopenedLoader = earthquakeReportImageLoader(composeRule.activity, client)
+        val url = "https://earthquake.usgs.gov/fixture-${UUID.randomUUID()}.png"
+        val request = ImageRequest.Builder(composeRule.activity).data(url).build()
         try {
-            assertNull(loader.memoryCache)
-            assertNull(loader.diskCache)
-            repeat(2) {
-                val result =
-                    loader.execute(
-                        ImageRequest.Builder(composeRule.activity)
-                            .data("https://earthquake.usgs.gov/report.png")
-                            .build()
-                    )
-                assertEquals(DataSource.NETWORK, assertIs<SuccessResult>(result).dataSource)
-            }
-            assertEquals(2, calls.get())
+            assertEquals(
+                DataSource.NETWORK,
+                assertIs<SuccessResult>(loader.execute(request)).dataSource,
+            )
+            assertEquals(
+                DataSource.MEMORY_CACHE,
+                assertIs<SuccessResult>(loader.execute(request)).dataSource,
+            )
+            loader.shutdown()
+            assertEquals(
+                DataSource.DISK,
+                assertIs<SuccessResult>(reopenedLoader.execute(request)).dataSource,
+            )
+            assertEquals(1, calls.get())
         } finally {
             loader.shutdown()
+            reopenedLoader.shutdown()
+            loader.diskCache?.remove(url)
             client.close()
         }
     }
 
     @Test
-    fun failedImageCanRetryAndOpenItsSourceWithoutCaching() {
+    fun failedImageCanRetryReopenFromCachesAndOpenItsSource() {
         val calls = AtomicInteger()
         val bytes = imageBytes()
         val client =
@@ -77,32 +85,54 @@ class EarthquakeReportImageTest {
                 }
             )
         val loader = earthquakeReportImageLoader(composeRule.activity, client)
+        val url = "https://earthquake.usgs.gov/fixture-${UUID.randomUUID()}.png"
+        val visible = mutableStateOf(true)
         var opened: String? = null
         try {
             composeRule.setContent {
                 EarthquakeTheme {
-                    EarthquakeReportImage(
-                        "https://earthquake.usgs.gov/report.png",
-                        "Published USGS report image",
-                        { opened = it },
-                        imageLoader = loader,
-                    )
+                    if (visible.value) {
+                        EarthquakeReportImage(
+                            url,
+                            "Published USGS report image",
+                            { opened = it },
+                            imageLoader = loader,
+                        )
+                    }
                 }
             }
             composeRule.waitUntil(5_000) { composeRule.onNodeWithText("Retry map").isDisplayed() }
             composeRule.onNodeWithText("Retry map").performClick()
             composeRule.waitUntil(5_000) {
-                calls.get() == 2 && !composeRule.onNodeWithText("Retry map").isDisplayed()
+                calls.get() == 2 &&
+                    composeRule
+                        .onNodeWithContentDescription("Published USGS report image")
+                        .isDisplayed()
             }
             composeRule
                 .onNodeWithContentDescription("Published USGS report image")
                 .assertIsDisplayed()
+            repeat(2) { attempt ->
+                composeRule.runOnIdle { visible.value = false }
+                composeRule
+                    .onNodeWithContentDescription("Published USGS report image")
+                    .assertDoesNotExist()
+                if (attempt == 1) {
+                    loader.memoryCache?.clear()
+                }
+                composeRule.runOnIdle { visible.value = true }
+                composeRule.waitUntil(5_000) {
+                    composeRule
+                        .onNodeWithContentDescription("Published USGS report image")
+                        .isDisplayed()
+                }
+                assertEquals(2, calls.get())
+            }
             composeRule.onNodeWithText("Open full-size USGS image").performClick()
-            assertEquals("https://earthquake.usgs.gov/report.png", opened)
-            assertNull(loader.memoryCache)
-            assertNull(loader.diskCache)
+            assertEquals(url, opened)
         } finally {
             loader.shutdown()
+            loader.diskCache?.remove(url)
             client.close()
         }
     }
