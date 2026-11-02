@@ -61,3 +61,9 @@ precedence over the local file. No custom debug signing is required.
 
 For guided setup with Codex, use `$build-project` in this repository. The
 [project build skill](.agents/skills/build-project/SKILL.md) follows the same guide.
+
+## Contributing
+
+Follow the [source control guide](docs/source-control.md). Agents must commit as
+they go; human contributors are encouraged to do the same, keeping each commit
+focused on one coherent change.
