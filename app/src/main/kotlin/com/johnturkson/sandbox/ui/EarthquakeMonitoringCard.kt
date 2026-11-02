@@ -128,7 +128,7 @@ fun EarthquakeMonitoringCard(
             else -> null
         }
     val titleLabel = stringResource(title)
-    val fullLabel = "$titleLabel · $detail"
+    val fullLabel = stringResource(R.string.monitoring_bar_summary, titleLabel, detail)
     val color =
         if (offline || failed) MaterialTheme.colorScheme.errorContainer
         else MaterialTheme.colorScheme.surfaceContainer
@@ -160,7 +160,9 @@ fun EarthquakeMonitoringCard(
                         val candidates =
                             listOfNotNull(
                                 fullLabel,
-                                shortDetail?.let { "$shortTitle · $it" },
+                                shortDetail?.let {
+                                    stringResource(R.string.monitoring_bar_summary, shortTitle, it)
+                                },
                                 shortTitle,
                             )
                         val label =
@@ -203,6 +205,7 @@ fun EarthquakeMonitoringCard(
                 }
                 actions()
             },
+            expandedHeight = earthquakeTopAppBarHeight,
             windowInsets = WindowInsets(0, 0, 0, 0),
             colors = TopAppBarDefaults.topAppBarColors(containerColor = color),
         )

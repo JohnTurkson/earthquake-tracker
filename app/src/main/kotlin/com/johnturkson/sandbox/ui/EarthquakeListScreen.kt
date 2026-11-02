@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -13,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -46,6 +49,7 @@ fun EarthquakeListScreen(
         }
     }
     val safePadding = WindowInsets.safeDrawing.asPaddingValues()
+    val layoutDirection = LocalLayoutDirection.current
     if (expanded) {
         EarthquakeListPanel(
             items = state.mapItems,
@@ -56,8 +60,12 @@ fun EarthquakeListScreen(
             modifier =
                 modifier
                     .fillMaxSize()
-                    .padding(safePadding)
-                    .padding(start = 16.dp, end = 16.dp, top = 80.dp, bottom = 16.dp),
+                    .padding(
+                        start = safePadding.calculateStartPadding(layoutDirection),
+                        end = safePadding.calculateEndPadding(layoutDirection),
+                        bottom = safePadding.calculateBottomPadding(),
+                    )
+                    .padding(16.dp),
             showMinimizeAction = false,
         )
     } else {

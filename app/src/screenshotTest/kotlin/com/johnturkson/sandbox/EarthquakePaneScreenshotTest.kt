@@ -145,6 +145,7 @@ class EarthquakePaneScreenshotTest {
                                     ),
                                 onClose = {},
                                 expanded = expanded,
+                                modifier = Modifier.padding(top = if (expanded) 64.dp else 0.dp),
                             )
                         }
                     },

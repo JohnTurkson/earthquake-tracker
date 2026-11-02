@@ -151,6 +151,7 @@ class EarthquakeNavigationTest {
         }
         composeRule.onNodeWithText("Map destination").assertIsDisplayed()
         composeRule.onNodeWithText("Recent earthquakes").assertIsDisplayed()
+        assertPaneBelowAppBar("List pane")
         composeRule.onNodeWithText("Select last earthquake").performClick()
         assertLastEarthquakeSelected()
         composeRule.onNode(hasScrollAction()).performScrollToIndex(0)
@@ -159,6 +160,7 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Notifications shortcut").performClick()
         composeRule.onNodeWithText("Notification destination").assertIsDisplayed()
         composeRule.onNodeWithText("Map destination").assertIsDisplayed()
+        assertPaneBelowAppBar("Notifications pane")
         composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
         composeRule.onNodeWithText("Close notifications").performClick()
         assertLastEarthquakeSelected()
@@ -225,6 +227,15 @@ class EarthquakeNavigationTest {
             composeRule.onNodeWithText("Earthquake 79").isDisplayed()
         }
         composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
+    }
+
+    private fun assertPaneBelowAppBar(tag: String) {
+        val refreshBounds =
+            composeRule
+                .onNodeWithContentDescription("Refresh earthquake data")
+                .fetchSemanticsNode()
+                .boundsInRoot
+        assertTrue(paneBounds(tag).top >= refreshBounds.bottom)
     }
 
     private fun paneBounds(tag: String): Rect =

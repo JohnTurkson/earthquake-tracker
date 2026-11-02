@@ -97,7 +97,7 @@ class EarthquakeViewSwitcherTest {
                         .assertIsDisplayed()
                         .fetchSemanticsNode()
                         .boundsInRoot
-                val margin = with(rule.density) { (if (expanded) 4.dp else 16.dp).toPx() }
+                val margin = with(rule.density) { (if (expanded) 8.dp else 16.dp).toPx() }
                 if (layoutDirection == LayoutDirection.Ltr) {
                     assertEquals(root.right - margin, bounds.right, 1f)
                 } else {

@@ -6,8 +6,11 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.snap
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveComponentOverrideApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
@@ -97,7 +100,19 @@ fun EarthquakeApp(
                 WIDTH_DP_EXPANDED_LOWER_BOUND,
                 HEIGHT_DP_MEDIUM_LOWER_BOUND,
             )
-        Box(modifier.fillMaxSize()) {
+        BoxWithConstraints(modifier.fillMaxSize()) {
+            val paneHeightMetadata =
+                if (expanded)
+                    SupportingPaneSceneStrategy.preferredPaneSize(
+                        height =
+                            (maxHeight -
+                                    WindowInsets.safeDrawing
+                                        .asPaddingValues()
+                                        .calculateTopPadding() -
+                                    earthquakeTopAppBarHeight)
+                                .coerceAtLeast(0.dp)
+                    )
+                else SupportingPaneSceneStrategy.preferredPaneSize(height = 1f)
             val immediatePaneAnimation =
                 SupportingPaneSceneStrategy.paneAnimation(
                     enterTransition = EnterTransition.None,
@@ -129,10 +144,10 @@ fun EarthquakeApp(
                     adaptStrategies =
                         SupportingPaneScaffoldDefaults.adaptStrategies(
                             supportingPaneAdaptStrategy =
-                                if (expanded) AdaptStrategy.Levitate(Alignment.CenterStart)
+                                if (expanded) AdaptStrategy.Levitate(Alignment.BottomStart)
                                 else AdaptStrategy.Hide,
                             extraPaneAdaptStrategy =
-                                if (expanded) AdaptStrategy.Levitate(Alignment.CenterEnd)
+                                if (expanded) AdaptStrategy.Levitate(Alignment.BottomEnd)
                                 else AdaptStrategy.Hide,
                         ),
                 )
@@ -229,7 +244,7 @@ fun EarthquakeApp(
                                         SupportingPaneSceneStrategy.preferredPaneSize(
                                             width = earthquakeListPaneWidth + 32.dp
                                         ) +
-                                        SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
+                                        paneHeightMetadata +
                                         explorerPaneAnimation
                             ) { navKey ->
                                 destinationContent(navKey, actions)
@@ -240,7 +255,7 @@ fun EarthquakeApp(
                                         SupportingPaneSceneStrategy.preferredPaneSize(
                                             width = earthquakeListPaneWidth + 32.dp
                                         ) +
-                                        SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
+                                        paneHeightMetadata +
                                         immediatePaneAnimation
                             ) { navKey ->
                                 destinationContent(navKey, actions)

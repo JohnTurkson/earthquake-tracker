@@ -11,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -23,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -135,6 +138,8 @@ fun EarthquakeNotificationsScreen(
     onChannelSettings: (Boolean) -> Unit = {},
     onPreviewAlert: () -> Unit = {},
 ) {
+    val safePadding = WindowInsets.safeDrawing.asPaddingValues()
+    val layoutDirection = LocalLayoutDirection.current
     Box(
         modifier
             .fillMaxSize()
@@ -154,11 +159,16 @@ fun EarthquakeNotificationsScreen(
             onPreviewAlert = onPreviewAlert,
             modifier =
                 Modifier.fillMaxSize()
-                    .padding(WindowInsets.safeDrawing.asPaddingValues())
+                    .padding(
+                        start = safePadding.calculateStartPadding(layoutDirection),
+                        end = safePadding.calculateEndPadding(layoutDirection),
+                        top = if (expanded) 0.dp else safePadding.calculateTopPadding(),
+                        bottom = safePadding.calculateBottomPadding(),
+                    )
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
-                        top = if (expanded) 84.dp else 12.dp,
+                        top = if (expanded) 20.dp else 12.dp,
                         bottom = 16.dp,
                     ),
         )

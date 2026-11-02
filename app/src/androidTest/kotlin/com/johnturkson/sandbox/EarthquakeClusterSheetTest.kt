@@ -122,27 +122,54 @@ class EarthquakeClusterSheetTest {
                     selectedClusterItemIds = items.map { it.id },
                 )
             )
+        var windowSize by mutableStateOf(DpSize(400.dp, 600.dp))
         composeRule.setContent {
-            EarthquakeTheme {
-                EarthquakeScreen(
-                    state = state,
-                    onMapItemClick = { state = state.copy(selectedMapItemId = it.id) },
-                    onMapClick = { state = state.copy(selectedMapItemId = null) },
-                    onClusterDismiss = { state = state.copy(selectedClusterItemIds = emptyList()) },
-                )
+            DeviceConfigurationOverride(DeviceConfigurationOverride.WindowSize(windowSize)) {
+                EarthquakeTheme {
+                    EarthquakeScreen(
+                        state = state,
+                        onMapItemClick = { state = state.copy(selectedMapItemId = it.id) },
+                        onMapClick = { state = state.copy(selectedMapItemId = null) },
+                        onClusterDismiss = {
+                            state = state.copy(selectedClusterItemIds = emptyList())
+                        },
+                    )
+                }
             }
         }
-        composeRule.onNodeWithContentDescription("Close earthquake cluster").assertIsDisplayed()
-        composeRule.onNodeWithText(requireNotNull(items.first().title)).assertIsSelected()
-        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
-        pressBack()
-        composeRule.onNodeWithContentDescription("Close earthquake cluster").assertDoesNotExist()
-        composeRule.onNodeWithText(requireNotNull(items.first().title)).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
-        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
-        composeRule.runOnIdle {
-            assertEquals(items.first().id, state.selectedMapItemId)
-            assertEquals(emptyList(), state.selectedClusterItemIds)
+        for (expanded in listOf(false, true)) {
+            composeRule.runOnIdle {
+                windowSize = DpSize(if (expanded) 900.dp else 400.dp, 600.dp)
+                state = state.copy(selectedClusterItemIds = items.map { it.id })
+            }
+            composeRule.onNodeWithContentDescription("Close earthquake cluster").assertIsDisplayed()
+            composeRule.onNodeWithText(requireNotNull(items.first().title)).assertIsSelected()
+            composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
+            composeRule
+                .onNodeWithContentDescription("Minimize earthquake list")
+                .assertDoesNotExist()
+            pressBack()
+            composeRule
+                .onNodeWithContentDescription("Close earthquake cluster")
+                .assertDoesNotExist()
+            composeRule.onNodeWithText(requireNotNull(items.first().title)).assertIsDisplayed()
+            if (expanded) {
+                composeRule
+                    .onNodeWithContentDescription("Minimize earthquake list")
+                    .assertIsDisplayed()
+                composeRule
+                    .onNodeWithContentDescription("Clear earthquake selection")
+                    .assertDoesNotExist()
+            } else {
+                composeRule
+                    .onNodeWithContentDescription("Clear earthquake selection")
+                    .assertIsDisplayed()
+            }
+            composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
+            composeRule.runOnIdle {
+                assertEquals(items.first().id, state.selectedMapItemId)
+                assertEquals(emptyList(), state.selectedClusterItemIds)
+            }
         }
     }
 }

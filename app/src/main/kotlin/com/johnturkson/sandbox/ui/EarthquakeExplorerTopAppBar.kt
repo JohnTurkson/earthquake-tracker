@@ -20,6 +20,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.johnturkson.sandbox.R
 
+internal val earthquakeTopAppBarHeight = 64.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EarthquakeExplorerTopAppBar(
@@ -68,6 +70,7 @@ fun EarthquakeExplorerTopAppBar(
             modifier = modifier,
             navigationIcon = navigationIcon,
             actions = actions,
+            expandedHeight = earthquakeTopAppBarHeight,
             windowInsets = WindowInsets(0, 0, 0, 0),
         )
     }

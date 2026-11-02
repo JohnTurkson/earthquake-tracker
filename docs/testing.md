@@ -291,6 +291,8 @@ empty, unknown-magnitude, dark, narrow large-text, and short large-text states.
 [EarthquakeClusterSheetTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterSheetTest.kt)
 checks the real modal container, scrolling to the last member, retained selection
 after dismissal, back dismissal through the real screen, and disappearing members.
+Back-dismissal fixtures explicitly cover compact and expanded windows: restore
+the compact selection card or expanded app bar and selected row as appropriate.
 It measures the content cap and checks last-member access across compact and
 medium height boundaries, including the former 600 dp threshold. The compact
 and medium height content previews cover the corresponding bounded viewports;
@@ -383,7 +385,8 @@ Run this class with the reserved emulator window at least 900 dp wide and 600 dp
 tall. Its host uses Compose's `DeviceConfigurationOverride.WindowSize` so both
 content constraints and `LocalWindowInfo` reflect each fixture size. Include the
 839/840 dp width and 479/480 dp height boundaries and verify entry owners survive
-resizing. Keep fixture sizes within the available window to retain the device's
+resizing. Verify expanded pane bounds stay below the app bar so its controls
+remain available through Android accessibility selectors. Keep fixture sizes within the available window to retain the device's
 native density while exercising the Material scene's lookahead layout.
 Record and restore the display override through the
 [Android CLI workflow](android-cli.md#change-device-configuration).

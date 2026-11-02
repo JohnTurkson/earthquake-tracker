@@ -199,6 +199,7 @@ class EarthquakeNotificationsScreenshotTest {
                 monitoring = EarthquakeMonitoringState(),
                 onClose = {},
                 expanded = true,
+                modifier = Modifier.padding(top = 64.dp),
             )
         }
     }

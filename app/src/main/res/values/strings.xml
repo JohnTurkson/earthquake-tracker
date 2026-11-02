@@ -95,4 +95,5 @@
     <string name="monitoring_bar_saved">Saved %1$s</string>
     <string name="monitoring_bar_saved_data">Saved data</string>
     <string name="monitoring_bar_no_data">No saved data</string>
+    <string name="monitoring_bar_summary">%1$s · %2$s</string>
 </resources>

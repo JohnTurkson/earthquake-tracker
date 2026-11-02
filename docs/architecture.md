@@ -311,7 +311,7 @@ labels when space permits. Keep controls on one row, clear of system insets.
 Use Material Adaptive's `rememberSupportingPaneSceneStrategy` with the Map entry
 as `mainPane`, List as `supportingPane`, and Notifications as `extraPane`.
 In expanded windows, configure the two secondary roles with
-`AdaptStrategy.Levitate`, aligned to the start and end respectively, without a
+`AdaptStrategy.Levitate`, aligned to the bottom start and bottom end respectively, without a
 scrim so the map remains interactive. Set one expanded horizontal partition so
 the main map fills the window. Compact windows use `AdaptStrategy.Hide` for the
 secondary roles and display the current destination full-screen. Keep
@@ -361,7 +361,12 @@ overlays. Pass the native map through `content` so it fills the scaffold beneath
 the app bar. Consume scaffold window insets without applying its top padding to
 the map surface; reserve the bar in the map's own content padding instead.
 Keep safe-drawing insets separate from the 64 dp bar content height. Expanded
-list and notification panes start below that bar. Set `showControls = false`
+list and notification pane containers start below the safe top inset and bar.
+Set their preferred height from the measured host height minus those values,
+and bottom-align them through the adaptive scene. The containers' accessibility
+bounds must exclude the bar so transparent pane spacing cannot hide its actions.
+Expanded entry wrappers add only their local surface spacing and the remaining
+safe insets; do not reserve the bar a second time. Set `showControls = false`
 while a cluster sheet is open, preserving the map and its camera owner.
 Runtime Map and List destinations
 set `renderListContent = false` when using its controls so the List entry renders
