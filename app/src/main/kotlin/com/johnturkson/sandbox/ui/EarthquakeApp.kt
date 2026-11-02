@@ -101,18 +101,13 @@ fun EarthquakeApp(
                 HEIGHT_DP_MEDIUM_LOWER_BOUND,
             )
         BoxWithConstraints(modifier.fillMaxSize()) {
-            val paneHeightMetadata =
+            val paneHeight =
                 if (expanded)
-                    SupportingPaneSceneStrategy.preferredPaneSize(
-                        height =
-                            (maxHeight -
-                                    WindowInsets.safeDrawing
-                                        .asPaddingValues()
-                                        .calculateTopPadding() -
-                                    earthquakeTopAppBarHeight)
-                                .coerceAtLeast(0.dp)
-                    )
-                else SupportingPaneSceneStrategy.preferredPaneSize(height = 1f)
+                    (maxHeight -
+                            WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding() -
+                            earthquakeTopAppBarHeight)
+                        .coerceAtLeast(0.dp)
+                else maxHeight
             val immediatePaneAnimation =
                 SupportingPaneSceneStrategy.paneAnimation(
                     enterTransition = EnterTransition.None,
@@ -136,7 +131,11 @@ fun EarthquakeApp(
             }
             val directive =
                 calculatePaneScaffoldDirective(adaptiveInfo)
-                    .copy(maxHorizontalPartitions = 1, maxVerticalPartitions = 1)
+                    .copy(
+                        maxHorizontalPartitions = 1,
+                        maxVerticalPartitions = 1,
+                        defaultPanePreferredHeight = paneHeight,
+                    )
             val strategy =
                 rememberSupportingPaneSceneStrategy<NavKey>(
                     shouldHandleSinglePaneLayout = true,
@@ -244,7 +243,6 @@ fun EarthquakeApp(
                                         SupportingPaneSceneStrategy.preferredPaneSize(
                                             width = earthquakeListPaneWidth + 32.dp
                                         ) +
-                                        paneHeightMetadata +
                                         explorerPaneAnimation
                             ) { navKey ->
                                 destinationContent(navKey, actions)
@@ -255,7 +253,6 @@ fun EarthquakeApp(
                                         SupportingPaneSceneStrategy.preferredPaneSize(
                                             width = earthquakeListPaneWidth + 32.dp
                                         ) +
-                                        paneHeightMetadata +
                                         immediatePaneAnimation
                             ) { navKey ->
                                 destinationContent(navKey, actions)

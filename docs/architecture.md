@@ -362,8 +362,10 @@ the app bar. Consume scaffold window insets without applying its top padding to
 the map surface; reserve the bar in the map's own content padding instead.
 Keep safe-drawing insets separate from the 64 dp bar content height. Expanded
 list and notification pane containers start below the safe top inset and bar.
-Set their preferred height from the measured host height minus those values,
-and bottom-align them through the adaptive scene. The containers' accessibility
+Set the adaptive directive's `defaultPanePreferredHeight` from the measured host
+height minus those values, and bottom-align them through the adaptive scene.
+Keep this changing height out of entry metadata so resizing updates existing
+destinations. The containers' accessibility
 bounds must exclude the bar so transparent pane spacing cannot hide its actions.
 Expanded entry wrappers add only their local surface spacing and the remaining
 safe insets; do not reserve the bar a second time. Set `showControls = false`

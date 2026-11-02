@@ -386,8 +386,10 @@ tall. Its host uses Compose's `DeviceConfigurationOverride.WindowSize` so both
 content constraints and `LocalWindowInfo` reflect each fixture size. Include the
 839/840 dp width and 479/480 dp height boundaries and verify entry owners survive
 resizing. Verify expanded pane bounds stay below the app bar so its controls
-remain available through Android accessibility selectors. Keep fixture sizes within the available window to retain the device's
-native density while exercising the Material scene's lookahead layout.
+remain available through Android accessibility selectors. Compare their screen
+coordinates because levitated panes use separate windows. Keep fixture sizes
+within the available window to retain the device's native density while
+exercising the Material scene's lookahead layout.
 Record and restore the display override through the
 [Android CLI workflow](android-cli.md#change-device-configuration).
 Freeze the Compose clock to check notification navigation before an ordinary

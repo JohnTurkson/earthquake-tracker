@@ -212,6 +212,7 @@ class EarthquakeNavigationTest {
             if (showsBothDestinations) {
                 composeRule.onNodeWithText("Map destination").assertIsDisplayed()
                 composeRule.onNodeWithText("Recent earthquakes").assertIsDisplayed()
+                assertPaneBelowAppBar("List pane")
             } else {
                 composeRule.onNodeWithText("Map destination").assertDoesNotExist()
                 composeRule.onNodeWithText("List").assertIsSelected()
@@ -230,12 +231,15 @@ class EarthquakeNavigationTest {
     }
 
     private fun assertPaneBelowAppBar(tag: String) {
-        val refreshBounds =
-            composeRule
-                .onNodeWithContentDescription("Refresh earthquake data")
-                .fetchSemanticsNode()
-                .boundsInRoot
-        assertTrue(paneBounds(tag).top >= refreshBounds.bottom)
+        val refresh =
+            composeRule.onNodeWithContentDescription("Refresh earthquake data").fetchSemanticsNode()
+        val pane = composeRule.onNodeWithTag(tag).fetchSemanticsNode()
+        val refreshBounds = Rect(refresh.positionOnScreen, refresh.size.toSize())
+        val bounds = Rect(pane.positionOnScreen, pane.size.toSize())
+        assertTrue(
+            bounds.top >= refreshBounds.bottom,
+            "$tag $bounds overlaps app bar $refreshBounds",
+        )
     }
 
     private fun paneBounds(tag: String): Rect =
