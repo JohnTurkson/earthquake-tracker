@@ -20,9 +20,6 @@ See the [full feature inventory](docs/features.md).
 
 ![Expanded Map with floating List, Details, and Notifications panes, including minimized and dark-mode layouts](docs/images/galleries/app-expanded-grid.png)
 
-The ShakeMap and DYFI images show the fixed-event report-image prototype.
-Report-image discovery is not yet connected to normal event selection.
-
 ## Setup and run
 
 ### Requirements
