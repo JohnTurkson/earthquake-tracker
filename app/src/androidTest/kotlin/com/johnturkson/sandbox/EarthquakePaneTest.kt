@@ -89,7 +89,16 @@ class EarthquakePaneTest {
         require(LocalWindowInfo.current.containerSize.width / density >= 900f)
         require(LocalWindowInfo.current.containerSize.height / density >= 600f)
         DeviceConfigurationOverride(
-            DeviceConfigurationOverride.WindowSize(DpSize(if (expanded) 900.dp else 400.dp, 600.dp))
+            DeviceConfigurationOverride.WindowSize(
+                DpSize(
+                    if (expanded) {
+                        900.dp
+                    } else {
+                        400.dp
+                    },
+                    600.dp,
+                )
+            )
         ) {
             EarthquakeApp(Modifier.fillMaxSize().testTag("pane-host")) { route, actions ->
                 when (route) {

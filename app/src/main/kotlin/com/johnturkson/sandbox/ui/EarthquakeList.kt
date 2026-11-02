@@ -56,7 +56,12 @@ fun EarthquakeList(
             PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
-                top = if (showTitle) 16.dp else 0.dp,
+                top =
+                    if (showTitle) {
+                        16.dp
+                    } else {
+                        0.dp
+                    },
                 bottom = 16.dp,
             ),
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -72,30 +77,53 @@ fun EarthquakeList(
         }
         item(key = "heading") {
             Column(
-                Modifier.padding(horizontal = 12.dp, vertical = if (showTitle) 12.dp else 0.dp)
+                Modifier.padding(
+                    horizontal = 12.dp,
+                    vertical =
+                        if (showTitle) {
+                            12.dp
+                        } else {
+                            0.dp
+                        },
+                )
             ) {
-                if (showTitle)
+                if (showTitle) {
                     Text(
                         stringResource(R.string.recent_earthquakes),
                         style =
-                            if (isSupportingPane) MaterialTheme.typography.titleLarge
-                            else MaterialTheme.typography.headlineMedium,
+                            if (isSupportingPane) {
+                                MaterialTheme.typography.titleLarge
+                            } else {
+                                MaterialTheme.typography.headlineMedium
+                            },
                         color = MaterialTheme.colorScheme.onSurface,
                     )
+                }
                 Text(
                     pluralStringResource(
                         R.plurals.earthquake_snapshot_count,
                         items.size,
                         items.size,
                     ),
-                    modifier = Modifier.padding(top = if (showTitle) 8.dp else 0.dp),
+                    modifier =
+                        Modifier.padding(
+                            top =
+                                if (showTitle) {
+                                    8.dp
+                                } else {
+                                    0.dp
+                                }
+                        ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     stringResource(
-                        if (isSupportingPane) R.string.local_event_times
-                        else R.string.list_explanation
+                        if (isSupportingPane) {
+                            R.string.local_event_times
+                        } else {
+                            R.string.list_explanation
+                        }
                     ),
                     modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
                     style = MaterialTheme.typography.bodySmall,
@@ -140,8 +168,11 @@ fun EarthquakeListRow(
         modifier = modifier.fillMaxWidth().semantics { selected = isSelected },
         shape = RoundedCornerShape(20.dp),
         color =
-            if (isSelected) MaterialTheme.colorScheme.secondaryContainer
-            else MaterialTheme.colorScheme.surface,
+            if (isSelected) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
     ) {
         Row(
             Modifier.padding(16.dp),

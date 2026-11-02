@@ -104,9 +104,11 @@ fun EarthquakeNotificationPage(
                                 Button(onClick = onEnableNotifications) {
                                     Text(
                                         stringResource(
-                                            if (state.requiresSettings)
+                                            if (state.requiresSettings) {
                                                 R.string.open_notification_settings
-                                            else R.string.enable_notifications
+                                            } else {
+                                                R.string.enable_notifications
+                                            }
                                         )
                                     )
                                 }
@@ -199,11 +201,12 @@ fun EarthquakeNotificationPage(
                         !state.monitoringChannelEnabled &&
                             state.permissionGranted &&
                             state.appEnabled
-                    )
+                    ) {
                         Text(
                             stringResource(R.string.monitor_channel_disabled),
                             style = MaterialTheme.typography.bodySmall,
                         )
+                    }
                 }
             }
             item(key = "channels") {
@@ -227,11 +230,12 @@ fun EarthquakeNotificationPage(
                     ) {
                         Text(stringResource(R.string.preview_alert))
                     }
-                    if (state.settingsError)
+                    if (state.settingsError) {
                         Text(
                             stringResource(R.string.notification_settings_error),
                             color = MaterialTheme.colorScheme.error,
                         )
+                    }
                 }
             }
         }

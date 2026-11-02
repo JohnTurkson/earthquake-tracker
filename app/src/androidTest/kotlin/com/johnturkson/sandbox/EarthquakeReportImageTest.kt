@@ -71,9 +71,11 @@ class EarthquakeReportImageTest {
         val client =
             HttpClient(
                 MockEngine {
-                    if (calls.incrementAndGet() == 1)
+                    if (calls.incrementAndGet() == 1) {
                         respond("Unavailable", HttpStatusCode.ServiceUnavailable)
-                    else respond(bytes, headers = headersOf(HttpHeaders.ContentType, "image/png"))
+                    } else {
+                        respond(bytes, headers = headersOf(HttpHeaders.ContentType, "image/png"))
+                    }
                 }
             )
         val loader = earthquakeReportImageLoader(composeRule.activity, client)

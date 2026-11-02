@@ -64,14 +64,28 @@ class EarthquakeRefreshIntegrationTest {
         var requests = 0
         fun event(preferred: Boolean) =
             EarthquakeNetworkModel(
-                if (preferred) preferredId else id,
+                if (preferred) {
+                    preferredId
+                } else {
+                    id
+                },
                 "Feature",
                 EarthquakePropertiesNetworkModel(
                     now,
-                    now + if (preferred) 1.milliseconds else Duration.ZERO,
+                    now +
+                        if (preferred) {
+                            1.milliseconds
+                        } else {
+                            Duration.ZERO
+                        },
                     6.2,
                     place = "Test Pacific",
-                    ids = if (preferred) ",$preferredId,$id-shared," else ",$id,$id-shared,",
+                    ids =
+                        if (preferred) {
+                            ",$preferredId,$id-shared,"
+                        } else {
+                            ",$id,$id-shared,"
+                        },
                     type = "earthquake",
                 ),
                 EarthquakeGeometryNetworkModel("Point", listOf(2.0, 1.0, 10.0)),
@@ -84,7 +98,9 @@ class EarthquakeRefreshIntegrationTest {
                         request.url.encodedPath,
                     )
                     requests++
-                    if (requests == 3) throw IOException("Earthquake feed unavailable")
+                    if (requests == 3) {
+                        throw IOException("Earthquake feed unavailable")
+                    }
                     val response =
                         EarthquakeCollectionNetworkModel(
                             "FeatureCollection",
@@ -149,14 +165,16 @@ class EarthquakeRefreshIntegrationTest {
                         workerClassName: String,
                         workerParameters: WorkerParameters,
                     ): ListenableWorker? =
-                        if (workerClassName == EarthquakeRefreshWorker::class.java.name)
+                        if (workerClassName == EarthquakeRefreshWorker::class.java.name) {
                             EarthquakeRefreshWorker(
                                 appContext,
                                 workerParameters,
                                 refresher,
                                 EarthquakeMonitoringFixtures.connection(),
                             )
-                        else null
+                        } else {
+                            null
+                        }
                 }
             suspend fun runWorker() =
                 TestListenableWorkerBuilder<EarthquakeRefreshWorker>(context)
@@ -169,14 +187,23 @@ class EarthquakeRefreshIntegrationTest {
             assertEquals(setOf(old.id, preferredId), stored.map { it.id }.toSet())
             val metadata = assertNotNull(database.monitoringDao().getRefreshFlow().first())
             assertEquals(
-                if (allowed) 1 else 0,
+                if (allowed) {
+                    1
+                } else {
+                    0
+                },
                 database.monitoringDao().getDeliveredAlertsFlow(preferredId).first().size,
             )
             withTimeout(5.seconds) {
                 while (
                     systemNotifications.activeNotifications.count {
                         it.tag == id || it.tag == preferredId
-                    } != if (allowed) 1 else 0
+                    } !=
+                        if (allowed) {
+                            1
+                        } else {
+                            0
+                        }
                 ) delay(50.milliseconds)
             }
             assertFailsWith<IOException> { runWorker() }

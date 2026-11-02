@@ -38,8 +38,11 @@ fun EarthquakeReportSection(
 ) {
     val stateLabel =
         stringResource(
-            if (expanded) R.string.earthquake_report_expanded
-            else R.string.earthquake_report_collapsed
+            if (expanded) {
+                R.string.earthquake_report_expanded
+            } else {
+                R.string.earthquake_report_collapsed
+            }
         )
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -60,7 +63,11 @@ fun EarthquakeReportSection(
                 )
             }
             Icon(
-                if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                if (expanded) {
+                    Icons.Outlined.ExpandLess
+                } else {
+                    Icons.Outlined.ExpandMore
+                },
                 contentDescription = null,
             )
         }

@@ -20,7 +20,9 @@ constructor(
     private val connectivity: EarthquakeConnection,
 ) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
-        if (!connectivity.isOnline()) return Result.failure()
+        if (!connectivity.isOnline()) {
+            return Result.failure()
+        }
         repository.refresh()
         try {
             repository.publishAlerts()

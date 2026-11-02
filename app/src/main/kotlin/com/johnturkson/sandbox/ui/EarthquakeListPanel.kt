@@ -49,13 +49,14 @@ fun EarthquakeListPanel(
                     Modifier.weight(1f),
                     style = MaterialTheme.typography.titleLarge,
                 )
-                if (showMinimizeAction)
+                if (showMinimizeAction) {
                     IconButton(onClick = { onMinimize() }) {
                         Icon(
                             Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                             contentDescription = stringResource(R.string.minimize_earthquake_list),
                         )
                     }
+                }
             }
             EarthquakeList(
                 items = items,

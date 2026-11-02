@@ -18,8 +18,9 @@ class EarthquakeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null)
+        if (savedInstanceState == null) {
             notificationEventId = intent.getStringExtra(EarthquakeNotifications.EventIdExtra)
+        }
         enableEdgeToEdge()
         setContent {
             EarthquakeApp(

@@ -78,7 +78,12 @@ class EarthquakeComponentScreenshotTest {
                             latitude = 33.822,
                             longitude = 136.9854,
                             title = "M6.0 - 58 km SSE of Shima, Japan",
-                            snippet = if (case.hasTime) "Oct 31, 2026 · 10:15 PM" else null,
+                            snippet =
+                                if (case.hasTime) {
+                                    "Oct 31, 2026 · 10:15 PM"
+                                } else {
+                                    null
+                                },
                         ),
                     isSelected = case.selected,
                     onClick = {},

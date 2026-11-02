@@ -72,14 +72,23 @@ constructor(
     }
 
     fun applySelection(result: EarthquakeSelectionResult, scroll: Boolean = true) {
-        if (result.revision <= selectionRevision) return
+        if (result.revision <= selectionRevision) {
+            return
+        }
         selectionRevision = result.revision
         selectedMapItemId = result.earthquakeId
-        scrollRequest = if (scroll && result.earthquakeId != null) result else null
+        scrollRequest =
+            if (scroll && result.earthquakeId != null) {
+                result
+            } else {
+                null
+            }
     }
 
     fun consumeScrollRequest(request: EarthquakeSelectionResult) {
-        if (scrollRequest == request) scrollRequest = null
+        if (scrollRequest == request) {
+            scrollRequest = null
+        }
     }
 
     fun refresh() = monitor.refresh()

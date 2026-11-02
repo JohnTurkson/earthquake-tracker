@@ -413,7 +413,9 @@ class EarthquakeMapTest {
     }
 
     private fun findMapView(view: View): MapView? {
-        if (view is MapView) return view
+        if (view is MapView) {
+            return view
+        }
         if (view is ViewGroup) {
             repeat(view.childCount) { index ->
                 findMapView(view.getChildAt(index))?.let {

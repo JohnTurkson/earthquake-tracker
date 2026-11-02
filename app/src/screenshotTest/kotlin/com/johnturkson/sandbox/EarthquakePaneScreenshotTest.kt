@@ -75,11 +75,17 @@ class EarthquakePaneScreenshotTest {
             val strategies =
                 SupportingPaneScaffoldDefaults.adaptStrategies(
                     supportingPaneAdaptStrategy =
-                        if (expanded) AdaptStrategy.Levitate(Alignment.CenterStart)
-                        else AdaptStrategy.Hide,
+                        if (expanded) {
+                            AdaptStrategy.Levitate(Alignment.CenterStart)
+                        } else {
+                            AdaptStrategy.Hide
+                        },
                     extraPaneAdaptStrategy =
-                        if (expanded) AdaptStrategy.Levitate(Alignment.CenterEnd)
-                        else AdaptStrategy.Hide,
+                        if (expanded) {
+                            AdaptStrategy.Levitate(Alignment.CenterEnd)
+                        } else {
+                            AdaptStrategy.Hide
+                        },
                 )
             val value =
                 calculateThreePaneScaffoldValue(
@@ -87,8 +93,11 @@ class EarthquakePaneScreenshotTest {
                     adaptStrategies = strategies,
                     currentDestination =
                         ThreePaneScaffoldDestinationItem<Any>(
-                            if (notifications) SupportingPaneScaffoldRole.Extra
-                            else SupportingPaneScaffoldRole.Supporting
+                            if (notifications) {
+                                SupportingPaneScaffoldRole.Extra
+                            } else {
+                                SupportingPaneScaffoldRole.Supporting
+                            }
                         ),
                 )
             EarthquakePaneOverrides {
@@ -136,7 +145,15 @@ class EarthquakePaneScreenshotTest {
                                     ),
                                 onClose = {},
                                 expanded = expanded,
-                                modifier = Modifier.padding(top = if (expanded) 64.dp else 0.dp),
+                                modifier =
+                                    Modifier.padding(
+                                        top =
+                                            if (expanded) {
+                                                64.dp
+                                            } else {
+                                                0.dp
+                                            }
+                                    ),
                             )
                         }
                     },

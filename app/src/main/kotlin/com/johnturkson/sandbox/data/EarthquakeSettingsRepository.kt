@@ -20,7 +20,13 @@ class EarthquakeSettingsRepository @Inject constructor(private val store: DataSt
 
     val settings =
         store.data
-            .catch { error -> if (error is IOException) emit(emptyPreferences()) else throw error }
+            .catch { error ->
+                if (error is IOException) {
+                    emit(emptyPreferences())
+                } else {
+                    throw error
+                }
+            }
             .map { preferences ->
                 EarthquakeSettings(
                     preferences[alerts] ?: false,

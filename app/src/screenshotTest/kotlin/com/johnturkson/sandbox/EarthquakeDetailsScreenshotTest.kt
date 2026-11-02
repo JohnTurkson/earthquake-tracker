@@ -364,7 +364,14 @@ class EarthquakeDetailsScreenshotTest {
             Modifier.fillMaxSize()
                 .padding(start = 16.dp, end = 16.dp, top = top.dp, bottom = 16.dp),
             listState =
-                rememberLazyListState(initialFirstVisibleItemIndex = if (scrolled) 9 else 0),
+                rememberLazyListState(
+                    initialFirstVisibleItemIndex =
+                        if (scrolled) {
+                            9
+                        } else {
+                            0
+                        }
+                ),
         )
     }
 

@@ -15,6 +15,33 @@ management. Use these settings for Kotlin sources and Gradle Kotlin scripts.
 [EditorConfig](../.editorconfig) supplies editor settings, including four-space
 Kotlin indentation and explicit imports.
 
+Use braces for every `if` and `else` branch, with the branch body on separate
+lines. Apply this to early returns, single actions, and expressions that produce
+values, including arguments and test fixtures. Keep `else if` conditions together,
+with braces around each body. Format existing instances by default; flag any
+proposed readability exception for review with its location and specific reason.
+
+[`EarthquakeRefreshWorker.doWork`](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeRefreshWorker.kt)
+uses a braced early return:
+
+```kotlin
+if (!connectivity.isOnline()) {
+    return Result.failure()
+}
+```
+
+[`EarthquakeViewModel.applySelection`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewModel.kt)
+uses the same layout for a value expression:
+
+```kotlin
+requestedMapFocusId =
+    if (focus) {
+        result.earthquakeId
+    } else {
+        null
+    }
+```
+
 Check formatting from the repository root:
 
 ```sh

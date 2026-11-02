@@ -75,13 +75,14 @@ class EarthquakeClusterSheetTest {
         var isOpen by mutableStateOf(true)
         composeRule.setContent {
             EarthquakeTheme {
-                if (isOpen)
+                if (isOpen) {
                     EarthquakeClusterSheet(
                         items = items,
                         selectedItemId = selected,
                         onItemClick = { selected = it.id },
                         onDismiss = { isOpen = false },
                     )
+                }
             }
         }
         composeRule.onNodeWithText("120 earthquakes in this area").assertIsDisplayed()
@@ -139,7 +140,15 @@ class EarthquakeClusterSheetTest {
         }
         for (expanded in listOf(false, true)) {
             composeRule.runOnIdle {
-                windowSize = DpSize(if (expanded) 900.dp else 400.dp, 600.dp)
+                windowSize =
+                    DpSize(
+                        if (expanded) {
+                            900.dp
+                        } else {
+                            400.dp
+                        },
+                        600.dp,
+                    )
                 state = state.copy(selectedClusterItemIds = items.map { it.id })
             }
             composeRule.onNodeWithContentDescription("Close earthquake cluster").assertIsDisplayed()

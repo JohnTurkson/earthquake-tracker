@@ -74,7 +74,9 @@ fun EarthquakeApp(
         var pendingListRevision by rememberSaveable { mutableStateOf<Long?>(null) }
         fun publishSelection(id: String?, fromMap: Boolean): EarthquakeSelectionResult {
             revision++
-            if (detailEarthquakeId != null) detailEarthquakeId = id
+            if (detailEarthquakeId != null) {
+                detailEarthquakeId = id
+            }
             if (fromMap) {
                 pendingMapRevision = null
                 pendingListId = id
@@ -102,12 +104,14 @@ fun EarthquakeApp(
             )
         BoxWithConstraints(modifier.fillMaxSize()) {
             val paneHeight =
-                if (expanded)
+                if (expanded) {
                     (maxHeight -
                             WindowInsets.safeDrawing.asPaddingValues().calculateTopPadding() -
                             earthquakeTopAppBarHeight)
                         .coerceAtLeast(0.dp)
-                else maxHeight
+                } else {
+                    maxHeight
+                }
             val immediatePaneAnimation =
                 SupportingPaneSceneStrategy.paneAnimation(
                     enterTransition = EnterTransition.None,
@@ -115,8 +119,11 @@ fun EarthquakeApp(
                     boundsAnimationSpec = snap(),
                 )
             val explorerPaneAnimation =
-                if (animateExplorerPanes && !notificationsVisible) emptyMap()
-                else immediatePaneAnimation
+                if (animateExplorerPanes && !notificationsVisible) {
+                    emptyMap()
+                } else {
+                    immediatePaneAnimation
+                }
             val listVisible =
                 expanded &&
                     panelVisible &&
@@ -126,17 +133,26 @@ fun EarthquakeApp(
             val detailsVisible =
                 detailEarthquakeId != null && !notificationsVisible && !clusterVisible
             val showList =
-                if (expanded) panelVisible && !clusterVisible
-                else compactView == EarthquakeView.List
+                if (expanded) {
+                    panelVisible && !clusterVisible
+                } else {
+                    compactView == EarthquakeView.List
+                }
             LaunchedEffect(showList, notificationsVisible, detailEarthquakeId, clusterVisible) {
                 val entries =
-                    if (showList) listOf(EarthquakeMapRoute, EarthquakeListRoute)
-                    else listOf(EarthquakeListRoute, EarthquakeMapRoute)
+                    if (showList) {
+                        listOf(EarthquakeMapRoute, EarthquakeListRoute)
+                    } else {
+                        listOf(EarthquakeListRoute, EarthquakeMapRoute)
+                    }
                 backStack.clear()
                 backStack.addAll(entries)
-                if (!clusterVisible)
+                if (!clusterVisible) {
                     detailEarthquakeId?.let { backStack.add(EarthquakeDetailsRoute(it)) }
-                if (notificationsVisible) backStack.add(EarthquakeNotificationsRoute)
+                }
+                if (notificationsVisible) {
+                    backStack.add(EarthquakeNotificationsRoute)
+                }
             }
             val directive =
                 calculatePaneScaffoldDirective(adaptiveInfo)
@@ -152,11 +168,17 @@ fun EarthquakeApp(
                     adaptStrategies =
                         SupportingPaneScaffoldDefaults.adaptStrategies(
                             supportingPaneAdaptStrategy =
-                                if (expanded) AdaptStrategy.Levitate(Alignment.BottomStart)
-                                else AdaptStrategy.Hide,
+                                if (expanded) {
+                                    AdaptStrategy.Levitate(Alignment.BottomStart)
+                                } else {
+                                    AdaptStrategy.Hide
+                                },
                             extraPaneAdaptStrategy =
-                                if (expanded) AdaptStrategy.Levitate(Alignment.BottomEnd)
-                                else AdaptStrategy.Hide,
+                                if (expanded) {
+                                    AdaptStrategy.Levitate(Alignment.BottomEnd)
+                                } else {
+                                    AdaptStrategy.Hide
+                                },
                         ),
                 )
             val actions =
@@ -183,7 +205,9 @@ fun EarthquakeApp(
                     },
                     onListPanelVisibilityChanged = {
                         animateExplorerPanes = !notificationsVisible
-                        if (it) detailEarthquakeId = null
+                        if (it) {
+                            detailEarthquakeId = null
+                        }
                         panelVisible = it
                         notificationsVisible = false
                     },
@@ -196,7 +220,9 @@ fun EarthquakeApp(
                         notificationsVisible = false
                     },
                     onClusterVisibilityChanged = {
-                        if (clusterVisible != it) animateExplorerPanes = !notificationsVisible
+                        if (clusterVisible != it) {
+                            animateExplorerPanes = !notificationsVisible
+                        }
                         clusterVisible = it
                     },
                     onMapSelection = { publishSelection(it, fromMap = true) },
@@ -206,15 +232,23 @@ fun EarthquakeApp(
                     pendingListSelection =
                         pendingListRevision?.let { EarthquakeSelectionResult(pendingListId, it) },
                     onMapSelectionConsumed = {
-                        if (pendingMapRevision == it.revision) pendingMapRevision = null
+                        if (pendingMapRevision == it.revision) {
+                            pendingMapRevision = null
+                        }
                     },
                     onListSelectionConsumed = {
-                        if (pendingListRevision == it.revision) pendingListRevision = null
+                        if (pendingListRevision == it.revision) {
+                            pendingListRevision = null
+                        }
                     },
                 )
             val supportingPaneTitle =
                 stringResource(
-                    if (detailsVisible) R.string.earthquake_details else R.string.recent_earthquakes
+                    if (detailsVisible) {
+                        R.string.earthquake_details
+                    } else {
+                        R.string.recent_earthquakes
+                    }
                 )
             EarthquakePaneOverrides(supportingPaneTitle = supportingPaneTitle) {
                 NavDisplay(
@@ -303,9 +337,17 @@ fun EarthquakeApp(
                     !notificationsVisible &&
                         !clusterVisible &&
                         (detailsVisible ||
-                            if (expanded) !listVisible else compactView == EarthquakeView.Map)
+                            if (expanded) {
+                                !listVisible
+                            } else {
+                                compactView == EarthquakeView.Map
+                            })
             ) {
-                if (detailsVisible) actions.onDetailsClose() else activity?.finish()
+                if (detailsVisible) {
+                    actions.onDetailsClose()
+                } else {
+                    activity?.finish()
+                }
             }
         }
     }
@@ -361,7 +403,9 @@ private fun EarthquakeDestination(
                 state = viewModel,
                 onItemClick = {
                     viewModel.applySelection(actions.onListSelection(it.id), scroll = false)
-                    if (!actions.expanded) actions.onViewSelected(EarthquakeView.Map)
+                    if (!actions.expanded) {
+                        actions.onViewSelected(EarthquakeView.Map)
+                    }
                 },
                 expanded = actions.expanded,
                 onMinimize = { actions.onListPanelVisibilityChanged(false) },

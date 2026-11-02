@@ -14,12 +14,15 @@ class EarthquakeAlertDelivery(
         settings: EarthquakeSettings,
         now: Instant,
     ) {
-        if (!settings.alertsEnabled) return
+        if (!settings.alertsEnabled) {
+            return
+        }
         items
             .filter { policy.qualifies(it, settings.minimumMagnitude, now) }
             .forEach { item ->
-                if (!wasDelivered(item.id) && publish(item))
+                if (!wasDelivered(item.id) && publish(item)) {
                     recordDelivery(EarthquakeAlertDatabaseModel(item.id, now))
+                }
             }
     }
 }

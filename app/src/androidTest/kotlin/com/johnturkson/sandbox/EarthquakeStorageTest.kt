@@ -343,8 +343,11 @@ class EarthquakeStorageTest {
         var response = "earthquakes-summary.json"
         var unavailable = false
         client {
-            if (unavailable) respond("unavailable", HttpStatusCode.ServiceUnavailable)
-            else respondFixture(response)
+            if (unavailable) {
+                respond("unavailable", HttpStatusCode.ServiceUnavailable)
+            } else {
+                respondFixture(response)
+            }
         }
             .use { client ->
                 val repository = repository()
@@ -364,7 +367,9 @@ class EarthquakeStorageTest {
     fun repositoryRefreshMetadataEmitsAfterWorkerCommitAndSurvivesFailure() = runTest {
         var unavailable = false
         client {
-            if (unavailable) throw IOException("offline")
+            if (unavailable) {
+                throw IOException("offline")
+            }
             respondFixture("earthquakes-summary.json")
         }
             .use { client ->
@@ -455,7 +460,9 @@ class EarthquakeStorageTest {
         var response = collection.copy(features = listOf(original, priorEvent))
         var offline = false
         client {
-            if (offline) throw IOException("offline while observing the database")
+            if (offline) {
+                throw IOException("offline while observing the database")
+            }
             respond(
                 json.encodeToString(response),
                 headers = headersOf(HttpHeaders.ContentType, "application/json"),
@@ -657,7 +664,9 @@ class EarthquakeStorageTest {
                 .doWork()
         }
         assertEquals(expectedFailure, result.isFailure)
-        if (!expectedFailure) assertEquals(ListenableWorker.Result.success(), result.getOrThrow())
+        if (!expectedFailure) {
+            assertEquals(ListenableWorker.Result.success(), result.getOrThrow())
+        }
     }
 
     private fun client(

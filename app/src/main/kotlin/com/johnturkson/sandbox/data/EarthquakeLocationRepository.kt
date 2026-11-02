@@ -19,11 +19,19 @@ class EarthquakeLocationRepository
 constructor(private val dataStore: DataStore<Preferences>) {
     val lastKnownLocation: Flow<EarthquakeLocation?> =
         dataStore.data
-            .catch { error -> if (error is IOException) emit(emptyPreferences()) else throw error }
+            .catch { error ->
+                if (error is IOException) {
+                    emit(emptyPreferences())
+                } else {
+                    throw error
+                }
+            }
             .map { preferences ->
                 val latitude = preferences[Latitude] ?: return@map null
                 val longitude = preferences[Longitude] ?: return@map null
-                if (latitude !in -90.0..90.0 || longitude !in -180.0..180.0) return@map null
+                if (latitude !in -90.0..90.0 || longitude !in -180.0..180.0) {
+                    return@map null
+                }
                 EarthquakeLocation(latitude, longitude, preferences.timestamp())
             }
 
@@ -37,8 +45,11 @@ constructor(private val dataStore: DataStore<Preferences>) {
             }
             preferences[Latitude] = location.latitude
             preferences[Longitude] = location.longitude
-            if (timestamp != null) preferences[Timestamp] = timestamp.toString()
-            else preferences.remove(Timestamp)
+            if (timestamp != null) {
+                preferences[Timestamp] = timestamp.toString()
+            } else {
+                preferences.remove(Timestamp)
+            }
             preferences.remove(LegacyTimestamp)
         }
     }

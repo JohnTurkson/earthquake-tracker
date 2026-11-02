@@ -54,7 +54,11 @@ constructor(
     }
 
     fun setMonitoring(enabled: Boolean) {
-        if (enabled) monitor.start() else monitor.stop()
+        if (enabled) {
+            monitor.start()
+        } else {
+            monitor.stop()
+        }
     }
 
     fun refreshNotificationCapabilities() {
@@ -83,7 +87,9 @@ constructor(
     }
 
     fun previewNotification() {
-        if (notifications.canPostAlerts) notificationManager.previewAlert()
+        if (notifications.canPostAlerts) {
+            notificationManager.previewAlert()
+        }
         refreshNotificationCapabilities()
     }
 

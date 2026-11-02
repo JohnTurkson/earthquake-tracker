@@ -51,7 +51,9 @@ constructor(
     override suspend fun publishAlerts() =
         withContext(ioDispatcher) {
             val preferences = settings.settings.first()
-            if (!preferences.alertsEnabled) return@withContext
+            if (!preferences.alertsEnabled) {
+                return@withContext
+            }
             val now = Clock.System.now()
             val recent =
                 dao.getEarthquakesFlow(

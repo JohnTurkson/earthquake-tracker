@@ -106,7 +106,9 @@ fun EarthquakeScreen(
         onPauseOrDispose {}
     }
     LifecycleStartEffect(isLocationGranted) {
-        if (isLocationGranted) viewModel.startLocationUpdates()
+        if (isLocationGranted) {
+            viewModel.startLocationUpdates()
+        }
         onStopOrDispose { viewModel.stopLocationUpdates() }
     }
     LaunchedEffect(notificationEventId) {
@@ -311,7 +313,9 @@ fun EarthquakeScreen(
                         LatLng(item.latitude, item.longitude),
                         maxOf(5f, cameraPositionState.position.zoom),
                     )
-                if (!expanded) onViewSelected(EarthquakeView.Map)
+                if (!expanded) {
+                    onViewSelected(EarthquakeView.Map)
+                }
             },
             onClearSelection = onMapClick,
             onViewSelected = onViewSelected,
@@ -368,14 +372,18 @@ fun EarthquakeScreen(
                                         if (
                                             showListPanel ||
                                                 expanded && detailsVisible && !showCluster
-                                        )
+                                        ) {
                                             earthquakeListPaneWidth + 32.dp
-                                        else 0.dp,
+                                        } else {
+                                            0.dp
+                                        },
                                 end =
                                     safePadding.calculateEndPadding(layoutDirection) +
-                                        if (expanded && notificationsVisible && !showCluster)
+                                        if (expanded && notificationsVisible && !showCluster) {
                                             earthquakeListPaneWidth + 32.dp
-                                        else 0.dp,
+                                        } else {
+                                            0.dp
+                                        },
                                 top =
                                     safePadding.calculateTopPadding() +
                                         when {

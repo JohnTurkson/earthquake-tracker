@@ -99,11 +99,20 @@ constructor(
     }
 
     fun applySelection(result: EarthquakeSelectionResult, focus: Boolean = true) {
-        if (result.revision <= selectionRevision) return
+        if (result.revision <= selectionRevision) {
+            return
+        }
         selectionRevision = result.revision
         selectedMapItemId = result.earthquakeId
-        if (result.earthquakeId == null) dismissMapCluster()
-        requestedMapFocusId = if (focus) result.earthquakeId else null
+        if (result.earthquakeId == null) {
+            dismissMapCluster()
+        }
+        requestedMapFocusId =
+            if (focus) {
+                result.earthquakeId
+            } else {
+                null
+            }
     }
 
     fun selectMapItem(item: EarthquakeMapItem) {
@@ -124,7 +133,9 @@ constructor(
     }
 
     fun startLocationUpdates() {
-        if (locationUpdates?.isActive == true) return
+        if (locationUpdates?.isActive == true) {
+            return
+        }
         locationUpdates = viewModelScope.launch {
             locationProvider.locations.collect { location ->
                 userLocation = location
@@ -155,7 +166,9 @@ constructor(
                 requestedMapFocusId = item.id
                 unavailableNotificationEvent = false
                 onSelected(item.id)
-            } else unavailableNotificationEvent = true
+            } else {
+                unavailableNotificationEvent = true
+            }
         }
     }
 

@@ -68,9 +68,11 @@ private class EarthquakePaneOverride(
             return
         }
         val title =
-            if (scope.paneRole == SupportingPaneScaffoldRole.Extra)
+            if (scope.paneRole == SupportingPaneScaffoldRole.Extra) {
                 stringResource(R.string.earthquake_alerts)
-            else supportingPaneTitle ?: stringResource(R.string.recent_earthquakes)
+            } else {
+                supportingPaneTitle ?: stringResource(R.string.recent_earthquakes)
+            }
         val intBoundsSpec = boundsAnimationSpec
         val boundsSpec =
             remember(intBoundsSpec) {
@@ -91,9 +93,11 @@ private class EarthquakePaneOverride(
         val paneModifier =
             modifier
                 .then(
-                    if (scope.paneMotion == PaneMotion.AnimateBounds)
+                    if (scope.paneMotion == PaneMotion.AnimateBounds) {
                         Modifier.animateBounds(scope, boundsTransform = { _, _ -> boundsSpec })
-                    else Modifier
+                    } else {
+                        Modifier
+                    }
                 )
                 .focusRequester(scope.focusRequesters.getValue(scope.paneRole))
                 .focusGroup()
@@ -104,12 +108,14 @@ private class EarthquakePaneOverride(
                     }
                 }
                 .then(
-                    if (scope.isInteractable)
+                    if (scope.isInteractable) {
                         Modifier.semantics {
                             isTraversalGroup = true
                             paneTitle = title
                         }
-                    else Modifier.clearAndSetSemantics {}
+                    } else {
+                        Modifier.clearAndSetSemantics {}
+                    }
                 )
         scope.scaffoldStateTransition.AnimatedVisibility(
             visible = { it[scope.paneRole] != PaneAdaptedValue.Hidden },

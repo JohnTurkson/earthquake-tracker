@@ -100,13 +100,28 @@ fun EarthquakeMonitoringCard(
         updatedLabel?.let { stringResource(R.string.monitoring_bar_summary, titleLabel, it) }
             ?: titleLabel
     val color =
-        if (failed) MaterialTheme.colorScheme.errorContainer
-        else MaterialTheme.colorScheme.surfaceContainer
+        if (failed) {
+            MaterialTheme.colorScheme.errorContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer
+        }
     Surface(
         modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        shape = RoundedCornerShape(if (floating) 20.dp else 0.dp),
+        shape =
+            RoundedCornerShape(
+                if (floating) {
+                    20.dp
+                } else {
+                    0.dp
+                }
+            ),
         color = color,
-        shadowElevation = if (floating) 2.dp else 0.dp,
+        shadowElevation =
+            if (floating) {
+                2.dp
+            } else {
+                0.dp
+            },
     ) {
         TopAppBar(
             title = {
@@ -145,7 +160,9 @@ fun EarthquakeMonitoringCard(
                                         .size
                                         .width + spacing + updatedWidth <= constraints.maxWidth
                                 }
-                            } else null
+                            } else {
+                                null
+                            }
                         val visibleTitle =
                             titleWithUpdated
                                 ?: titles.firstOrNull {
@@ -200,9 +217,11 @@ fun EarthquakeMonitoringCard(
                     enabled = !state.isRefreshing,
                     modifier = Modifier.semantics { contentDescription = refreshDescription },
                 ) {
-                    if (state.isRefreshing)
+                    if (state.isRefreshing) {
                         CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-                    else Icon(Icons.Outlined.Refresh, contentDescription = null)
+                    } else {
+                        Icon(Icons.Outlined.Refresh, contentDescription = null)
+                    }
                 }
                 actions()
             },

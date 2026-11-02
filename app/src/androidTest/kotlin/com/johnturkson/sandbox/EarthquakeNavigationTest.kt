@@ -255,8 +255,11 @@ class EarthquakeNavigationTest {
         back: Boolean,
     ) {
         composeRule.mainClock.autoAdvance = false
-        if (shortcut != null) composeRule.onNodeWithText(shortcut).performClick()
-        else composeRule.onNodeWithContentDescription("Earthquake alerts").performClick()
+        if (shortcut != null) {
+            composeRule.onNodeWithText(shortcut).performClick()
+        } else {
+            composeRule.onNodeWithContentDescription("Earthquake alerts").performClick()
+        }
         composeRule.mainClock.advanceTimeBy(64)
         composeRule.onNodeWithTag(previousPane).assertDoesNotExist()
         val notificationBounds = paneBounds("Notifications pane")
@@ -403,8 +406,18 @@ class EarthquakeNavigationTest {
                     Column(
                         Modifier.align(Alignment.TopEnd)
                             .padding(
-                                top = if (actions.expanded) 80.dp else 40.dp,
-                                end = if (actions.notificationsVisible) 400.dp else 16.dp,
+                                top =
+                                    if (actions.expanded) {
+                                        80.dp
+                                    } else {
+                                        40.dp
+                                    },
+                                end =
+                                    if (actions.notificationsVisible) {
+                                        400.dp
+                                    } else {
+                                        16.dp
+                                    },
                             )
                     ) {
                         Text("Map destination")
@@ -418,8 +431,11 @@ class EarthquakeNavigationTest {
                         }
                         TextButton(
                             onClick = {
-                                if (actions.expanded) actions.onListPanelVisibilityChanged(true)
-                                else actions.onViewSelected(EarthquakeView.List)
+                                if (actions.expanded) {
+                                    actions.onListPanelVisibilityChanged(true)
+                                } else {
+                                    actions.onViewSelected(EarthquakeView.List)
+                                }
                             }
                         ) {
                             Text("Open list")
@@ -447,7 +463,9 @@ class EarthquakeNavigationTest {
                     state = owner,
                     onItemClick = {
                         owner.applySelection(actions.onListSelection(it.id), false)
-                        if (!actions.expanded) actions.onViewSelected(EarthquakeView.Map)
+                        if (!actions.expanded) {
+                            actions.onViewSelected(EarthquakeView.Map)
+                        }
                     },
                     expanded = actions.expanded,
                     onMinimize = { actions.onListPanelVisibilityChanged(false) },
@@ -464,7 +482,14 @@ class EarthquakeNavigationTest {
                 Column(
                     Modifier.fillMaxSize()
                         .testTag("Details pane")
-                        .padding(top = if (actions.expanded) 100.dp else 20.dp)
+                        .padding(
+                            top =
+                                if (actions.expanded) {
+                                    100.dp
+                                } else {
+                                    20.dp
+                                }
+                        )
                 ) {
                     Text("Detail event: ${route.earthquakeId}")
                     TextButton(onClick = actions.onDetailsClose) { Text("Close details") }
@@ -493,6 +518,11 @@ class EarthquakeNavigationTestViewModel(savedStateHandle: SavedStateHandle) :
 
     fun applySelection(result: EarthquakeSelectionResult, scroll: Boolean) {
         selectedMapItemId = result.earthquakeId
-        scrollRequest = if (scroll) result else null
+        scrollRequest =
+            if (scroll) {
+                result
+            } else {
+                null
+            }
     }
 }

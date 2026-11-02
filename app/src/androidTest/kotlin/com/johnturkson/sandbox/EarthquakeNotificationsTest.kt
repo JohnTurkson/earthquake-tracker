@@ -63,7 +63,12 @@ class EarthquakeNotificationsTest {
                     notifications.capabilities().alertsEnabled
             assertEquals(allowed, notifications.postAlert(first))
             assertEquals(allowed, notifications.postAlert(second))
-            val expected = if (allowed) 2 else 0
+            val expected =
+                if (allowed) {
+                    2
+                } else {
+                    0
+                }
             val posted =
                 withTimeout(5_000) {
                     var active =
@@ -103,7 +108,9 @@ class EarthquakeNotificationsTest {
                 foreground.notification.channelId,
             )
             assertTrue(foreground.notification.actions.any { it.title == "Stop monitoring" })
-            if (!allowed) assertFalse(notifications.previewAlert())
+            if (!allowed) {
+                assertFalse(notifications.previewAlert())
+            }
             assertEquals(
                 EarthquakeNotifications.MonitoringChannel,
                 notifications.foreground(UUID.randomUUID()).notification.channelId,

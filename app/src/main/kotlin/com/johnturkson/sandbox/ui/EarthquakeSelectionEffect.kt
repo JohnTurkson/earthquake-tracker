@@ -17,5 +17,9 @@ internal fun EarthquakeSelectionEffect(
         onResult(it)
         onConsumed(it)
     }
-    LaunchedEffect(pending) { if (pending != null) bus.sendResult(resultKey, pending) }
+    LaunchedEffect(pending) {
+        if (pending != null) {
+            bus.sendResult(resultKey, pending)
+        }
+    }
 }

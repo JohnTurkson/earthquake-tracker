@@ -46,8 +46,11 @@ fun EarthquakeClusterSheet(
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val maximumHeight =
         windowHeight *
-            if (windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)) 0.6f
-            else 0.45f
+            if (windowSizeClass.isHeightAtLeastBreakpoint(HEIGHT_DP_MEDIUM_LOWER_BOUND)) {
+                0.6f
+            } else {
+                0.45f
+            }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),

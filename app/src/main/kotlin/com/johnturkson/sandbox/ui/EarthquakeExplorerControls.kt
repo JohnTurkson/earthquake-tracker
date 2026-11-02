@@ -79,8 +79,11 @@ fun EarthquakeExplorerControls(
     val showMapCard =
         showControls &&
             !detailsVisible &&
-            (if (expanded) !showListPanel
-            else selectedView == EarthquakeView.Map && !notificationsVisible)
+            (if (expanded) {
+                !showListPanel
+            } else {
+                selectedView == EarthquakeView.Map && !notificationsVisible
+            })
     val showLocation =
         showControls &&
             showLocationButton &&
@@ -94,9 +97,18 @@ fun EarthquakeExplorerControls(
     var fabHeight by remember { mutableIntStateOf(0) }
     var snackbarHeight by remember { mutableIntStateOf(0) }
     LaunchedEffect(showLocation, showSelection, selectionHeight, fabHeight, snackbarHeight) {
-        val bottomHeight = if (showSelection) selectionHeight else 0
+        val bottomHeight =
+            if (showSelection) {
+                selectionHeight
+            } else {
+                0
+            }
         val locationHeight =
-            if (showLocation) fabHeight + with(density) { 16.dp.roundToPx() } else 0
+            if (showLocation) {
+                fabHeight + with(density) { 16.dp.roundToPx() }
+            } else {
+                0
+            }
         onMapBottomControlsSizeChanged(bottomHeight + locationHeight + snackbarHeight)
     }
 
@@ -147,9 +159,11 @@ fun EarthquakeExplorerControls(
                             start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                             end =
                                 contentPadding.calculateEndPadding(layoutDirection) +
-                                    if (expanded && notificationsVisible)
+                                    if (expanded && notificationsVisible) {
                                         earthquakeListPaneWidth + 32.dp
-                                    else 16.dp,
+                                    } else {
+                                        16.dp
+                                    },
                             top = 0.dp,
                             bottom = contentPadding.calculateBottomPadding() + 16.dp,
                         )
@@ -170,12 +184,17 @@ fun EarthquakeExplorerControls(
             Box(
                 Modifier.padding(
                         start =
-                            if (showListPanel || expanded && detailsVisible)
+                            if (showListPanel || expanded && detailsVisible) {
                                 earthquakeListPaneWidth + 32.dp
-                            else 0.dp,
+                            } else {
+                                0.dp
+                            },
                         end =
-                            if (expanded && notificationsVisible) earthquakeListPaneWidth + 32.dp
-                            else 0.dp,
+                            if (expanded && notificationsVisible) {
+                                earthquakeListPaneWidth + 32.dp
+                            } else {
+                                0.dp
+                            },
                     )
                     .onSizeChanged { snackbarHeight = it.height }
             ) {
@@ -264,17 +283,31 @@ fun EarthquakeExplorerControls(
                 }
                 if (notificationsVisible) {
                     notificationContent(
-                        Modifier.align(if (expanded) Alignment.CenterEnd else Alignment.Center)
+                        Modifier.align(
+                                if (expanded) {
+                                    Alignment.CenterEnd
+                                } else {
+                                    Alignment.Center
+                                }
+                            )
                             .padding(contentPadding)
                             .padding(
                                 start = 16.dp,
                                 end = 16.dp,
-                                top = if (expanded) 84.dp else 12.dp,
+                                top =
+                                    if (expanded) {
+                                        84.dp
+                                    } else {
+                                        12.dp
+                                    },
                                 bottom = 16.dp,
                             )
                             .then(
-                                if (expanded) Modifier.width(earthquakeListPaneWidth)
-                                else Modifier.fillMaxWidth()
+                                if (expanded) {
+                                    Modifier.width(earthquakeListPaneWidth)
+                                } else {
+                                    Modifier.fillMaxWidth()
+                                }
                             )
                             .fillMaxHeight()
                     )

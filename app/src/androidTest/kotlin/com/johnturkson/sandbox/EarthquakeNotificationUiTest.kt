@@ -61,7 +61,12 @@ class EarthquakeNotificationUiTest {
                     state,
                     {},
                     Modifier.width(640.dp),
-                    lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
+                    lastUpdatedLabel =
+                        if (state.lastUpdated != null) {
+                            "10:42"
+                        } else {
+                            null
+                        },
                 )
             }
         }

@@ -47,7 +47,13 @@ class EarthquakeReportPrototypeActivity : ComponentActivity() {
                             )
                     Box(
                         Modifier.align(Alignment.CenterStart)
-                            .then(if (expanded) Modifier.width(392.dp) else Modifier.fillMaxSize())
+                            .then(
+                                if (expanded) {
+                                    Modifier.width(392.dp)
+                                } else {
+                                    Modifier.fillMaxSize()
+                                }
+                            )
                             .fillMaxSize()
                             .padding(WindowInsets.safeDrawing.asPaddingValues())
                             .padding(16.dp)

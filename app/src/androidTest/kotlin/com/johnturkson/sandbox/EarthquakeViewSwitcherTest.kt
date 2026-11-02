@@ -83,8 +83,11 @@ class EarthquakeViewSwitcherTest {
                 1f,
             )
             assertTrue(
-                if (layoutDirection == LayoutDirection.Ltr) list.right < bell.left
-                else list.left > bell.right
+                if (layoutDirection == LayoutDirection.Ltr) {
+                    list.right < bell.left
+                } else {
+                    list.left > bell.right
+                }
             )
             for (layout in listOf(false to true, true to true, true to false)) {
                 rule.runOnIdle {
@@ -97,7 +100,15 @@ class EarthquakeViewSwitcherTest {
                         .assertIsDisplayed()
                         .fetchSemanticsNode()
                         .boundsInRoot
-                val margin = with(rule.density) { (if (expanded) 8.dp else 16.dp).toPx() }
+                val margin =
+                    with(rule.density) {
+                        (if (expanded) {
+                                8.dp
+                            } else {
+                                16.dp
+                            })
+                            .toPx()
+                    }
                 if (layoutDirection == LayoutDirection.Ltr) {
                     assertEquals(root.right - margin, bounds.right, 1f)
                 } else {

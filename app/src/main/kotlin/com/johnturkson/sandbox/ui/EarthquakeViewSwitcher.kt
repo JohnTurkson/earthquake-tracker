@@ -34,7 +34,11 @@ fun EarthquakeViewSwitcher(
     val labels =
         EarthquakeView.entries.map { view ->
             stringResource(
-                if (view == EarthquakeView.Map) R.string.map_view else R.string.list_view
+                if (view == EarthquakeView.Map) {
+                    R.string.map_view
+                } else {
+                    R.string.list_view
+                }
             )
         }
     val textMeasurer = rememberTextMeasurer()
@@ -63,8 +67,11 @@ fun EarthquakeViewSwitcher(
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth(), space = 0.dp) {
                 EarthquakeView.entries.forEachIndexed { index, view ->
                     val imageVector =
-                        if (view == EarthquakeView.Map) Icons.Outlined.Map
-                        else Icons.AutoMirrored.Outlined.List
+                        if (view == EarthquakeView.Map) {
+                            Icons.Outlined.Map
+                        } else {
+                            Icons.AutoMirrored.Outlined.List
+                        }
                     SegmentedButton(
                         selected = selectedView == view,
                         onClick = { onViewSelected(view) },

@@ -143,8 +143,20 @@ internal object EarthquakeMapFixtures {
             val longitude = -122.4194 + (group % 2) * 0.035
             EarthquakeMapItem(
                 id = "synthetic-$index",
-                latitude = latitude + if (index < 8) 0.0 else ((index * 17) % 23 - 11) * 0.0003,
-                longitude = longitude + if (index < 8) 0.0 else ((index * 13) % 19 - 9) * 0.0003,
+                latitude =
+                    latitude +
+                        if (index < 8) {
+                            0.0
+                        } else {
+                            ((index * 17) % 23 - 11) * 0.0003
+                        },
+                longitude =
+                    longitude +
+                        if (index < 8) {
+                            0.0
+                        } else {
+                            ((index * 13) % 19 - 9) * 0.0003
+                        },
                 title = "M$magnitude · San Francisco sample ${index + 1}",
                 snippet = "Synthetic event · ${index + 1} min ago",
                 magnitude = magnitude,

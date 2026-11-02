@@ -15,8 +15,21 @@ fun EarthquakeMapMarker(isSelected: Boolean, modifier: Modifier = Modifier) {
     Box(
         modifier =
             modifier
-                .size(if (isSelected) 24.dp else 16.dp)
-                .background(if (isSelected) Color(0xFF2563EB) else Color(0xFFDC2626), CircleShape)
+                .size(
+                    if (isSelected) {
+                        24.dp
+                    } else {
+                        16.dp
+                    }
+                )
+                .background(
+                    if (isSelected) {
+                        Color(0xFF2563EB)
+                    } else {
+                        Color(0xFFDC2626)
+                    },
+                    CircleShape,
+                )
                 .border(2.dp, Color.White, CircleShape)
     )
 }

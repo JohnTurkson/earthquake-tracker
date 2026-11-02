@@ -25,6 +25,10 @@ class EarthquakeApi @Inject constructor(private val client: HttpClient) {
         query: EarthquakeCatalogResources.Query
     ): EarthquakeCollectionNetworkModel? {
         val response = client.get(query) { expectSuccess = true }
-        return if (response.status == HttpStatusCode.NoContent) null else response.body()
+        return if (response.status == HttpStatusCode.NoContent) {
+            null
+        } else {
+            response.body()
+        }
     }
 }

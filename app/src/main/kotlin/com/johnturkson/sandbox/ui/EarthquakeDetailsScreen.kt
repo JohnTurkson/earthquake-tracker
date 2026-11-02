@@ -84,7 +84,11 @@ fun EarthquakeDetailsScreen(
         modifier
             .fillMaxSize()
             .then(
-                if (expanded) Modifier else Modifier.background(MaterialTheme.colorScheme.surface)
+                if (expanded) {
+                    Modifier
+                } else {
+                    Modifier.background(MaterialTheme.colorScheme.surface)
+                }
             )
     ) {
         val safePadding = WindowInsets.safeDrawing.asPaddingValues()
@@ -94,13 +98,23 @@ fun EarthquakeDetailsScreen(
                 .padding(
                     start = safePadding.calculateStartPadding(layoutDirection),
                     end = safePadding.calculateEndPadding(layoutDirection),
-                    top = if (expanded) 0.dp else safePadding.calculateTopPadding(),
+                    top =
+                        if (expanded) {
+                            0.dp
+                        } else {
+                            safePadding.calculateTopPadding()
+                        },
                     bottom = safePadding.calculateBottomPadding(),
                 )
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    top = if (expanded) 16.dp else 12.dp,
+                    top =
+                        if (expanded) {
+                            16.dp
+                        } else {
+                            12.dp
+                        },
                     bottom = 16.dp,
                 )
         val item = state.item
@@ -137,11 +151,16 @@ fun EarthquakeDetailsScreen(
                         Modifier.padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        if (state.isLoading) CircularProgressIndicator()
+                        if (state.isLoading) {
+                            CircularProgressIndicator()
+                        }
                         Text(
                             stringResource(
-                                if (state.isLoading) R.string.loading_earthquake_details
-                                else R.string.event_unavailable
+                                if (state.isLoading) {
+                                    R.string.loading_earthquake_details
+                                } else {
+                                    R.string.event_unavailable
+                                }
                             )
                         )
                     }

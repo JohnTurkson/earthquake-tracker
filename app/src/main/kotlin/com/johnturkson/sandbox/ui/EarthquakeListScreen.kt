@@ -37,14 +37,22 @@ fun EarthquakeListScreen(
         if (request != null) {
             val index = state.mapItems.indexOfFirst { it.id == request.earthquakeId }
             if (index >= 0) {
-                val listIndex = index + if (expanded) 1 else 2
+                val listIndex =
+                    index +
+                        if (expanded) {
+                            1
+                        } else {
+                            2
+                        }
                 val layout = listState.layoutInfo
                 val visible = layout.visibleItemsInfo.find { it.index == listIndex }
                 val fullyVisible =
                     visible != null &&
                         visible.offset >= layout.viewportStartOffset &&
                         visible.offset + visible.size <= layout.viewportEndOffset
-                if (!fullyVisible) listState.animateScrollToItem(listIndex)
+                if (!fullyVisible) {
+                    listState.animateScrollToItem(listIndex)
+                }
                 onScrollHandled(request)
             }
         }

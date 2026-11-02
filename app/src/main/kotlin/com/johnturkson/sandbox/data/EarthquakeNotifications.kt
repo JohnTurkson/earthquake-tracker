@@ -97,19 +97,22 @@ constructor(@ApplicationContext private val context: Context) {
                     WorkManager.getInstance(context).createCancelPendingIntent(workId),
                 )
                 .build()
-        return if (Build.VERSION.SDK_INT >= 29)
+        return if (Build.VERSION.SDK_INT >= 29) {
             ForegroundInfo(
                 MonitoringId,
                 notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
             )
-        else ForegroundInfo(MonitoringId, notification)
+        } else {
+            ForegroundInfo(MonitoringId, notification)
+        }
     }
 
     fun postAlert(item: EarthquakeDatabaseModel): Boolean {
         val capability = capabilities()
-        if (!capability.permissionGranted || !capability.appEnabled || !capability.alertsEnabled)
+        if (!capability.permissionGranted || !capability.appEnabled || !capability.alertsEnabled) {
             return false
+        }
         val magnitude = item.magnitude
         val magnitudeText =
             if (magnitude != null) {
@@ -142,8 +145,9 @@ constructor(@ApplicationContext private val context: Context) {
 
     fun previewAlert(): Boolean {
         val capability = capabilities()
-        if (!capability.permissionGranted || !capability.appEnabled || !capability.alertsEnabled)
+        if (!capability.permissionGranted || !capability.appEnabled || !capability.alertsEnabled) {
             return false
+        }
         return post(
             "preview",
             PreviewId,
@@ -170,8 +174,11 @@ constructor(@ApplicationContext private val context: Context) {
             Intent(context, EarthquakeActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 data =
-                    if (eventId == null) "earthquaketracker://monitoring".toUri()
-                    else "earthquaketracker://earthquake/${android.net.Uri.encode(eventId)}".toUri()
+                    if (eventId == null) {
+                        "earthquaketracker://monitoring".toUri()
+                    } else {
+                        "earthquaketracker://earthquake/${android.net.Uri.encode(eventId)}".toUri()
+                    }
                 putExtra(EventIdExtra, eventId)
             }
         return PendingIntent.getActivity(

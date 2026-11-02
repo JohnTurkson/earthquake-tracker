@@ -20,7 +20,11 @@ fun EarthquakeLocationButton(
             Icons.Default.MyLocation,
             contentDescription =
                 stringResource(
-                    if (requiresSettings) R.string.location_settings else R.string.use_my_location
+                    if (requiresSettings) {
+                        R.string.location_settings
+                    } else {
+                        R.string.use_my_location
+                    }
                 ),
         )
     }

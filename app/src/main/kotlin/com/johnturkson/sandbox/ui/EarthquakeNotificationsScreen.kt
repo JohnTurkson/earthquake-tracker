@@ -93,8 +93,11 @@ fun EarthquakeNotificationsScreen(
         onEnableNotifications = ::enableNotifications,
         onAlertsEnabled = { enabled ->
             viewModel.setAlertsEnabled(enabled)
-            if (enabled && (!notificationState.permissionGranted || !notificationState.appEnabled))
+            if (
+                enabled && (!notificationState.permissionGranted || !notificationState.appEnabled)
+            ) {
                 enableNotifications()
+            }
         },
         onMagnitudeSelected = viewModel::setMinimumMagnitude,
         onMonitoringEnabled = viewModel::setMonitoring,
@@ -104,8 +107,11 @@ fun EarthquakeNotificationsScreen(
                     .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                     .putExtra(
                         Settings.EXTRA_CHANNEL_ID,
-                        if (alerts) EarthquakeNotifications.AlertsChannel
-                        else EarthquakeNotifications.MonitoringChannel,
+                        if (alerts) {
+                            EarthquakeNotifications.AlertsChannel
+                        } else {
+                            EarthquakeNotifications.MonitoringChannel
+                        },
                     )
             )
         },
@@ -144,7 +150,11 @@ fun EarthquakeNotificationsScreen(
         modifier
             .fillMaxSize()
             .then(
-                if (expanded) Modifier else Modifier.background(MaterialTheme.colorScheme.surface)
+                if (expanded) {
+                    Modifier
+                } else {
+                    Modifier.background(MaterialTheme.colorScheme.surface)
+                }
             )
     ) {
         EarthquakeNotificationPage(
@@ -162,13 +172,23 @@ fun EarthquakeNotificationsScreen(
                     .padding(
                         start = safePadding.calculateStartPadding(layoutDirection),
                         end = safePadding.calculateEndPadding(layoutDirection),
-                        top = if (expanded) 0.dp else safePadding.calculateTopPadding(),
+                        top =
+                            if (expanded) {
+                                0.dp
+                            } else {
+                                safePadding.calculateTopPadding()
+                            },
                         bottom = safePadding.calculateBottomPadding(),
                     )
                     .padding(
                         start = 16.dp,
                         end = 16.dp,
-                        top = if (expanded) 20.dp else 12.dp,
+                        top =
+                            if (expanded) {
+                                20.dp
+                            } else {
+                                12.dp
+                            },
                         bottom = 16.dp,
                     ),
         )

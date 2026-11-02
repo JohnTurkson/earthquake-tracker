@@ -40,7 +40,12 @@ class EarthquakeNotificationsScreenshotTest {
                 EarthquakeMonitoringCard(
                     state,
                     {},
-                    lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
+                    lastUpdatedLabel =
+                        if (state.lastUpdated != null) {
+                            "10:42"
+                        } else {
+                            null
+                        },
                 )
             }
         }
@@ -61,7 +66,12 @@ class EarthquakeNotificationsScreenshotTest {
                 onListPanelVisibilityChanged = {},
                 onRefresh = {},
                 onNotificationsClick = {},
-                lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
+                lastUpdatedLabel =
+                    if (state.lastUpdated != null) {
+                        "10:42"
+                    } else {
+                        null
+                    },
             )
         }
     }
@@ -81,7 +91,12 @@ class EarthquakeNotificationsScreenshotTest {
                 onListPanelVisibilityChanged = {},
                 onRefresh = {},
                 onNotificationsClick = {},
-                lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
+                lastUpdatedLabel =
+                    if (state.lastUpdated != null) {
+                        "10:42"
+                    } else {
+                        null
+                    },
             )
         }
     }
@@ -361,19 +376,33 @@ class EarthquakeNotificationsScreenshotTest {
             EarthquakeExplorerControls(
                 items,
                 "1",
-                if (minimized) EarthquakeView.Map else EarthquakeView.List,
+                if (minimized) {
+                    EarthquakeView.Map
+                } else {
+                    EarthquakeView.List
+                },
                 expanded,
                 {},
                 {},
                 {},
-                listState = rememberLazyListState(if (scrolled) 10 else 0),
+                listState =
+                    rememberLazyListState(
+                        if (scrolled) {
+                            10
+                        } else {
+                            0
+                        }
+                    ),
                 isListPanelVisible = !minimized,
                 monitoring =
                     EarthquakeMonitoringState(
                         status = EarthquakeMonitoringState.Status.Running,
                         refresh =
-                            if (refreshing) EarthquakeMonitoringState.Refresh.Running
-                            else EarthquakeMonitoringState.Refresh.Idle,
+                            if (refreshing) {
+                                EarthquakeMonitoringState.Refresh.Running
+                            } else {
+                                EarthquakeMonitoringState.Refresh.Idle
+                            },
                     ),
                 notificationsVisible = page,
                 notificationContent = { modifier ->

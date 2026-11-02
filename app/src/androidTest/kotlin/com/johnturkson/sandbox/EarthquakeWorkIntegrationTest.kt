@@ -111,8 +111,9 @@ class EarthquakeWorkIntegrationTest {
                         }
                     ) delay(50.milliseconds)
                 }
-                if (posted)
+                if (posted) {
                     assertTrue(systemNotifications.activeNotifications.any { it.tag == alert.id })
+                }
                 assertEquals(
                     0,
                     manager
