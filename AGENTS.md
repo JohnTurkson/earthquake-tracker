@@ -18,3 +18,10 @@ these requirements to guide design, implementation, and testing.
 - Stage only changes that belong to the current task. Preserve unrelated work.
 - Follow the [source control guide](docs/source-control.md) for commit scope,
   review, and validation.
+
+# Testing
+
+- Read and follow the [testing guide](docs/testing.md) when choosing checks,
+  writing tests, and reporting verification for a change.
+- Report formatting, build, lint, unit tests, device tests, and manual checks
+  separately. State which checks passed, failed, or were not run, and why.

@@ -90,6 +90,10 @@ From the repository root:
 ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
+This is a build and local-test smoke check. Follow the
+[testing guide](testing.md) for the checks required for a change and what counts
+as passing.
+
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`. To install it
 on a connected device or running emulator:
 

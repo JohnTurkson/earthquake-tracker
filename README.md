@@ -40,6 +40,9 @@ Include automated tests for important behavior and structure the app so that thi
 behavior can be tested effectively. Choose test types using engineering judgment;
 there is no prescribed coverage percentage or mix of test types.
 
+Follow the [testing guide](docs/testing.md) for required checks, passing criteria,
+and reporting verification.
+
 ## Design decisions
 
 Presentation, ordering, navigation, information hierarchy, and the details of the
@@ -67,3 +70,7 @@ For guided setup with Codex, use `$build-project` in this repository. The
 Follow the [source control guide](docs/source-control.md). Agents must commit as
 they go; human contributors are encouraged to do the same, keeping each commit
 focused on one coherent change.
+
+Shared agent rules live in `AGENTS.md`. See the
+[agent instruction guide](docs/agent-instructions.md) for Codex discovery and
+sharing the rules with Claude Code.
