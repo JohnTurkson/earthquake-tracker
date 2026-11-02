@@ -468,6 +468,8 @@ only WorkManager's initializer from AndroidX Startup.
 
 `EarthquakeMonitoringWorker` calls `setForeground` with the `dataSync` service
 type and uses `refreshAndAwait` instead of calling the repository directly.
+Its refreshing notification is shown only when the shared refresh work is
+observed in `WorkInfo.State.RUNNING`, rather than while waiting in the queue.
 `EarthquakePollingLoop` owns cancellable minute pacing, skips catch-up
 bursts after slow requests, and wakes on reconnection. WorkManager owns
 execution and rescheduling. Do not add UI timers, restart work on recomposition,

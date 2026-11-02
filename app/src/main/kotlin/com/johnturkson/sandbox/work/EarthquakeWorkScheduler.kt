@@ -26,10 +26,13 @@ class EarthquakeWorkScheduler @Inject constructor(private val manager: WorkManag
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>().build(),
         )
 
-    suspend fun refreshAndAwait(): WorkInfo {
+    suspend fun refreshAndAwait(onRunning: suspend () -> Unit = {}): WorkInfo {
         currentCoroutineContext().ensureActive()
         refresh().await()
-        return refreshWork.filterNotNull().first { it.state.isFinished }
+        return refreshWork.filterNotNull().first { info ->
+            if (info.state == WorkInfo.State.RUNNING) onRunning()
+            info.state.isFinished
+        }
     }
 
     fun startMonitoring() {

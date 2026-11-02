@@ -39,9 +39,12 @@ constructor(
                         setForeground(notifications.foreground(id, offline = true))
                     },
                     onTick = {
-                        setProgress(workDataOf(EarthquakeWorkScheduler.ResultKey to "Running"))
-                        setForeground(notifications.foreground(id, refreshing = true))
-                        val work = scheduler.refreshAndAwait()
+                        setProgress(workDataOf(EarthquakeWorkScheduler.ResultKey to "Queued"))
+                        setForeground(notifications.foreground(id))
+                        val work = scheduler.refreshAndAwait {
+                            setProgress(workDataOf(EarthquakeWorkScheduler.ResultKey to "Running"))
+                            setForeground(notifications.foreground(id, refreshing = true))
+                        }
                         val result = work.outputData.getString(EarthquakeWorkScheduler.ResultKey)
                         setProgress(work.outputData)
                         setForeground(

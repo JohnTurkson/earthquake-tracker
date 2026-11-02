@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox
 
+import android.app.Notification
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -52,8 +53,15 @@ class EarthquakeWorkSchedulerTest {
                     request,
                 )
                 .await()
-            val first = async(start = CoroutineStart.UNDISPATCHED) { scheduler.refreshAndAwait() }
-            val second = async(start = CoroutineStart.UNDISPATCHED) { scheduler.refreshAndAwait() }
+            var runningCallbacks = 0
+            val first =
+                async(start = CoroutineStart.UNDISPATCHED) {
+                    scheduler.refreshAndAwait { runningCallbacks++ }
+                }
+            val second =
+                async(start = CoroutineStart.UNDISPATCHED) {
+                    scheduler.refreshAndAwait { runningCallbacks++ }
+                }
             scheduler.refresh().await()
             assertEquals(
                 listOf(request.id),
@@ -63,6 +71,7 @@ class EarthquakeWorkSchedulerTest {
             )
             assertFalse(first.isCompleted)
             assertFalse(second.isCompleted)
+            assertEquals(0, runningCallbacks)
             manager.cancelWorkById(request.id).await()
             withTimeout(5_000) {
                 listOf(first.await(), second.await()).forEach { info ->
@@ -115,7 +124,17 @@ class EarthquakeWorkSchedulerTest {
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>()
                 .setInitialDelay(1, TimeUnit.DAYS)
                 .build()
-        val worker = monitoringBuilder(context, scheduler).build()
+        val titles = mutableListOf<String?>()
+        val worker =
+            monitoringBuilder(context, scheduler)
+                .setForegroundUpdater { _, _, foreground ->
+                    titles += foreground.notification.extras.getString(Notification.EXTRA_TITLE)
+                    CallbackToFutureAdapter.getFuture<Void> { completer ->
+                        completer.set(null)
+                        "Monitoring foreground"
+                    }
+                }
+                .build()
         try {
             manager
                 .enqueueUniqueWork(
@@ -128,6 +147,10 @@ class EarthquakeWorkSchedulerTest {
             scheduler.refresh().await()
             assertFalse(monitoring.isCompleted)
             monitoring.cancelAndJoin()
+            assertEquals(
+                setOf(context.getString(R.string.monitor_notification_title)),
+                titles.toSet(),
+            )
             assertEquals(WorkInfo.State.ENQUEUED, manager.getWorkInfoById(request.id).get()!!.state)
             assertEquals(
                 listOf(request.id),

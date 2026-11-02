@@ -409,6 +409,8 @@ replaces the previous result and returns typed output, and that a monitoring
 tick enqueues the shared worker and receives its result. Run these tests with
 device internet disabled under the shared reservation; controlled repository
 connectivity and MockEngine responses do not require live USGS requests.
+Queued-work fixtures also verify that the running callback and refreshing
+foreground title are withheld until WorkManager reports running work.
 `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
 `EarthquakePollingLoopTest` advances a coroutine test scheduler through minute
 boundaries, slow requests, offline pauses, reconnection, and cancellation;
