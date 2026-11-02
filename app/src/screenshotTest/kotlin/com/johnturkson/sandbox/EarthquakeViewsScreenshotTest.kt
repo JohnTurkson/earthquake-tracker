@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -72,11 +73,26 @@ class EarthquakeViewsScreenshotTest {
 
     @PreviewTest
     @Preview(locale = "en-US")
+    @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
     fun selectedMapSwitcher() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(12.dp)) {
                 EarthquakeViewSwitcher(EarthquakeView.Map, {}, Modifier.width(280.dp))
+            }
+        }
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(locale = "en-US", fontScale = 1.5f)
+    @Composable
+    fun selectedListSwitcher() {
+        EarthquakeTheme(dynamicColor = false) {
+            Box(Modifier.padding(12.dp)) {
+                EarthquakeViewSwitcher(EarthquakeView.List, {}, Modifier.width(280.dp))
             }
         }
     }

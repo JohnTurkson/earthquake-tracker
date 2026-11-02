@@ -1,7 +1,7 @@
 package com.johnturkson.sandbox.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
@@ -32,12 +32,13 @@ fun EarthquakeViewSwitcher(
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 6.dp,
     ) {
-        SingleChoiceSegmentedButtonRow(Modifier.padding(4.dp)) {
+        SingleChoiceSegmentedButtonRow(space = 0.dp) {
             EarthquakeView.entries.forEachIndexed { index, view ->
                 SegmentedButton(
                     selected = selectedView == view,
                     onClick = { onViewSelected(view) },
                     shape = SegmentedButtonDefaults.itemShape(index, EarthquakeView.entries.size),
+                    modifier = Modifier.heightIn(min = 48.dp),
                     border = BorderStroke(0.dp, Color.Transparent),
                     icon = {
                         Icon(

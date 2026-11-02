@@ -254,6 +254,8 @@ bounds are fixed; no network, database, dynamic color, or clock is involved.
 covers the ordinary Compose explorer visuals: compact List,
 selected and empty List, dark mode, large text at narrow width, the Map-selected
 switcher, rows with no time, and selected-event cards with and without time.
+Isolated Map-selected and List-selected switcher previews cover light, dark,
+and large-text configurations, including the selection fill at the outer edges.
 List previews render the real `EarthquakeScreen` List branch. Use deterministic
 snippet strings for time labels in pixel fixtures so host time zones do not
 change their pixels. These images do not cover the native map surface.

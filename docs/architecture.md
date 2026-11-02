@@ -228,7 +228,10 @@ durable application data belongs in storage accessed through the repository.
 Use separate full-screen Map and List views in compact windows.
 [EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
 places Material single-choice segmented buttons in an opaque floating surface
-at the top, clear of system insets. Changing presentation is a screen action,
+at the top, clear of system insets. Keep the segments flush with that surface,
+with no outer padding or overlap for the borderless buttons. Each segment has a
+minimum visual height of 48 dp so its fill covers the accessible touch target.
+Changing presentation is a screen action,
 not a new Navigation 3 back-stack entry. Keep destination navigation in
 `EarthquakeApp` when adding actual destinations.
 
