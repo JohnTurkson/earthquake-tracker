@@ -36,7 +36,8 @@ cluster IDs, location values, monitoring, and pending camera focus.
 [EarthquakeListState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListState.kt)
 is implemented by its own
 [EarthquakeListViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListViewModel.kt)
-and deterministic `EarthquakeListPreviewState`.
+and deterministic
+[EarthquakeListPreviewState](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/EarthquakeListPreviewState.kt).
 [EarthquakeNotificationsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsState.kt)
 is implemented by
 [EarthquakeNotificationsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsViewModel.kt).
