@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Clone the repository and open it in Android Studio.
-- Use the included Gradle wrapper, which selects Gradle 9.8.2 and automatically
+- Use the included Gradle wrapper, which selects Gradle 9.6.1 and automatically
   downloads the required JetBrains JDK 21 if it is not already available. No
   separate JDK 21 installation is required.
 - Install Android SDK Platform 37 and the SDK tools requested during Gradle sync.
