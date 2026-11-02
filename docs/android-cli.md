@@ -92,6 +92,36 @@ launch in one step, use `android run --device="$ANDROID_SERIAL" ':app@debug'`.
 Inspect the reported build log and confirm the expected APK exists. Run the
 formatting, lint, and test commands from the testing guide as required.
 
+### Gradle target selection
+
+The Gradle root project is named `earthquake-tracker` in
+[`settings.gradle.kts`](../settings.gradle.kts). The Android application is the
+`:app` subproject. Select both its module and variant with `:app@debug`; this
+builds `:app:assembleDebug`.
+
+Android CLI 1.1.16717390 treats `android build :app` as a request for the Gradle
+task `:app`, producing `Cannot locate tasks that match ':app'`. Google's
+[command reference](https://developer.android.com/tools/agents/android-cli/commands/build)
+lists that module-only form, but use `android build ':app@debug'` with this
+installed version. Renaming the root project does not change task selection.
+
+To select the app's default debug variant without naming the variant, use the
+documented directory-reference form:
+
+```sh
+android build './app?'
+```
+
+The path sets the working directory to `app`, and the empty target after `?`
+selects that directory's Gradle project and its default debug variant. This needs
+no additional project configuration or root forwarding tasks.
+
+Bare `android build` from the repository root requests `:assembleDebug`, which
+also does not exist on the root project. The direct wrapper command
+`./gradlew assembleDebug` searches subprojects and finds the app's task;
+`./gradlew :app:assembleDebug` selects it explicitly. Gradle's `defaultTasks(...)`
+does not redirect an explicit task requested by the CLI.
+
 ## Inspect and interact
 
 Inspect the live hierarchy before selecting a control:

@@ -15,6 +15,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "sandbox"
+rootProject.name = "earthquake-tracker"
 
 include(":app")
