@@ -14,12 +14,14 @@
   **Google Play**. Follow the
   [shared-emulator workflow](testing.md#shared-test-emulator) and setup skill.
 
-The project uses AGP 9.5.0 with compile and target SDK 37. Google's
+The project is pinned to **AGP 9.1.1** with compile and target SDK 37 to support
+the current IntelliJ IDEA Android plugin. Do not upgrade AGP beyond 9.1.1 unless
+the user changes this compatibility requirement. A newer-version inspection is
+not a reason to override the pin. Google's
 [API-level compatibility table](https://developer.android.com/build/releases/about-agp#api-level-support)
 requires AGP 9.1.1 or newer for API 37; this pairing needs no unsupported-compile-SDK
-warning suppression. When using IntelliJ IDEA, its Android plugin must support
-the AGP 9.5 release series. IDE compatibility and command-line build compatibility
-are separate checks.
+warning suppression. IDE compatibility and command-line build compatibility are
+separate checks.
 
 Android Studio includes a Java runtime that can start Gradle. For terminal builds,
 make an existing Java runtime available through `JAVA_HOME` or `java` on `PATH`;

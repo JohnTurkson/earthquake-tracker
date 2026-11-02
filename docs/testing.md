@@ -364,7 +364,7 @@ foreground-only updates, the native SDK location layer, and the bottom-right
 Locate action before and after permission is granted. Device captures
 supplement the native-map regression coverage limitation described below.
 
-Use Google's Compose Preview Screenshot Testing. This AGP 9.5.0 project retains
+Use Google's Compose Preview Screenshot Testing. This AGP 9.1.1 project retains
 the `com.android.compose.screenshot` plugin version 0.0.1-alpha16, with
 `screenshot-validation-api` version 0.0.1-alpha17. Keep their version-catalog
 entries separate: the annotation library and standalone plugin do not share

@@ -131,3 +131,10 @@ For a Boolean operation gated by several capabilities, use a short-circuiting
 posted only after all capability checks succeed. Select related display-resource
 IDs together when they share the same conditions, as the full and short title
 pair in [EarthquakeMonitoringCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/monitoring/EarthquakeMonitoringCard.kt).
+
+## Build-version compatibility
+
+Keep AGP pinned to **9.1.1** for IntelliJ IDEA compatibility. Follow the
+[build guide](building.md#prerequisites) when updating dependencies or build tools;
+newer-version inspection suggestions must respect this pin. The concrete version
+is declared in [the version catalog](../gradle/libs.versions.toml).
