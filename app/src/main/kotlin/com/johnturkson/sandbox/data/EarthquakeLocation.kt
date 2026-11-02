@@ -10,6 +10,7 @@ data class EarthquakeLocation(
     val timestamp: Instant? = null,
 ) {
     companion object {
+        /** The default location corresponds to San Francisco, California. */
         val Default = EarthquakeLocation(latitude = 37.7749, longitude = -122.4194)
     }
 }
