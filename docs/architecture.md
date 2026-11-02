@@ -20,23 +20,23 @@ Keep the Android application in the `:app` Gradle module. Match Kotlin package
 declarations to their directories under `com.johnturkson.sandbox`, and group
 sources by their existing responsibility:
 
-| Package | Responsibility and source examples |
-| --- | --- |
-| `app` | Android entry points: `EarthquakeApplication` and `EarthquakeActivity`. |
-| `di`, `di.qualifiers` | [EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/di/EarthquakeModule.kt) and injected dispatcher qualifiers. |
-| `ui.navigation` | `EarthquakeApp`, destinations, navigation actions, and selection result delivery. |
-| `ui.layout` | [EarthquakeControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeControls.kt), `EarthquakeTopAppBar`, view switching, and adaptive pane rendering. |
-| `ui.map`, `ui.map.cluster`, `ui.map.location` | Map destination state/rendering, clustering, and location controls. |
-| `ui.list` | List destination, state, ViewModel, list container, and floating panel. |
-| `ui.details`, `ui.details.reports` | Details destination and its report sections/images. |
-| `ui.notifications` | Notification destination, page, state, and ViewModel. |
-| `ui.monitoring` | Shared monitoring presentation and observation. |
-| `ui.event` | [EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/event/EarthquakeMapItem.kt), shared event rows, and localized title/time formatting. |
-| `data.network` | API, routes, response models, wire serializers, and connectivity. |
-| `data.database` | Room database, DAOs, entities, and timestamp converters. |
-| `data.repository` | Stored-event reads, refresh coordination, and network-to-storage mapping. |
-| `data.location`, `data.settings`, `data.notifications` | Location access, preferences, and notification delivery/policy. |
-| `theme`, `work` | Theme values and WorkManager scheduling/workers. |
+| Package                                                | Responsibility and source examples                                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app`                                                  | Android entry points: `EarthquakeApplication` and `EarthquakeActivity`.                                                                                                   |
+| `di`, `di.qualifiers`                                  | [EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/di/EarthquakeModule.kt) and injected dispatcher qualifiers.                                             |
+| `ui.navigation`                                        | `EarthquakeApp`, destinations, navigation actions, and selection result delivery.                                                                                         |
+| `ui.layout`                                            | [EarthquakeControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeControls.kt), `EarthquakeTopAppBar`, view switching, and adaptive pane rendering. |
+| `ui.map`, `ui.map.cluster`, `ui.map.location`          | Map destination state/rendering, clustering, and location controls.                                                                                                       |
+| `ui.list`                                              | List destination, state, ViewModel, list container, and floating panel.                                                                                                   |
+| `ui.details`, `ui.details.reports`                     | Details destination and its report sections/images.                                                                                                                       |
+| `ui.notifications`                                     | Notification destination, page, state, and ViewModel.                                                                                                                     |
+| `ui.monitoring`                                        | Shared monitoring presentation and observation.                                                                                                                           |
+| `ui.event`                                             | [EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/event/EarthquakeMapItem.kt), shared event rows, and localized title/time formatting.                |
+| `data.network`                                         | API, routes, response models, wire serializers, and connectivity.                                                                                                         |
+| `data.database`                                        | Room database, DAOs, entities, and timestamp converters.                                                                                                                  |
+| `data.repository`                                      | Stored-event reads, refresh coordination, and network-to-storage mapping.                                                                                                 |
+| `data.location`, `data.settings`, `data.notifications` | Location access, preferences, and notification delivery/policy.                                                                                                           |
+| `theme`, `work`                                        | Theme values and WorkManager scheduling/workers.                                                                                                                          |
 
 Keep each screen's read-only state interface and ViewModel beside that screen.
 Put presentation shared by destinations in `ui.event` or `ui.monitoring`; those
@@ -248,6 +248,13 @@ ViewModel owns the unavailable-event flag; rendering a snackbar does not create
 another owner of that feature state. Screenshot fixtures supply fixed snackbar
 data to the actual component without starting a timer.
 
+Location and notification rationale wrappers resolve their own title and
+explanation resources, then render the shared
+[EarthquakePermissionRationale](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakePermissionRationale.kt).
+The dialog receives text and callbacks; feature screen entries continue to own
+permission launchers and rationale visibility. Its supported text variants remain
+covered by the location and notification screenshot fixtures.
+
 Every app UI component must have screenshot tests for all of its supported visual
 states. Add or update coverage with each UI change. Enumerate those states from
 its state contract and inputs, and render deterministic fixtures without live
@@ -295,11 +302,13 @@ Use the existing serialization pattern instead of maintaining an unrelated
 saved copy of the same state:
 
 ```kotlin
-override var selectedMapItemId: String? by
-    savedStateHandle
-        .saved(serializer = MutableStateSerializer<String?>()) { mutableStateOf(null) }
-        .getValue(this, this::selectedMapItemId)
-    private set
+class EarthquakeViewModel(savedStateHandle: SavedStateHandle) : ViewModel(), EarthquakeState {
+    override var selectedMapItemId: String? by
+        savedStateHandle
+            .saved(serializer = MutableStateSerializer<String?>()) { mutableStateOf(null) }
+            .getValue(this, this::selectedMapItemId)
+        private set
+}
 ```
 
 Decide which values must restore when introducing state. Keep one authoritative

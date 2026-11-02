@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,7 +26,6 @@ import com.johnturkson.sandbox.ui.details.EarthquakeDetailsItem
 import com.johnturkson.sandbox.ui.event.EarthquakeMapItem
 import kotlin.time.Instant
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 class EarthquakeReportPrototypeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -41,7 +41,7 @@ constructor(@ApplicationContext private val context: Context) {
         manager.createNotificationChannels(
             listOf(
                 NotificationChannel(
-                        MonitoringChannel,
+                        MONITORING_CHANNEL,
                         context.getString(R.string.monitor_channel_name),
                         NotificationManager.IMPORTANCE_LOW,
                     )
@@ -50,7 +50,7 @@ constructor(@ApplicationContext private val context: Context) {
                         setSound(null, null)
                     },
                 NotificationChannel(
-                        AlertsChannel,
+                        ALERTS_CHANNEL,
                         context.getString(R.string.alert_channel_name),
                         NotificationManager.IMPORTANCE_HIGH,
                     )
@@ -72,10 +72,10 @@ constructor(@ApplicationContext private val context: Context) {
         return Capabilities(
             granted,
             NotificationManagerCompat.from(context).areNotificationsEnabled(),
-            manager.getNotificationChannel(MonitoringChannel)?.let {
+            manager.getNotificationChannel(MONITORING_CHANNEL)?.let {
                 it.importance != NotificationManager.IMPORTANCE_NONE
             } == true,
-            manager.getNotificationChannel(AlertsChannel)?.let {
+            manager.getNotificationChannel(ALERTS_CHANNEL)?.let {
                 it.importance != NotificationManager.IMPORTANCE_NONE
             } == true,
         )
@@ -83,7 +83,7 @@ constructor(@ApplicationContext private val context: Context) {
 
     fun foreground(workId: UUID): ForegroundInfo {
         val notification =
-            NotificationCompat.Builder(context, MonitoringChannel)
+            NotificationCompat.Builder(context, MONITORING_CHANNEL)
                 .setSmallIcon(R.drawable.ic_notification_earthquake)
                 .setContentTitle(context.getString(R.string.monitor_notification_title))
                 .setContentText(context.getString(R.string.monitor_notification_detail))
@@ -100,12 +100,12 @@ constructor(@ApplicationContext private val context: Context) {
                 .build()
         return if (Build.VERSION.SDK_INT >= 29) {
             ForegroundInfo(
-                MonitoringId,
+                MONITORING_ID,
                 notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
             )
         } else {
-            ForegroundInfo(MonitoringId, notification)
+            ForegroundInfo(MONITORING_ID, notification)
         }
     }
 
@@ -130,7 +130,7 @@ constructor(@ApplicationContext private val context: Context) {
                     placeText,
                 )
         val notification =
-            NotificationCompat.Builder(context, AlertsChannel)
+            NotificationCompat.Builder(context, ALERTS_CHANNEL)
                 .setSmallIcon(R.drawable.ic_notification_earthquake)
                 .setContentTitle(title)
                 .setContentText(context.getString(R.string.alerts_on))
@@ -141,25 +141,25 @@ constructor(@ApplicationContext private val context: Context) {
                 .setCategory(Notification.CATEGORY_EVENT)
                 .setWhen(item.time.toEpochMilliseconds())
                 .build()
-        return post(item.id, AlertId, notification)
+        return post(item.id, ALERT_ID, notification)
     }
 
     fun previewAlert(): Boolean {
         val capability = capabilities()
-        if (!capability.permissionGranted || !capability.appEnabled || !capability.alertsEnabled) {
-            return false
-        }
-        return post(
-            "preview",
-            PreviewId,
-            NotificationCompat.Builder(context, AlertsChannel)
-                .setSmallIcon(R.drawable.ic_notification_earthquake)
-                .setContentTitle(context.getString(R.string.preview_alert_title))
-                .setContentText(context.getString(R.string.preview_alert_detail))
-                .setContentIntent(openApp())
-                .setAutoCancel(true)
-                .build(),
-        )
+        return capability.permissionGranted &&
+            capability.appEnabled &&
+            capability.alertsEnabled &&
+            post(
+                "preview",
+                PREVIEW_ID,
+                NotificationCompat.Builder(context, ALERTS_CHANNEL)
+                    .setSmallIcon(R.drawable.ic_notification_earthquake)
+                    .setContentTitle(context.getString(R.string.preview_alert_title))
+                    .setContentText(context.getString(R.string.preview_alert_detail))
+                    .setContentIntent(openApp())
+                    .setAutoCancel(true)
+                    .build(),
+            )
     }
 
     private fun post(tag: String, id: Int, notification: Notification): Boolean =
@@ -180,7 +180,7 @@ constructor(@ApplicationContext private val context: Context) {
                     } else {
                         "earthquaketracker://earthquake/${android.net.Uri.encode(eventId)}".toUri()
                     }
-                putExtra(EventIdExtra, eventId)
+                putExtra(EVENT_ID_EXTRA, eventId)
             }
         return PendingIntent.getActivity(
             context,
@@ -191,11 +191,11 @@ constructor(@ApplicationContext private val context: Context) {
     }
 
     companion object {
-        const val MonitoringChannel = "earthquake_monitoring"
-        const val AlertsChannel = "earthquake_alerts"
-        const val MonitoringId = 1001
-        const val AlertId = 1002
-        const val PreviewId = 1003
-        const val EventIdExtra = "earthquake_id"
+        const val MONITORING_CHANNEL = "earthquake_monitoring"
+        const val ALERTS_CHANNEL = "earthquake_alerts"
+        const val MONITORING_ID = 1001
+        const val ALERT_ID = 1002
+        const val PREVIEW_ID = 1003
+        const val EVENT_ID_EXTRA = "earthquake_id"
     }
 }

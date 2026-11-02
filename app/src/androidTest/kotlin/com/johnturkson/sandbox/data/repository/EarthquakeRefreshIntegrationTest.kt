@@ -208,8 +208,8 @@ class EarthquakeRefreshIntegrationTest {
             assertEquals(stored, repository.getEarthquakesFlow().first())
             assertEquals(metadata, database.monitoringDao().getRefreshFlow().first())
         } finally {
-            systemNotifications.cancel(id, EarthquakeNotifications.AlertId)
-            systemNotifications.cancel(preferredId, EarthquakeNotifications.AlertId)
+            systemNotifications.cancel(id, EarthquakeNotifications.ALERT_ID)
+            systemNotifications.cancel(preferredId, EarthquakeNotifications.ALERT_ID)
             storeJob.cancelAndJoin()
             file.delete()
             client.close()

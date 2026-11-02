@@ -42,7 +42,7 @@ class EarthquakePaneScreenshotTest {
     )
     @Preview(widthDp = 900, heightDp = 600, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun notifications() {
+    fun Notifications() {
         Pane(notifications = true)
     }
 
@@ -56,14 +56,14 @@ class EarthquakePaneScreenshotTest {
     )
     @Preview(widthDp = 900, heightDp = 600, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun list() {
+    fun List() {
         Pane(notifications = false)
     }
 
     @PreviewTest
     @Preview(widthDp = 400, heightDp = 720, locale = "en-US")
     @Composable
-    fun compactNotifications() {
+    fun CompactNotifications() {
         Pane(notifications = true, expanded = false)
     }
 

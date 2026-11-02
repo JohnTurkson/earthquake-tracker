@@ -24,7 +24,7 @@ class EarthquakeLocationScreenshotTest {
     @Preview(widthDp = 320, heightDp = 720, locale = "en-US", fontScale = 1.5f)
     @Preview(widthDp = 720, heightDp = 384, locale = "en-US")
     @Composable
-    fun selectedLocationAndSnackbar() {
+    fun SelectedLocationAndSnackbar() {
         val data =
             object : SnackbarData {
                 override val visuals =
@@ -60,7 +60,7 @@ class EarthquakeLocationScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactLocationControls() {
+    fun CompactLocationControls() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeControls(
                 items = emptyList(),
@@ -80,7 +80,7 @@ class EarthquakeLocationScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedLocationControls() {
+    fun ExpandedLocationControls() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeControls(
                 items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")),
@@ -100,7 +100,7 @@ class EarthquakeLocationScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun minimizedLocationControls() {
+    fun MinimizedLocationControls() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeControls(
                 items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")),
@@ -129,7 +129,7 @@ class EarthquakeLocationScreenshotTest {
         uiMode = Configuration.UI_MODE_NIGHT_YES,
     )
     @Composable
-    fun compactSelectedLocationControls() {
+    fun CompactSelectedLocationControls() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeControls(
                 items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")),
@@ -151,7 +151,7 @@ class EarthquakeLocationScreenshotTest {
     @Preview(locale = "en-US")
     @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Composable
-    fun requestLocation() {
+    fun RequestLocation() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(16.dp)) { EarthquakeLocationButton(onClick = {}) }
         }
@@ -161,7 +161,7 @@ class EarthquakeLocationScreenshotTest {
     @Preview(locale = "en-US")
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun locationSettings() {
+    fun LocationSettings() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(16.dp)) {
                 EarthquakeLocationButton(onClick = {}, requiresSettings = true)
@@ -172,7 +172,7 @@ class EarthquakeLocationScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun largeTextLocation() {
+    fun LargeTextLocation() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(16.dp)) { EarthquakeLocationButton(onClick = {}) }
         }
@@ -181,7 +181,7 @@ class EarthquakeLocationScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun darkLocationSettings() {
+    fun DarkLocationSettings() {
         EarthquakeTheme(darkTheme = true, dynamicColor = false) {
             Box(Modifier.padding(16.dp)) {
                 EarthquakeLocationButton(onClick = {}, requiresSettings = true)
@@ -198,14 +198,14 @@ class EarthquakeLocationScreenshotTest {
         uiMode = Configuration.UI_MODE_NIGHT_YES,
     )
     @Composable
-    fun locationRationale() {
+    fun LocationRationale() {
         EarthquakeTheme(dynamicColor = false) { EarthquakeLocationRationale({}, {}) }
     }
 
     @PreviewTest
     @Preview(widthDp = 320, heightDp = 720, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun largeTextLocationRationale() {
+    fun LargeTextLocationRationale() {
         EarthquakeTheme(dynamicColor = false) { EarthquakeLocationRationale({}, {}) }
     }
 }

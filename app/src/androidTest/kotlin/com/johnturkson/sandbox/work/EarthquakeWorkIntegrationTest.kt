@@ -15,7 +15,7 @@ import com.johnturkson.sandbox.data.notifications.EarthquakeNotifications
 import com.johnturkson.sandbox.data.repository.EarthquakeMonitoringFixtures
 import java.util.UUID
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
@@ -42,16 +42,17 @@ class EarthquakeWorkIntegrationTest {
                 time = Clock.System.now(),
             )
         try {
-            assertFalse(
+            assertNotEquals(
+                true,
                 network
                     .getNetworkCapabilities(network.activeNetwork)
-                    ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true,
+                    ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
                 "Run the device suite with Wi-Fi and mobile data disabled under the shared reservation",
             )
             ActivityScenario.launch(EarthquakeActivity::class.java).use {
                 scheduler.refresh().await()
                 withTimeout(45.seconds) {
-                    manager.getWorkInfosForUniqueWorkFlow(EarthquakeMonitor.RefreshWork).first {
+                    manager.getWorkInfosForUniqueWorkFlow(EarthquakeMonitor.REFRESH_WORK).first {
                         infos ->
                         infos.any { info -> info.state == WorkInfo.State.FAILED }
                     }
@@ -61,7 +62,7 @@ class EarthquakeWorkIntegrationTest {
                 val running =
                     withTimeout(45.seconds) {
                             manager
-                                .getWorkInfosForUniqueWorkFlow(EarthquakeMonitor.MonitoringWork)
+                                .getWorkInfosForUniqueWorkFlow(EarthquakeMonitor.MONITORING_WORK)
                                 .first { infos ->
                                     infos.any { info -> info.state == WorkInfo.State.RUNNING }
                                 }
@@ -78,7 +79,7 @@ class EarthquakeWorkIntegrationTest {
                     withTimeout(5.seconds) {
                         while (
                             systemNotifications.activeNotifications.none {
-                                it.id == EarthquakeNotifications.MonitoringId &&
+                                it.id == EarthquakeNotifications.MONITORING_ID &&
                                     it.notification.extras.getString(Notification.EXTRA_TITLE) ==
                                         context.getString(R.string.monitor_notification_title)
                             }
@@ -108,7 +109,7 @@ class EarthquakeWorkIntegrationTest {
                 withTimeout(5.seconds) {
                     while (
                         systemNotifications.activeNotifications.any {
-                            it.id == EarthquakeNotifications.MonitoringId
+                            it.id == EarthquakeNotifications.MONITORING_ID
                         }
                     ) delay(50.milliseconds)
                 }
@@ -118,14 +119,14 @@ class EarthquakeWorkIntegrationTest {
                 assertEquals(
                     0,
                     manager
-                        .getWorkInfosForUniqueWork(EarthquakeMonitor.MonitoringWork)
+                        .getWorkInfosForUniqueWork(EarthquakeMonitor.MONITORING_WORK)
                         .get()
                         .count { info -> !info.state.isFinished },
                 )
             }
         } finally {
             scheduler.stop().await()
-            systemNotifications.cancel(alert.id, EarthquakeNotifications.AlertId)
+            systemNotifications.cancel(alert.id, EarthquakeNotifications.ALERT_ID)
         }
     }
 }

@@ -44,7 +44,6 @@
         <item quantity="other">%d earthquakes</item>
     </plurals>
     <string name="refreshing_earthquakes">Refreshing earthquakes…</string>
-    <string name="existing_data_visible">Existing data remains visible</string>
     <string name="refresh_succeeded">Earthquakes updated</string>
     <string name="refresh_failed">Couldn’t refresh earthquakes</string>
     <string name="refresh_idle">Ready to refresh</string>

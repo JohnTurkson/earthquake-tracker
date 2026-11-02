@@ -49,6 +49,7 @@ import com.johnturkson.sandbox.ui.list.EarthquakeListScreen
 import com.johnturkson.sandbox.ui.list.EarthquakeListState
 import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringState
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -76,7 +77,7 @@ class EarthquakeNavigationTest {
         val movingBounds = paneBounds("List pane")
         composeRule.mainClock.autoAdvance = true
         composeRule.waitForIdle()
-        assertTrue(movingBounds != paneBounds("List pane"))
+        assertNotEquals(movingBounds, paneBounds("List pane"))
     }
 
     @Test

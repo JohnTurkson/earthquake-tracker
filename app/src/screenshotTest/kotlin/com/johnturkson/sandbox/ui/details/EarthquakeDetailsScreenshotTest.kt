@@ -59,14 +59,14 @@ class EarthquakeDetailsScreenshotTest {
         uiMode = Configuration.UI_MODE_NIGHT_YES,
     )
     @Composable
-    fun compactDetails() {
+    fun CompactDetails() {
         Theme { Card() }
     }
 
     @PreviewTest
     @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun narrowLargeTextDetails() {
+    fun NarrowLargeTextDetails() {
         Theme { Card() }
     }
 
@@ -80,7 +80,7 @@ class EarthquakeDetailsScreenshotTest {
     )
     @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun missingMeasurements() {
+    fun MissingMeasurements() {
         Theme {
             Card(
                 item =
@@ -107,7 +107,7 @@ class EarthquakeDetailsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 720, locale = "en-US")
     @Composable
-    fun zeroMeasurements() {
+    fun ZeroMeasurements() {
         Theme {
             Card(
                 item =
@@ -125,7 +125,7 @@ class EarthquakeDetailsScreenshotTest {
     @Preview(widthDp = 384, heightDp = 720, locale = "en-US")
     @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun expandedCommunityReports() {
+    fun ExpandedCommunityReports() {
         Theme {
             EarthquakeDetailsCard(
                 item,
@@ -142,14 +142,14 @@ class EarthquakeDetailsScreenshotTest {
     @Preview(widthDp = 384, heightDp = 480, locale = "en-US")
     @Preview(widthDp = 320, heightDp = 640, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun scrolledSourceInformation() {
+    fun ScrolledSourceInformation() {
         Theme { Card(scrolled = true) }
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 720, locale = "en-US")
     @Composable
-    fun rightToLeftDetails() {
+    fun RightToLeftDetails() {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Theme { Card() }
         }
@@ -165,7 +165,7 @@ class EarthquakeDetailsScreenshotTest {
     )
     @Preview(widthDp = 392, heightDp = 600, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun loadingDetails() {
+    fun LoadingDetails() {
         Theme { EarthquakeDetailsScreen(PreviewState(true), {}) }
     }
 
@@ -179,21 +179,21 @@ class EarthquakeDetailsScreenshotTest {
     )
     @Preview(widthDp = 392, heightDp = 600, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun unavailableDetails() {
+    fun UnavailableDetails() {
         Theme { EarthquakeDetailsScreen(PreviewState(false), {}) }
     }
 
     @PreviewTest
     @Preview(widthDp = 392, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedLoadingDetails() {
+    fun ExpandedLoadingDetails() {
         Theme { EarthquakeDetailsScreen(PreviewState(true), {}, expanded = true) }
     }
 
     @PreviewTest
     @Preview(widthDp = 392, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedUnavailableDetails() {
+    fun ExpandedUnavailableDetails() {
         Theme { EarthquakeDetailsScreen(PreviewState(false), {}, expanded = true) }
     }
 
@@ -207,7 +207,7 @@ class EarthquakeDetailsScreenshotTest {
     )
     @Preview(widthDp = 320, heightDp = 480, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun selectionCardEntryPoint() {
+    fun SelectionCardEntryPoint() {
         Theme {
             Box(Modifier.fillMaxSize()) {
                 EarthquakeSelectionCard(mapItem, {}, Modifier.padding(16.dp), onMoreDetails = {})
@@ -218,7 +218,7 @@ class EarthquakeDetailsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 360, locale = "en-US")
     @Composable
-    fun selectionCardWithoutTime() {
+    fun SelectionCardWithoutTime() {
         Theme {
             Box(Modifier.fillMaxSize()) {
                 EarthquakeSelectionCard(
@@ -235,14 +235,14 @@ class EarthquakeDetailsScreenshotTest {
     @Preview(widthDp = 384, locale = "en-US")
     @Preview(widthDp = 320, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun listRowEntryPoint() {
+    fun ListRowEntryPoint() {
         Theme { EarthquakeListRow(mapItem, false, {}, onMoreDetails = {}) }
     }
 
     @PreviewTest
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Composable
-    fun selectedListRowWithoutTime() {
+    fun SelectedListRowWithoutTime() {
         Theme {
             EarthquakeListRow(
                 mapItem.copy(snippet = null),
@@ -264,21 +264,21 @@ class EarthquakeDetailsScreenshotTest {
         uiMode = Configuration.UI_MODE_NIGHT_YES,
     )
     @Composable
-    fun expandedDetailsInLeftPane() {
+    fun ExpandedDetailsInLeftPane() {
         Expanded()
     }
 
     @PreviewTest
     @Preview(widthDp = 840, heightDp = 600, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun expandedDetailsWithLargeText() {
+    fun ExpandedDetailsWithLargeText() {
         Expanded()
     }
 
     @PreviewTest
     @Preview(widthDp = 1100, heightDp = 720, locale = "en-US")
     @Composable
-    fun minimizedMapEntryPoint() {
+    fun MinimizedMapEntryPoint() {
         Theme {
             EarthquakeControls(
                 items = listOf(mapItem),
@@ -305,7 +305,7 @@ class EarthquakeDetailsScreenshotTest {
         uiMode = Configuration.UI_MODE_NIGHT_YES,
     )
     @Composable
-    fun compactMapEntryPoint() {
+    fun CompactMapEntryPoint() {
         Theme {
             EarthquakeControls(
                 items = listOf(mapItem),

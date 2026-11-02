@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.NotificationsOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -35,6 +34,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.johnturkson.sandbox.R
+import com.johnturkson.sandbox.ui.layout.EarthquakePermissionRationale
 import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringState
 
 @Composable
@@ -249,16 +249,11 @@ fun EarthquakeNotificationPage(
 
 @Composable
 fun EarthquakeNotificationRationale(onContinue: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.enable_notifications)) },
-        text = { Text(stringResource(R.string.notification_permission_explanation)) },
-        confirmButton = {
-            TextButton(onClick = onContinue) { Text(stringResource(R.string.continue_action)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.not_now)) }
-        },
+    EarthquakePermissionRationale(
+        title = stringResource(R.string.enable_notifications),
+        explanation = stringResource(R.string.notification_permission_explanation),
+        onContinue = onContinue,
+        onDismiss = onDismiss,
     )
 }
 

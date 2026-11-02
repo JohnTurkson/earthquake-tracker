@@ -29,6 +29,7 @@ import com.johnturkson.sandbox.ui.map.EarthquakeScreen
 import com.johnturkson.sandbox.ui.map.location.EarthquakeLocationButton
 import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringState
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -221,7 +222,7 @@ class EarthquakeViewsTest {
         composeRule.onNodeWithText(title).assertDoesNotExist()
         composeRule.onNodeWithText("Show list").performClick()
         composeRule.onAllNodesWithText(title).assertCountEquals(1)
-        composeRule.runOnIdle { assertEquals(null, selectedId) }
+        composeRule.runOnIdle { assertNull(selectedId) }
     }
 
     @Test
@@ -261,7 +262,7 @@ class EarthquakeViewsTest {
         composeRule.onNodeWithText("Map").performClick()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").performClick()
         composeRule.onNodeWithText("List").performClick()
-        composeRule.runOnIdle { assertEquals(null, state.selectedMapItemId) }
+        composeRule.runOnIdle { assertNull(state.selectedMapItemId) }
         composeRule.onNodeWithText(title).assertIsDisplayed()
     }
 

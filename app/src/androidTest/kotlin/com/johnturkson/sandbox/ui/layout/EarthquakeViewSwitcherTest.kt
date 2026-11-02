@@ -86,10 +86,11 @@ class EarthquakeViewSwitcherTest {
                     list.left > bell.right
                 }
             )
-            for (layout in listOf(false to true, true to true, true to false)) {
+            for ((isExpanded, isPanelVisible) in
+                listOf(false to true, true to true, true to false)) {
                 rule.runOnIdle {
-                    expanded = layout.first
-                    panelVisible = layout.second
+                    expanded = isExpanded
+                    panelVisible = isPanelVisible
                 }
                 val bounds =
                     rule

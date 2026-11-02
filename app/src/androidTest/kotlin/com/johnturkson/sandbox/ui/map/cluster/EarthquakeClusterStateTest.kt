@@ -20,6 +20,7 @@ import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringObserver
 import com.johnturkson.sandbox.ui.navigation.Destination
 import com.johnturkson.sandbox.work.EarthquakeMonitor
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -81,7 +82,7 @@ class EarthquakeClusterStateTest {
                 restored.selectMapCluster(items)
                 restored.clearMapSelection()
                 assertEquals(emptyList(), restored.selectedClusterItemIds)
-                assertEquals(null, restored.selectedMapItemId)
+                assertNull(restored.selectedMapItemId)
                 restored.selectMapCluster(items)
                 restored.openNotificationEvent(stored.id)
             }

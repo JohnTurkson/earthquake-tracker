@@ -11,8 +11,11 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -32,13 +35,13 @@ class EarthquakeNotificationsTest {
         assertEquals(before, manager.notificationChannels.associateBy { it.id })
         assertEquals(
             NotificationManager.IMPORTANCE_LOW,
-            before.getValue(EarthquakeNotifications.MonitoringChannel).importance,
+            before.getValue(EarthquakeNotifications.MONITORING_CHANNEL).importance,
         )
         assertEquals(
             NotificationManager.IMPORTANCE_HIGH,
-            before.getValue(EarthquakeNotifications.AlertsChannel).importance,
+            before.getValue(EarthquakeNotifications.ALERTS_CHANNEL).importance,
         )
-        assertEquals(null, before.getValue(EarthquakeNotifications.MonitoringChannel).sound)
+        assertNull(before.getValue(EarthquakeNotifications.MONITORING_CHANNEL).sound)
     }
 
     @Test
@@ -70,13 +73,13 @@ class EarthquakeNotificationsTest {
                     0
                 }
             val posted =
-                withTimeout(5_000) {
+                withTimeout(5.seconds) {
                     var active =
                         manager.activeNotifications.filter {
                             it.tag == first.id || it.tag == second.id
                         }
                     while (active.size != expected) {
-                        delay(50)
+                        delay(50.milliseconds)
                         active =
                             manager.activeNotifications.filter {
                                 it.tag == first.id || it.tag == second.id
@@ -93,7 +96,7 @@ class EarthquakeNotificationsTest {
                 assertEquals("Unknown Magnitude – Unknown location", titles[second.id])
                 assertTrue(
                     posted.all {
-                        it.notification.channelId == EarthquakeNotifications.AlertsChannel
+                        it.notification.channelId == EarthquakeNotifications.ALERTS_CHANNEL
                     }
                 )
                 assertNotEquals(
@@ -102,9 +105,9 @@ class EarthquakeNotificationsTest {
                 )
             }
             val foreground = notifications.foreground(UUID.randomUUID())
-            assertEquals(EarthquakeNotifications.MonitoringId, foreground.notificationId)
+            assertEquals(EarthquakeNotifications.MONITORING_ID, foreground.notificationId)
             assertEquals(
-                EarthquakeNotifications.MonitoringChannel,
+                EarthquakeNotifications.MONITORING_CHANNEL,
                 foreground.notification.channelId,
             )
             assertTrue(foreground.notification.actions.any { it.title == "Stop monitoring" })
@@ -112,12 +115,12 @@ class EarthquakeNotificationsTest {
                 assertFalse(notifications.previewAlert())
             }
             assertEquals(
-                EarthquakeNotifications.MonitoringChannel,
+                EarthquakeNotifications.MONITORING_CHANNEL,
                 notifications.foreground(UUID.randomUUID()).notification.channelId,
             )
         } finally {
-            manager.cancel(first.id, EarthquakeNotifications.AlertId)
-            manager.cancel(second.id, EarthquakeNotifications.AlertId)
+            manager.cancel(first.id, EarthquakeNotifications.ALERT_ID)
+            manager.cancel(second.id, EarthquakeNotifications.ALERT_ID)
         }
     }
 }

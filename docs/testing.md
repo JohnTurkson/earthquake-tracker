@@ -7,12 +7,12 @@ device, and Maps configuration.
 
 ## Choose the checks
 
-| Change | Required verification |
-| --- | --- |
-| Documentation or instruction files only | Review the text and local links; run `git diff --check`. No Android build is needed. Prototype new device coordination instructions on the shared emulator. |
-| Kotlin source, resources, manifest, dependencies, or build configuration | Run formatting checks, assemble the debug app, run debug unit tests, and run Android lint. |
-| UI, navigation, lifecycle, Android storage, or platform integration | Also run relevant device tests and manually exercise the changed behavior on the resizable API 37 emulator described below. |
-| Maps configuration or rendering | Also follow the Maps checks in [Verify the run](building.md#verify-the-run). |
+| Change                                                                   | Required verification                                                                                                                                       |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation or instruction files only                                  | Review the text and local links; run `git diff --check`. No Android build is needed. Prototype new device coordination instructions on the shared emulator. |
+| Kotlin source, resources, manifest, dependencies, or build configuration | Run formatting checks, assemble the debug app, run debug unit tests, and run Android lint.                                                                  |
+| UI, navigation, lifecycle, Android storage, or platform integration      | Also run relevant device tests and manually exercise the changed behavior on the resizable API 37 emulator described below.                                 |
+| Maps configuration or rendering                                          | Also follow the Maps checks in [Verify the run](building.md#verify-the-run).                                                                                |
 
 Set up the standalone ktfmt CLI and `KTFMT_JAR` as described in the
 [formatting guide](formatting.md), then run the standard checks from the
@@ -145,6 +145,28 @@ offline screen behavior, refresh, or Maps authorization. The data-layer tests
 below check persistence independently; the notification integration tests also
 exercise the real refresh worker and repository with controlled network input.
 
+## Assertion and coroutine style
+
+Use `kotlin.test` assertions that express the expected outcome directly:
+`assertNull(value)`, `assertNotNull(value)`, `assertTrue(condition)`,
+`assertFalse(condition)`, `assertEquals(expected, actual)`, and
+`assertNotEquals(unexpected, actual)`. Preserve floating-point tolerances and
+useful failure messages. [EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeDestinationStateTest.kt)
+uses `assertNull` for cleared selection and pending scroll state.
+
+Preserve null semantics when simplifying Boolean checks.
+[EarthquakeWorkIntegrationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/work/EarthquakeWorkIntegrationTest.kt)
+uses `assertNotEquals(true, capability)` because both false and an absent network
+are valid offline states. `assertEquals(false, capability)` would reject null.
+
+Use typed durations for coroutine delays and timeouts, such as `delay(50.milliseconds)`
+and `withTimeout(5.seconds)` in
+[EarthquakeNotificationsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/data/notifications/EarthquakeNotificationsTest.kt).
+Create concurrent fixture work inside a local `coroutineScope` so children finish
+or cancel before fixture cleanup; do not implicitly capture an outer
+`runBlocking` receiver through a suspending fixture callback. See
+[EarthquakeRefreshRepositoryTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/data/repository/EarthquakeRefreshRepositoryTest.kt).
+
 ## Test source sets
 
 Keep unit tests and their helpers in `app/src/test/kotlin`, instrumented tests
@@ -275,22 +297,22 @@ Host queueing, timing, and dismissal are separate from these pixel fixtures.
 
 The component state inventory is:
 
-| Component | Required rendering cases |
-| --- | --- |
-| Map marker artwork | Selected and unselected. |
-| Cluster badge | Available/missing magnitude, small/large count, dark, and large text. |
-| Cluster sheet content | Empty, populated, selected, missing magnitude/time, and the last scrolled member; include short windows. |
-| List | Empty/single/multiple events with each title/supporting-pane presentation; monitoring present and absent in parent fixtures. |
-| List row | Selected/unselected, available/missing time, map arrow shown/hidden, and fallback titles with available/missing magnitude and place. |
-| Selection card | Available/missing time, wrapped text, More details shown/hidden, and fallback titles with available/missing magnitude and place. |
-| Earthquake details | Populated/missing measurements, loading/unavailable, source rows after scrolling, dark, RTL, narrow large text, expanded left-pane replacement, report expansion, and Close. |
-| View switcher | Map/List selected with labels and with icons only, including dark and large text. |
-| Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
-| Location FAB and rationale | Icon-only request/settings actions and the rationale, with light/dark and large text. |
-| Monitoring card | Each refresh state with available/missing update time; verify monitoring states cannot override refresh presentation. |
+| Component                       | Required rendering cases                                                                                                                                                            |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Map marker artwork              | Selected and unselected.                                                                                                                                                            |
+| Cluster badge                   | Available/missing magnitude, small/large count, dark, and large text.                                                                                                               |
+| Cluster sheet content           | Empty, populated, selected, missing magnitude/time, and the last scrolled member; include short windows.                                                                            |
+| List                            | Empty/single/multiple events with each title/supporting-pane presentation; monitoring present and absent in parent fixtures.                                                        |
+| List row                        | Selected/unselected, available/missing time, map arrow shown/hidden, and fallback titles with available/missing magnitude and place.                                                |
+| Selection card                  | Available/missing time, wrapped text, More details shown/hidden, and fallback titles with available/missing magnitude and place.                                                    |
+| Earthquake details              | Populated/missing measurements, loading/unavailable, source rows after scrolling, dark, RTL, narrow large text, expanded left-pane replacement, report expansion, and Close.        |
+| View switcher                   | Map/List selected with labels and with icons only, including dark and large text.                                                                                                   |
+| Explorer controls               | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement.                                     |
+| Location FAB and rationale      | Icon-only request/settings actions and the rationale, with light/dark and large text.                                                                                               |
+| Monitoring card                 | Each refresh state with available/missing update time; verify monitoring states cannot override refresh presentation.                                                               |
 | Notification page and rationale | Checking, denied/settings permission, alerts on/off, channel availability, each magnitude threshold and monitoring status, enabled/disabled preview, settings error, and rationale. |
-| Notification bell | Its ordinary appearance and placement through the explorer fixtures. |
-| Event snackbar | Visible unavailable-event message with normal and wrapped text. |
+| Notification bell               | Its ordinary appearance and placement through the explorer fixtures.                                                                                                                |
+| Event snackbar                  | Visible unavailable-event message with normal and wrapped text.                                                                                                                     |
 
 [EarthquakeClusterScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/map/cluster/EarthquakeClusterScreenshotTest.kt)
 covers cluster badges with and without magnitude, small and large counts, dark
@@ -342,13 +364,17 @@ foreground-only updates, the native SDK location layer, and the bottom-right
 Locate action before and after permission is granted. Device captures
 supplement the native-map regression coverage limitation described below.
 
-Use Google's Compose Preview Screenshot Testing. The current AGP
-9.1.1 project uses the compatible `com.android.compose.screenshot` plugin and
-`screenshot-validation-api` version 0.0.1-alpha16. Its experimental source-set
-flags are configured in `gradle.properties` and the app module. Newer AGP test-suite
-integration requires a separate build-version change.
+Use Google's Compose Preview Screenshot Testing. This AGP 9.5.0 project retains
+the `com.android.compose.screenshot` plugin version 0.0.1-alpha16, with
+`screenshot-validation-api` version 0.0.1-alpha17. Keep their version-catalog
+entries separate: the annotation library and standalone plugin do not share
+every release. Its experimental source-set flags are configured in
+`gradle.properties` and the app module. Keep the existing source sets, tasks,
+and reference paths until an explicit test-suite migration is agreed.
 
-Mark test previews with `@PreviewTest` and `@Preview` in
+Name test preview composables with an uppercase first letter, as in
+`EarthquakeMapMarkerScreenshotTest.UnselectedMarker`. Mark them with
+`@PreviewTest` and `@Preview` in
 `app/src/screenshotTest/kotlin/`. The working example is
 [EarthquakeMapMarkerScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMapMarkerScreenshotTest.kt).
 It covers every marker artwork state: the small red unselected dot and larger

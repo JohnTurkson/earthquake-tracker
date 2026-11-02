@@ -25,8 +25,8 @@ class EarthquakeReportScreenshotTest {
     @Preview(widthDp = 360, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 288, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun loadingImage() {
-        Image(AsyncImagePreviewHandler { _, _ -> AsyncImagePainter.State.Loading(null) })
+    fun LoadingImage() {
+        Image { _, _ -> AsyncImagePainter.State.Loading(null) }
     }
 
     @PreviewTest
@@ -34,15 +34,13 @@ class EarthquakeReportScreenshotTest {
     @Preview(widthDp = 360, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 288, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun failedImage() {
-        Image(
-            AsyncImagePreviewHandler { _, request ->
-                AsyncImagePainter.State.Error(
-                    null,
-                    ErrorResult(null, request, IOException("Fixture image failure")),
-                )
-            }
-        )
+    fun FailedImage() {
+        Image { _, request ->
+            AsyncImagePainter.State.Error(
+                null,
+                ErrorResult(null, request, IOException("Fixture image failure")),
+            )
+        }
     }
 
     @PreviewTest
@@ -50,7 +48,7 @@ class EarthquakeReportScreenshotTest {
     @Preview(widthDp = 360, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 288, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun loadedImage() {
+    fun LoadedImage() {
         Image(AsyncImagePreviewHandler { ColorImage(android.graphics.Color.LTGRAY, 640, 480) })
     }
 
@@ -58,7 +56,7 @@ class EarthquakeReportScreenshotTest {
     @Preview(widthDp = 360, locale = "en-US")
     @Preview(widthDp = 288, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun collapsedReport() {
+    fun CollapsedReport() {
         EarthquakeTheme(dynamicColor = false) {
             Surface {
                 EarthquakeReportSection(

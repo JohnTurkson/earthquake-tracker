@@ -13,7 +13,7 @@ class EarthquakeMapMarkerScreenshotTest {
     @PreviewTest
     @Preview(showBackground = true, backgroundColor = 0xFFE7E9E3)
     @Composable
-    fun unselectedMarker() {
+    fun UnselectedMarker() {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             EarthquakeMapMarker(isSelected = false)
         }
@@ -22,7 +22,7 @@ class EarthquakeMapMarkerScreenshotTest {
     @PreviewTest
     @Preview(showBackground = true, backgroundColor = 0xFFE7E9E3)
     @Composable
-    fun selectedMarker() {
+    fun SelectedMarker() {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             EarthquakeMapMarker(isSelected = true)
         }

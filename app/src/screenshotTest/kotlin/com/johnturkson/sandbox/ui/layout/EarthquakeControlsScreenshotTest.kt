@@ -34,28 +34,28 @@ class EarthquakeControlsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactMapControls() {
+    fun CompactMapControls() {
         Controls(expanded = false)
     }
 
     @PreviewTest
     @Preview(widthDp = 320, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactNarrowMapControls() {
+    fun CompactNarrowMapControls() {
         Controls(expanded = false)
     }
 
     @PreviewTest
     @Preview(widthDp = 760, heightDp = 480, locale = "en-US")
     @Composable
-    fun compactWideMapControls() {
+    fun CompactWideMapControls() {
         Controls(expanded = false)
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactRtlMapControls() {
+    fun CompactRtlMapControls() {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Controls(expanded = false)
         }
@@ -64,105 +64,105 @@ class EarthquakeControlsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactSelectedMapControls() {
+    fun CompactSelectedMapControls() {
         Controls(expanded = false, selectedId = item.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactSelectionWithoutTime() {
+    fun CompactSelectionWithoutTime() {
         Controls(expanded = false, selectedId = second.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactDarkMapControls() {
+    fun CompactDarkMapControls() {
         Controls(expanded = false, selectedId = item.id, dark = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun compactLargeTextMapControls() {
+    fun CompactLargeTextMapControls() {
         Controls(expanded = false, selectedId = item.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedPanel() {
+    fun ExpandedPanel() {
         Controls(expanded = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedEmptyPanel() {
+    fun ExpandedEmptyPanel() {
         Controls(expanded = true, items = emptyList())
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedSelectedPanel() {
+    fun ExpandedSelectedPanel() {
         Controls(expanded = true, selectedId = item.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedSelectionWithoutTime() {
+    fun ExpandedSelectionWithoutTime() {
         Controls(expanded = true, selectedId = second.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedDarkPanel() {
+    fun ExpandedDarkPanel() {
         Controls(expanded = true, selectedId = item.id, dark = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 840, heightDp = 600, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun expandedLargeTextPanel() {
+    fun ExpandedLargeTextPanel() {
         Controls(expanded = true, selectedId = item.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun minimizedPanel() {
+    fun MinimizedPanel() {
         Controls(expanded = true, panelVisible = false)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun minimizedSelectedPanel() {
+    fun MinimizedSelectedPanel() {
         Controls(expanded = true, panelVisible = false, selectedId = item.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun minimizedSelectionWithoutTime() {
+    fun MinimizedSelectionWithoutTime() {
         Controls(expanded = true, panelVisible = false, selectedId = second.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
     @Composable
-    fun minimizedDarkPanel() {
+    fun MinimizedDarkPanel() {
         Controls(expanded = true, panelVisible = false, selectedId = item.id, dark = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 840, heightDp = 600, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun minimizedLargeTextPanel() {
+    fun MinimizedLargeTextPanel() {
         Controls(expanded = true, panelVisible = false, selectedId = item.id)
     }
 

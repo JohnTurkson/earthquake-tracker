@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox.data.repository
 
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -30,6 +31,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
@@ -108,9 +110,12 @@ class EarthquakeRefreshRepositoryTest {
                 started.complete(Unit)
                 response.await()
             }
-            val pending = async { fixture.refresher.refresh() }
-            withTimeout(5.seconds) { started.await() }
-            pending.cancelAndJoin()
+            val pending = coroutineScope {
+                val pending = async { fixture.refresher.refresh() }
+                withTimeout(5.seconds) { started.await() }
+                pending.cancelAndJoin()
+                pending
+            }
             assertTrue(pending.isCancelled)
             fixture.assertUnchanged()
             fixture.response = { fixture.feed }
@@ -131,7 +136,7 @@ class EarthquakeRefreshRepositoryTest {
     }
 
     private class Fixture {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
         val database = Room.inMemoryDatabaseBuilder(context, EarthquakeDatabase::class.java).build()
         val old =
             EarthquakeMonitoringFixtures.item(id = "old", time = Instant.fromEpochMilliseconds(1))

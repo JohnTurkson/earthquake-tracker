@@ -19,7 +19,7 @@ class EarthquakeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
-            notificationEventId = intent.getStringExtra(EarthquakeNotifications.EventIdExtra)
+            notificationEventId = intent.getStringExtra(EarthquakeNotifications.EVENT_ID_EXTRA)
         }
         enableEdgeToEdge()
         setContent {
@@ -33,6 +33,6 @@ class EarthquakeActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        notificationEventId = intent.getStringExtra(EarthquakeNotifications.EventIdExtra)
+        notificationEventId = intent.getStringExtra(EarthquakeNotifications.EVENT_ID_EXTRA)
     }
 }

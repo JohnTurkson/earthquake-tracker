@@ -25,6 +25,7 @@ import com.johnturkson.sandbox.ui.navigation.Destination
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
@@ -93,7 +94,7 @@ class EarthquakeDetailsTest {
             .onNodeWithContentDescription("Use my location")
             .assertIsDisplayed()
             .performClick()
-        assertEquals(true, located)
+        assertTrue(located)
     }
 
     @Test
@@ -170,7 +171,7 @@ class EarthquakeDetailsTest {
                     .onNodeWithText(composeRule.activity.getString(R.string.event_unavailable))
                     .assertIsDisplayed()
                 composeRule.onNodeWithContentDescription("Close earthquake details").performClick()
-                assertEquals(true, closed)
+                assertTrue(closed)
                 database.earthquakeDao().mergeEarthquakes(listOf(record))
                 composeRule.waitUntil { model.item != null }
                 assertFalse(model.isLoading)

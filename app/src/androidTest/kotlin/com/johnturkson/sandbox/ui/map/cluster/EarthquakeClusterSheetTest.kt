@@ -20,11 +20,11 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.espresso.Espresso.pressBack
 import com.johnturkson.sandbox.theme.EarthquakeTheme
-import com.johnturkson.sandbox.ui.event.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.map.EarthquakeMapFixtures
 import com.johnturkson.sandbox.ui.map.EarthquakePreviewState
 import com.johnturkson.sandbox.ui.map.EarthquakeScreen
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -105,10 +105,10 @@ class EarthquakeClusterSheetTest {
         composeRule.setContent {
             EarthquakeTheme { EarthquakeClusterSheet(items, null, {}, { dismissed = true }) }
         }
-        composeRule.runOnIdle { items = emptyList<EarthquakeMapItem>() }
+        composeRule.runOnIdle { items = emptyList() }
         composeRule.onNodeWithText("These earthquakes are no longer available.").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Close earthquake cluster").performClick()
-        composeRule.runOnIdle { assertEquals(true, dismissed) }
+        composeRule.runOnIdle { assertTrue(dismissed) }
     }
 
     @Test

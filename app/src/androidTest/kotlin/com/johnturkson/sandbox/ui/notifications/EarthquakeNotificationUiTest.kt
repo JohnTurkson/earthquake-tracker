@@ -37,6 +37,7 @@ import com.johnturkson.sandbox.ui.layout.EarthquakeView
 import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringCard
 import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringState
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 import org.junit.Rule
 import org.junit.Test
@@ -206,7 +207,7 @@ class EarthquakeNotificationUiTest {
         rule.onNodeWithText("Preview earthquake alert").assertIsEnabled().performClick()
         rule.runOnIdle {
             assertEquals(1, previewRequests)
-            assertEquals(true, state.alertsEnabled)
+            assertTrue(state.alertsEnabled)
         }
         rule.onNode(hasScrollAction()).performScrollToNode(hasText("M7.0+"))
         rule.onNodeWithText("M7.0+").performClick()

@@ -37,35 +37,35 @@ class EarthquakeViewsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun compactList() {
+    fun CompactList() {
         ListScreen()
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun selectedList() {
+    fun SelectedList() {
         ListScreen(selectedId = item.id)
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun emptyListView() {
+    fun EmptyListView() {
         ListScreen(items = emptyList())
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
-    fun darkList() {
+    fun DarkList() {
         ListScreen(dark = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun largeTextList() {
+    fun LargeTextList() {
         ListScreen(selectedId = item.id)
     }
 
@@ -74,7 +74,7 @@ class EarthquakeViewsScreenshotTest {
     @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun selectedMapSwitcher() {
+    fun SelectedMapSwitcher() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(12.dp)) {
                 EarthquakeViewSwitcher(EarthquakeView.Map, {}, Modifier.width(280.dp))
@@ -87,7 +87,7 @@ class EarthquakeViewsScreenshotTest {
     @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun selectedListSwitcher() {
+    fun SelectedListSwitcher() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(12.dp)) {
                 EarthquakeViewSwitcher(EarthquakeView.List, {}, Modifier.width(280.dp))
@@ -98,42 +98,42 @@ class EarthquakeViewsScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun iconOnlyMapSwitcher() {
+    fun IconOnlyMapSwitcher() {
         CompactSwitcher(EarthquakeView.Map)
     }
 
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun iconOnlyListSwitcher() {
+    fun IconOnlyListSwitcher() {
         CompactSwitcher(EarthquakeView.List)
     }
 
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun darkIconOnlySwitcher() {
+    fun DarkIconOnlySwitcher() {
         CompactSwitcher(EarthquakeView.List, dark = true)
     }
 
     @PreviewTest
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun largeTextIconOnlySwitcher() {
+    fun LargeTextIconOnlySwitcher() {
         CompactSwitcher(EarthquakeView.Map)
     }
 
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun darkIconOnlyMapSwitcher() {
+    fun DarkIconOnlyMapSwitcher() {
         CompactSwitcher(EarthquakeView.Map, dark = true)
     }
 
     @PreviewTest
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun largeTextIconOnlyListSwitcher() {
+    fun LargeTextIconOnlyListSwitcher() {
         CompactSwitcher(EarthquakeView.List)
     }
 
@@ -149,7 +149,7 @@ class EarthquakeViewsScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun selectedEarthquake() {
+    fun SelectedEarthquake() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(12.dp)) {
                 EarthquakeSelectionCard(item, {}, Modifier.width(360.dp))
@@ -160,7 +160,7 @@ class EarthquakeViewsScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun largeTextSelectedEarthquake() {
+    fun LargeTextSelectedEarthquake() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(12.dp)) {
                 EarthquakeSelectionCard(item, {}, Modifier.width(296.dp))
@@ -171,7 +171,7 @@ class EarthquakeViewsScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun earthquakeWithoutTime() {
+    fun EarthquakeWithoutTime() {
         EarthquakeTheme(dynamicColor = false) {
             Surface(Modifier.width(384.dp)) {
                 EarthquakeListRow(second, isSelected = false, onClick = {})
@@ -184,7 +184,7 @@ class EarthquakeViewsScreenshotTest {
     @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun selectedEarthquakeWithoutTime() {
+    fun SelectedEarthquakeWithoutTime() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(12.dp)) {
                 EarthquakeSelectionCard(second, {}, Modifier.width(360.dp))

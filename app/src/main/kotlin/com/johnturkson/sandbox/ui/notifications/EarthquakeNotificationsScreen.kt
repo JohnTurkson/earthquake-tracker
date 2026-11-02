@@ -38,8 +38,8 @@ import com.johnturkson.sandbox.ui.navigation.Destination
 fun EarthquakeNotificationsScreen(
     navKey: Destination.EarthquakeNotificationsRoute,
     onClose: () -> Unit,
-    expanded: Boolean = false,
     modifier: Modifier = Modifier,
+    expanded: Boolean = false,
     viewModel: EarthquakeNotificationsViewModel =
         hiltViewModel<EarthquakeNotificationsViewModel, EarthquakeNotificationsViewModel.Factory>(
             creationCallback = { factory -> factory.create(navKey) }
@@ -112,9 +112,9 @@ fun EarthquakeNotificationsScreen(
                     .putExtra(
                         Settings.EXTRA_CHANNEL_ID,
                         if (alerts) {
-                            EarthquakeNotifications.AlertsChannel
+                            EarthquakeNotifications.ALERTS_CHANNEL
                         } else {
-                            EarthquakeNotifications.MonitoringChannel
+                            EarthquakeNotifications.MONITORING_CHANNEL
                         },
                     )
             )

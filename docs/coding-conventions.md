@@ -89,3 +89,45 @@ Keep fallback formatting readable with a block body and explicit returns, as in
 `magnitudeText` and `placeText` values before passing them to the fallback template.
 Keep the numeric `magnitude` separate from its formatted text instead of nesting
 resource calls and scope functions inside the template arguments.
+
+## Names and inferred types
+
+Use `UPPER_SNAKE_CASE` for `const val` declarations, including companion-object
+constants. Keep persisted string values independent of identifier renames, as in
+[EarthquakeMonitor](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeMonitor.kt)
+and [EarthquakeNotifications](../app/src/main/kotlin/com/johnturkson/sandbox/data/notifications/EarthquakeNotifications.kt).
+Functions returning `Unit` and annotated `@Composable` start with an uppercase
+letter, including screenshot-test previews. Ordinary test methods remain lower
+camel case. The [screenshot testing guide](testing.md#compose-screenshot-tests)
+describes how to preserve references when renaming previews.
+
+Specify the intended nullable or non-null type when a property initializer
+returns an unchecked Java platform type. The Maps key in
+[the app build script](../app/build.gradle.kts) is `String?`, preserving the
+missing-key check; the formatter in
+[EarthquakeInstantConverters](../app/src/main/kotlin/com/johnturkson/sandbox/data/database/EarthquakeInstantConverters.kt)
+is a non-null `DateTimeFormatter`.
+
+## Compose parameters and numeric state
+
+Place `modifier: Modifier = Modifier` before other optional composable parameters,
+as in [EarthquakeNotificationsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/notifications/EarthquakeNotificationsScreen.kt).
+Use `mutableIntStateOf`, `mutableLongStateOf`, `mutableFloatStateOf`, or
+`mutableDoubleStateOf` for non-null numeric Compose state. Keep nullable numeric
+state, Boolean state, value classes such as `Dp`, and object state in
+`mutableStateOf`; do not replace a meaningful null with a numeric sentinel.
+[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeApp.kt)
+uses `mutableLongStateOf` for its revision and `mutableStateOf<Long?>` for a
+pending revision that can be absent.
+
+Use Kotlin type inference for obvious collection assignments, and destructure
+pairs into meaningful names instead of reading `.first` and `.second` repeatedly.
+Keep range checks explicit about the upper bound, as in the converter's
+`value in Minimum..<Maximum` validation.
+
+For a Boolean operation gated by several capabilities, use a short-circuiting
+`&&` chain when it reads clearly. In
+`EarthquakeNotifications.previewAlert`, the notification is constructed and
+posted only after all capability checks succeed. Select related display-resource
+IDs together when they share the same conditions, as the full and short title
+pair in [EarthquakeMonitoringCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/monitoring/EarthquakeMonitoringCard.kt).

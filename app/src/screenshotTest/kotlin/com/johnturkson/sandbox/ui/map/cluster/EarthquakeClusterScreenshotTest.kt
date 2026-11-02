@@ -22,56 +22,56 @@ class EarthquakeClusterScreenshotTest {
     @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun pair() {
+    fun Pair() {
         Badge(2, null)
     }
 
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun countAndMagnitude() {
+    fun CountAndMagnitude() {
         Badge(30, 4.8)
     }
 
     @PreviewTest
     @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun largeCountAndText() {
+    fun LargeCountAndText() {
         Badge(1200, 6.2)
     }
 
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
-    fun darkBadge() {
+    fun DarkBadge() {
         Badge(8, 0.0, dark = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 384, locale = "en-US")
     @Composable
-    fun populatedSheet() {
+    fun PopulatedSheet() {
         Sheet()
     }
 
     @PreviewTest
     @Preview(widthDp = 384, locale = "en-US")
     @Composable
-    fun selectedSheet() {
+    fun SelectedSheet() {
         Sheet(selected = "synthetic-0")
     }
 
     @PreviewTest
     @Preview(widthDp = 384, locale = "en-US")
     @Composable
-    fun emptySheet() {
+    fun EmptySheet() {
         Sheet(items = emptyList())
     }
 
     @PreviewTest
     @Preview(widthDp = 384, locale = "en-US")
     @Composable
-    fun singleUnknownMagnitude() {
+    fun SingleUnknownMagnitude() {
         Sheet(
             items =
                 listOf(
@@ -83,35 +83,35 @@ class EarthquakeClusterScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 384, locale = "en-US")
     @Composable
-    fun darkSheet() {
+    fun DarkSheet() {
         Sheet(dark = true, selected = "synthetic-0")
     }
 
     @PreviewTest
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun largeTextSheet() {
+    fun LargeTextSheet() {
         Sheet(selected = "synthetic-0", maxHeight = 640)
     }
 
     @PreviewTest
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun shortLargeTextSheet() {
+    fun ShortLargeTextSheet() {
         Sheet(maxHeight = 240)
     }
 
     @PreviewTest
     @Preview(widthDp = 400, locale = "en-US")
     @Composable
-    fun compactHeightSheet() {
+    fun CompactHeightSheet() {
         Sheet(maxHeight = 216)
     }
 
     @PreviewTest
     @Preview(widthDp = 400, locale = "en-US")
     @Composable
-    fun mediumHeightSheet() {
+    fun MediumHeightSheet() {
         Sheet(maxHeight = 288)
     }
 
@@ -120,7 +120,7 @@ class EarthquakeClusterScreenshotTest {
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun selectedUnknownMagnitude() {
+    fun SelectedUnknownMagnitude() {
         Sheet(
             items =
                 listOf(
@@ -135,7 +135,7 @@ class EarthquakeClusterScreenshotTest {
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun scrolledSheet() {
+    fun ScrolledSheet() {
         Sheet(selected = EarthquakeMapFixtures.denseItems.last().id, firstVisibleItemIndex = 120)
     }
 

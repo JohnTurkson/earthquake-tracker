@@ -38,6 +38,7 @@ import kotlin.math.abs
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 import org.junit.Rule
@@ -240,7 +241,7 @@ class EarthquakeMapTest {
         composeRule.runOnIdle { items = emptyList() }
         tapLocation(map, LatLng(moved.latitude, moved.longitude))
         composeRule.waitUntil(10_000) { mapClicks == 1 }
-        composeRule.runOnIdle { assertEquals(null, selectedItem) }
+        composeRule.runOnIdle { assertNull(selectedItem) }
     }
 
     @Test

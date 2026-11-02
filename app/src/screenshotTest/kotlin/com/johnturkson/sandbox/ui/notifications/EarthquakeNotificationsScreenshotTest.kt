@@ -28,7 +28,7 @@ class EarthquakeNotificationsScreenshotTest {
     @Preview(widthDp = 360, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun monitoring(
+    fun Monitoring(
         @PreviewParameter(EarthquakeMonitoringStateProvider::class) state: EarthquakeMonitoringState
     ) {
         EarthquakeTheme(dynamicColor = false) {
@@ -52,7 +52,7 @@ class EarthquakeNotificationsScreenshotTest {
     @Preview(widthDp = 840, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 840, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun expandedMonitoring(
+    fun ExpandedMonitoring(
         @PreviewParameter(EarthquakeMonitoringStateProvider::class) state: EarthquakeMonitoringState
     ) {
         EarthquakeTheme(dynamicColor = false) {
@@ -77,7 +77,7 @@ class EarthquakeNotificationsScreenshotTest {
     @Preview(widthDp = 840, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 840, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun expandedMonitoringWithPanel(
+    fun ExpandedMonitoringWithPanel(
         @PreviewParameter(EarthquakeMonitoringStateProvider::class) state: EarthquakeMonitoringState
     ) {
         EarthquakeTheme(dynamicColor = false) {
@@ -100,24 +100,24 @@ class EarthquakeNotificationsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 360, heightDp = 800, locale = "en-US")
     @Composable
-    fun page(
+    fun Page(
         @PreviewParameter(EarthquakeNotificationStateProvider::class)
         state: EarthquakeNotificationState
     ) {
-        Page(state)
+        NotificationPageContent(state)
     }
 
     @PreviewTest
     @Preview(widthDp = 320, heightDp = 800, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun largePage() {
-        Page(EarthquakeNotificationState(isChecking = false))
+    fun LargePage() {
+        NotificationPageContent(EarthquakeNotificationState(isChecking = false))
     }
 
     @PreviewTest
     @Preview(widthDp = 360, heightDp = 800, locale = "en-US")
     @Composable
-    fun channelsAndMonitoring() {
+    fun ChannelsAndMonitoring() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeNotificationPage(
                 EarthquakeNotificationState(
@@ -145,15 +145,15 @@ class EarthquakeNotificationsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 360, heightDp = 800, locale = "en-US")
     @Composable
-    fun darkPage() {
-        Page(EarthquakeNotificationState(isChecking = false), dark = true)
+    fun DarkPage() {
+        NotificationPageContent(EarthquakeNotificationState(isChecking = false), dark = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 360, heightDp = 800, locale = "en-US")
     @Composable
-    fun checkingWithAlertsSelected() {
-        Page(EarthquakeNotificationState(alertsEnabled = true))
+    fun CheckingWithAlertsSelected() {
+        NotificationPageContent(EarthquakeNotificationState(alertsEnabled = true))
     }
 
     @PreviewTest
@@ -166,11 +166,11 @@ class EarthquakeNotificationsScreenshotTest {
     )
     @Preview(widthDp = 320, heightDp = 480, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun pageActions(
+    fun PageActions(
         @PreviewParameter(EarthquakeNotificationActionStateProvider::class)
         state: EarthquakeNotificationState
     ) {
-        Page(state, firstVisibleItemIndex = 4)
+        NotificationPageContent(state, firstVisibleItemIndex = 4)
     }
 
     @PreviewTest
@@ -183,7 +183,7 @@ class EarthquakeNotificationsScreenshotTest {
     )
     @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun compactNotificationScreen() {
+    fun CompactNotificationScreen() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeNotificationsScreen(
                 state = EarthquakeNotificationState(isChecking = false),
@@ -203,7 +203,7 @@ class EarthquakeNotificationsScreenshotTest {
     )
     @Preview(widthDp = 392, heightDp = 720, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun expandedNotificationScreen() {
+    fun ExpandedNotificationScreen() {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeNotificationsScreen(
                 state = EarthquakeNotificationState(isChecking = false),
@@ -225,56 +225,56 @@ class EarthquakeNotificationsScreenshotTest {
     )
     @Preview(widthDp = 320, heightDp = 800, fontScale = 1.5f, locale = "en-US")
     @Composable
-    fun rationale() {
+    fun Rationale() {
         EarthquakeTheme(dynamicColor = false) { EarthquakeNotificationRationale({}, {}) }
     }
 
     @PreviewTest
     @Preview(widthDp = 1000, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedNotifications() {
+    fun ExpandedNotifications() {
         Controls(expanded = true, page = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 1000, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedList() {
+    fun ExpandedList() {
         Controls(expanded = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 1000, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedScrolled() {
+    fun ExpandedScrolled() {
         Controls(expanded = true, scrolled = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 1000, heightDp = 720, locale = "en-US")
     @Composable
-    fun expandedMinimized() {
+    fun ExpandedMinimized() {
         Controls(expanded = true, minimized = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 720, locale = "en-US")
     @Composable
-    fun compactMapRefreshing() {
+    fun CompactMapRefreshing() {
         Controls(expanded = false, minimized = true, refreshing = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 720, locale = "en-US")
     @Composable
-    fun compactScrolled() {
+    fun CompactScrolled() {
         Controls(expanded = false, scrolled = true)
     }
 
     @PreviewTest
     @Preview(widthDp = 360, heightDp = 800, locale = "en-US")
     @Composable
-    fun monitoringPage(
+    fun MonitoringPage(
         @PreviewParameter(EarthquakeMonitoringStatusProvider::class)
         status: EarthquakeMonitoringState.Status
     ) {
@@ -302,7 +302,7 @@ class EarthquakeNotificationsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 360, locale = "en-US")
     @Composable
-    fun darkMonitoring() {
+    fun DarkMonitoring() {
         EarthquakeTheme(darkTheme = true, dynamicColor = false) {
             EarthquakeMonitoringCard(
                 EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Failed),
@@ -314,7 +314,7 @@ class EarthquakeNotificationsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 360, locale = "en-US")
     @Composable
-    fun darkSuccessfulRefresh() {
+    fun DarkSuccessfulRefresh() {
         EarthquakeTheme(darkTheme = true, dynamicColor = false) {
             EarthquakeMonitoringCard(
                 EarthquakeMonitoringState(
@@ -328,7 +328,7 @@ class EarthquakeNotificationsScreenshotTest {
     }
 
     @Composable
-    private fun Page(
+    private fun NotificationPageContent(
         state: EarthquakeNotificationState,
         dark: Boolean = isSystemInDarkTheme(),
         firstVisibleItemIndex: Int = 0,

@@ -34,7 +34,7 @@ class EarthquakeComponentScreenshotTest {
     )
     @Preview(widthDp = 320, heightDp = 720, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun list(@PreviewParameter(EarthquakeListCaseProvider::class) case: EarthquakeListCase) {
+    fun List(@PreviewParameter(EarthquakeListCaseProvider::class) case: EarthquakeListCase) {
         val items =
             listOf(
                     EarthquakeMapItem(
@@ -65,7 +65,7 @@ class EarthquakeComponentScreenshotTest {
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun listRow(
+    fun ListRow(
         @PreviewParameter(EarthquakeListRowCaseProvider::class) case: EarthquakeListRowCase
     ) {
         EarthquakeTheme(dynamicColor = false) {
@@ -97,7 +97,7 @@ class EarthquakeComponentScreenshotTest {
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun fallbackTitles(
+    fun FallbackTitles(
         @PreviewParameter(EarthquakeFallbackTitleProvider::class) item: EarthquakeMapItem
     ) {
         EarthquakeTheme(dynamicColor = false) {
@@ -115,7 +115,7 @@ class EarthquakeComponentScreenshotTest {
     @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    fun unavailableEventSnackbar() {
+    fun UnavailableEventSnackbar() {
         val eventMessage = stringResource(R.string.event_unavailable)
         val data =
             object : SnackbarData {

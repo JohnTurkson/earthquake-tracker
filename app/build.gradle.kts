@@ -10,7 +10,7 @@ plugins {
     alias(libs.plugins.screenshot)
 }
 
-val mapsApiKey =
+val mapsApiKey: String? =
     providers.gradleProperty("MAPS_API_KEY").orNull
         ?: gradleLocalProperties(rootDir, providers).getProperty("MAPS_API_KEY")
 
@@ -24,9 +24,10 @@ android {
     namespace = "com.johnturkson.sandbox"
 
     compileSdk {
-        version = release(37) {
-            minorApiLevel = 0
-        }
+        version =
+            release(37) {
+                minorApiLevel = 0
+            }
     }
 
     defaultConfig {

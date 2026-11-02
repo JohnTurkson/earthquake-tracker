@@ -20,6 +20,7 @@ import com.johnturkson.sandbox.ui.map.EarthquakeViewModel
 import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringObserver
 import com.johnturkson.sandbox.work.EarthquakeMonitor
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -50,7 +51,7 @@ class EarthquakeDestinationStateTest {
         val repository = EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
         val scheduler = EarthquakeMonitor(WorkManager.getInstance(context))
         scheduler.stop().await()
-        WorkManager.getInstance(context).cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
+        WorkManager.getInstance(context).cancelUniqueWork(EarthquakeMonitor.REFRESH_WORK).await()
         val originalRefresh = scheduler.refreshWork.first()
         fun create(handle: SavedStateHandle) =
             EarthquakeViewModel(
@@ -81,7 +82,7 @@ class EarthquakeDestinationStateTest {
                 composeRule.activity.viewModelStore.put("list", list)
                 val first = EarthquakeSelectionResult(item.id, 1L)
                 map.applySelection(first, focus = false)
-                assertEquals(null, list.selectedMapItemId)
+                assertNull(list.selectedMapItemId)
                 list.applySelection(first)
                 assertEquals(item.id, list.selectedMapItemId)
                 assertEquals(first, list.scrollRequest)
@@ -99,7 +100,7 @@ class EarthquakeDestinationStateTest {
                 assertEquals(item.id, restored.selectedMapItemId)
                 assertEquals(first, restored.scrollRequest)
                 restored.consumeScrollRequest(first)
-                assertEquals(null, restored.scrollRequest)
+                assertNull(restored.scrollRequest)
                 val second = EarthquakeSelectionResult("second", 2L)
                 restored.applySelection(second, scroll = false)
                 assertEquals(item.id, map.selectedMapItemId)
@@ -113,10 +114,10 @@ class EarthquakeDestinationStateTest {
                 val clear = EarthquakeSelectionResult(null, 3L)
                 restored.applySelection(clear)
                 map.applySelection(clear)
-                assertEquals(null, restored.selectedMapItemId)
-                assertEquals(null, restored.scrollRequest)
-                assertEquals(null, map.selectedMapItemId)
-                assertEquals(null, map.requestedMapFocusId)
+                assertNull(restored.selectedMapItemId)
+                assertNull(restored.scrollRequest)
+                assertNull(map.selectedMapItemId)
+                assertNull(map.requestedMapFocusId)
                 val repeated = EarthquakeSelectionResult(item.id, 4L)
                 restored.applySelection(repeated)
                 restored.consumeScrollRequest(repeated)

@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Clone the repository and open it in Android Studio.
-- Use the included Gradle wrapper, which selects Gradle 9.6.1 and automatically
+- Use the included Gradle wrapper, which selects Gradle 9.8.2 and automatically
   downloads the required JetBrains JDK 21 if it is not already available. No
   separate JDK 21 installation is required.
 - Install Android SDK Platform 37 and the SDK tools requested during Gradle sync.
@@ -14,11 +14,11 @@
   **Google Play**. Follow the
   [shared-emulator workflow](testing.md#shared-test-emulator) and setup skill.
 
-The project uses AGP 9.1.1 with compile and target SDK 37. Google's
+The project uses AGP 9.5.0 with compile and target SDK 37. Google's
 [API-level compatibility table](https://developer.android.com/build/releases/about-agp#api-level-support)
 requires AGP 9.1.1 or newer for API 37; this pairing needs no unsupported-compile-SDK
 warning suppression. When using IntelliJ IDEA, its Android plugin must support
-the AGP 9.1 release series. IDE compatibility and command-line build compatibility
+the AGP 9.5 release series. IDE compatibility and command-line build compatibility
 are separate checks.
 
 Android Studio includes a Java runtime that can start Gradle. For terminal builds,
@@ -130,11 +130,11 @@ idle home and release it. Android signs debug builds automatically.
 
 Report these checks separately:
 
-| Check | What it verifies |
-| --- | --- |
-| Debug build and unit tests pass | The project compiles and its local tests pass; Maps authorization is not exercised. |
-| The app installs and launches | The startup UI runs on that device; map tiles still need to be checked. |
-| A map loads fresh tiles | Maps access works for that build, key, device, and network; this does not verify every app feature. |
+| Check                           | What it verifies                                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Debug build and unit tests pass | The project compiles and its local tests pass; Maps authorization is not exercised.                 |
+| The app installs and launches   | The startup UI runs on that device; map tiles still need to be checked.                             |
+| A map loads fresh tiles         | Maps access works for that build, key, device, and network; this does not verify every app feature. |
 
 To verify the Maps setup, launch the app and open its map screen with network
 access. Confirm that actual geographic tiles and labels appear. Pan or zoom to a

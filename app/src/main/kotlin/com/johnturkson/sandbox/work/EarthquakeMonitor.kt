@@ -9,28 +9,28 @@ import kotlinx.coroutines.flow.map
 
 @Singleton
 class EarthquakeMonitor @Inject constructor(private val manager: WorkManager) {
-    val refreshWork = manager.getWorkInfosForUniqueWorkFlow(RefreshWork).map { it.singleOrNull() }
+    val refreshWork = manager.getWorkInfosForUniqueWorkFlow(REFRESH_WORK).map { it.singleOrNull() }
     val monitoringWork =
-        manager.getWorkInfosForUniqueWorkFlow(MonitoringWork).map { it.singleOrNull() }
+        manager.getWorkInfosForUniqueWorkFlow(MONITORING_WORK).map { it.singleOrNull() }
 
     fun refresh() =
         manager.enqueueUniqueWork(
-            RefreshWork,
+            REFRESH_WORK,
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>().build(),
         )
 
     fun start() =
         manager.enqueueUniqueWork(
-            MonitoringWork,
+            MONITORING_WORK,
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<EarthquakeMonitoringWorker>().build(),
         )
 
-    fun stop() = manager.cancelUniqueWork(MonitoringWork)
+    fun stop() = manager.cancelUniqueWork(MONITORING_WORK)
 
     companion object {
-        const val RefreshWork = "earthquake_refresh"
-        const val MonitoringWork = "earthquake_monitoring"
+        const val REFRESH_WORK = "earthquake_refresh"
+        const val MONITORING_WORK = "earthquake_monitoring"
     }
 }

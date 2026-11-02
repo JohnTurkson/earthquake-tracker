@@ -53,14 +53,19 @@ fun EarthquakeMonitoringCard(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     val failed = state.refresh == EarthquakeMonitoringState.Refresh.Failed
-    val title =
+    val (title, shortTitle) =
         when (state.refresh) {
-            EarthquakeMonitoringState.Refresh.Idle -> R.string.refresh_idle
-            EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
-            EarthquakeMonitoringState.Refresh.Running -> R.string.refreshing_earthquakes
-            EarthquakeMonitoringState.Refresh.Succeeded -> R.string.refresh_succeeded
-            EarthquakeMonitoringState.Refresh.Failed -> R.string.refresh_failed
-            EarthquakeMonitoringState.Refresh.Cancelled -> R.string.refresh_cancelled
+            EarthquakeMonitoringState.Refresh.Idle -> R.string.refresh_idle to R.string.refresh_idle
+            EarthquakeMonitoringState.Refresh.Queued ->
+                R.string.refresh_queued to R.string.refresh_queued
+            EarthquakeMonitoringState.Refresh.Running ->
+                R.string.refreshing_earthquakes to R.string.monitoring_bar_refreshing
+            EarthquakeMonitoringState.Refresh.Succeeded ->
+                R.string.refresh_succeeded to R.string.monitoring_bar_refresh_succeeded
+            EarthquakeMonitoringState.Refresh.Failed ->
+                R.string.refresh_failed to R.string.monitoring_bar_refresh_failed
+            EarthquakeMonitoringState.Refresh.Cancelled ->
+                R.string.refresh_cancelled to R.string.refresh_cancelled
         }
     val lastUpdated =
         lastUpdatedLabel
@@ -68,18 +73,7 @@ fun EarthquakeMonitoringCard(
                 DateFormat.getTimeFormat(LocalContext.current)
                     .format(Date(it.toEpochMilliseconds()))
             }
-    val shortTitle =
-        stringResource(
-            when (state.refresh) {
-                EarthquakeMonitoringState.Refresh.Idle -> R.string.refresh_idle
-                EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
-                EarthquakeMonitoringState.Refresh.Running -> R.string.monitoring_bar_refreshing
-                EarthquakeMonitoringState.Refresh.Succeeded ->
-                    R.string.monitoring_bar_refresh_succeeded
-                EarthquakeMonitoringState.Refresh.Failed -> R.string.monitoring_bar_refresh_failed
-                EarthquakeMonitoringState.Refresh.Cancelled -> R.string.refresh_cancelled
-            }
-        )
+    val shortTitleLabel = stringResource(shortTitle)
     val titleLabel = stringResource(title)
     val updatedLabel = lastUpdated?.let { stringResource(R.string.monitoring_bar_updated, it) }
     val fullLabel =
@@ -137,7 +131,7 @@ fun EarthquakeMonitoringCard(
                                     .size
                                     .width
                             } ?: 0
-                        val titles = listOf(titleLabel, shortTitle)
+                        val titles = listOf(titleLabel, shortTitleLabel)
                         val titleWithUpdated =
                             if (updatedLabel != null) {
                                 titles.firstOrNull {
@@ -157,7 +151,7 @@ fun EarthquakeMonitoringCard(
                                         .size
                                         .width <= constraints.maxWidth
                                 }
-                                ?: shortTitle
+                                ?: shortTitleLabel
                         Row(
                             Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
                                 contentDescription = fullLabel

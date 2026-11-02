@@ -1,23 +1,16 @@
 package com.johnturkson.sandbox.ui.map.location
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.johnturkson.sandbox.R
+import com.johnturkson.sandbox.ui.layout.EarthquakePermissionRationale
 
 @Composable
 fun EarthquakeLocationRationale(onContinue: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.location_permission_title)) },
-        text = { Text(stringResource(R.string.location_permission_explanation)) },
-        confirmButton = {
-            TextButton(onClick = onContinue) { Text(stringResource(R.string.continue_action)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.not_now)) }
-        },
+    EarthquakePermissionRationale(
+        title = stringResource(R.string.location_permission_title),
+        explanation = stringResource(R.string.location_permission_explanation),
+        onContinue = onContinue,
+        onDismiss = onDismiss,
     )
 }
