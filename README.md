@@ -67,16 +67,17 @@ For guided setup with Codex, use `$build-project` in this repository. The
 
 ## Contributing
 
-Follow the [source control guide](docs/source-control.md). Agents must commit as
-they go; human contributors are encouraged to do the same, keeping each commit
-focused on one coherent change.
-
-Shared agent rules live in `AGENTS.md`. See the
-[agent instruction guide](docs/agent-instructions.md) for Codex discovery and
-sharing the rules with Claude Code.
-
 Follow the [formatting guidelines](docs/formatting.md) and
 [architecture and state management guidelines](docs/architecture.md). These apply
 to human contributors and agents, with examples from the current implementation.
 Discuss additions as new project patterns are introduced and update the guides
 with the agreed conventions and working examples.
+
+Follow the [source control guide](docs/source-control.md). Agents must commit as
+they go and before ending a turn, then integrate completed changes onto local
+`main` unless branch-only work was requested or integration is blocked. Human
+contributors are encouraged to keep each commit focused on one coherent change.
+
+Shared agent rules live in `AGENTS.md`. See the
+[agent instruction guide](docs/agent-instructions.md) for Codex discovery and
+sharing the rules with Claude Code.
