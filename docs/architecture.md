@@ -314,6 +314,15 @@ secondary roles and display the current destination full-screen. Keep
 `shouldHandleSinglePaneLayout` enabled to preserve one scaffold scene through
 resizing. Use the library's scene layout rather than a custom `Scene`.
 
+Keep notification navigation immediate and independent of explorer motion.
+`EarthquakeApp` uses `SupportingPaneSceneStrategy.paneAnimation` with
+`EnterTransition.None`, `ExitTransition.None`, and `snap()` bounds for
+Notifications. Apply the same metadata to Map and List when opening or closing
+Notifications, including Back, so the replaced or restored pane does not slide.
+Map/List and expanded-list controls restore the library's default pane motion
+when Notifications is closed. Keep this transient animation choice in the host;
+it is not destination state and does not need saved-state restoration.
+
 [EarthquakeListScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListScreen.kt)
 uses the same entry-owned `LazyListState` for both presentations.
 [EarthquakeListPanel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListPanel.kt)

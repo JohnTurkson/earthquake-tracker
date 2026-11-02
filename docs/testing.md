@@ -384,6 +384,12 @@ resizing. Keep fixture sizes within the available window to retain the device's
 native density while exercising the Material scene's lookahead layout.
 Record and restore the display override through the
 [Android CLI workflow](android-cli.md#change-device-configuration).
+Freeze the Compose clock to check notification navigation before an ordinary
+slide could finish: the replaced pane must disappear and the restored pane must
+already have its settled bounds. Cover compact Map and List, expanded open and
+minimized List, Close and Back, and verify Map/List switching still animates
+after returning from Notifications. Existing screenshot fixtures cover the
+settled destination appearances; timing assertions cover their transitions.
 [EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDestinationStateTest.kt)
 uses the real Map and List ViewModels with test-local Room data to check
 independent selection, saved result revisions, pending scroll restoration,

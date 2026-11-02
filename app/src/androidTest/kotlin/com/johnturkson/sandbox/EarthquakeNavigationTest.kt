@@ -13,8 +13,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.WindowSize
 import androidx.compose.ui.test.assertIsDisplayed
@@ -24,6 +26,7 @@ import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
@@ -49,6 +52,7 @@ import com.johnturkson.sandbox.ui.EarthquakeView
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -56,6 +60,51 @@ class EarthquakeNavigationTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
     private val owners = mutableMapOf<Destination, EarthquakeNavigationTestViewModel>()
     private var windowSize by mutableStateOf(DpSize(400.dp, 600.dp))
+
+    @Test
+    fun compactNotificationsOpenAndCloseImmediatelyFromMapAndList() {
+        composeRule.setContent { Content() }
+        val mapBounds = paneBounds("Map pane")
+        assertImmediateNotifications("Notifications shortcut", "Map pane", mapBounds, back = false)
+        composeRule.onNodeWithText("Open list").performClick()
+        val listBounds = paneBounds("List pane")
+        assertImmediateNotifications(null, "List pane", listBounds, back = true)
+        composeRule.onNodeWithText("Map").performClick()
+        composeRule.onNodeWithText("Map destination").assertIsDisplayed()
+        composeRule.mainClock.autoAdvance = false
+        composeRule.onNodeWithText("Open list").performClick()
+        composeRule.mainClock.advanceTimeBy(64)
+        val movingBounds = paneBounds("List pane")
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+        assertTrue(movingBounds != paneBounds("List pane"))
+    }
+
+    @Test
+    fun expandedNotificationsReplaceAndRestoreTheListImmediately() {
+        windowSize = DpSize(900.dp, 600.dp)
+        composeRule.setContent { Content() }
+        val listBounds = paneBounds("List pane")
+        assertImmediateNotifications(
+            "Notifications shortcut",
+            "List pane",
+            listBounds,
+            back = false,
+        )
+        composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
+        composeRule.mainClock.autoAdvance = false
+        composeRule.onNodeWithText("Notifications shortcut").performClick()
+        composeRule.mainClock.advanceTimeBy(64)
+        composeRule.onNodeWithText("Notification destination").assertIsDisplayed()
+        composeRule.onNodeWithText("Map destination").assertIsDisplayed()
+        composeRule.onNodeWithTag("List pane").assertDoesNotExist()
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.mainClock.advanceTimeBy(64)
+        composeRule.onNodeWithTag("Notifications pane").assertDoesNotExist()
+        composeRule.onNodeWithTag("List pane").assertDoesNotExist()
+        composeRule.onNodeWithText("Map destination").assertIsDisplayed()
+        composeRule.mainClock.autoAdvance = true
+    }
 
     @Test
     fun destinationsExchangeResultsAndNotificationsReturnToThePreviousView() {
@@ -177,6 +226,37 @@ class EarthquakeNavigationTest {
         composeRule.onNodeWithText("Earthquake 79").assertIsSelected()
     }
 
+    private fun paneBounds(tag: String): Rect =
+        composeRule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+
+    private fun assertImmediateNotifications(
+        shortcut: String?,
+        previousPane: String,
+        previousBounds: Rect,
+        back: Boolean,
+    ) {
+        composeRule.mainClock.autoAdvance = false
+        if (shortcut != null) composeRule.onNodeWithText(shortcut).performClick()
+        else composeRule.onNodeWithContentDescription("Earthquake alerts").performClick()
+        composeRule.mainClock.advanceTimeBy(64)
+        composeRule.onNodeWithTag(previousPane).assertDoesNotExist()
+        val notificationBounds = paneBounds("Notifications pane")
+        composeRule.mainClock.advanceTimeBy(64)
+        assertEquals(notificationBounds, paneBounds("Notifications pane"))
+        if (back) {
+            composeRule.runOnUiThread {
+                composeRule.activity.onBackPressedDispatcher.onBackPressed()
+            }
+        } else {
+            composeRule.onNodeWithText("Close notifications").performClick()
+        }
+        composeRule.mainClock.advanceTimeBy(64)
+        composeRule.onNodeWithTag("Notifications pane").assertDoesNotExist()
+        assertEquals(previousBounds, paneBounds(previousPane))
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+    }
+
     @Composable
     private fun Content() {
         val availableSize =
@@ -205,7 +285,7 @@ class EarthquakeNavigationTest {
                     { owner.applySelection(it, false) },
                     actions.onMapSelectionConsumed,
                 )
-                Box(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize().testTag("Map pane")) {
                     Column(
                         Modifier.align(Alignment.TopEnd)
                             .padding(
@@ -244,6 +324,7 @@ class EarthquakeNavigationTest {
                     actions.onListSelectionConsumed,
                 )
                 EarthquakeListScreen(
+                    modifier = Modifier.testTag("List pane"),
                     state = owner,
                     onItemClick = {
                         owner.applySelection(actions.onListSelection(it.id), false)
@@ -257,7 +338,7 @@ class EarthquakeNavigationTest {
                 )
             }
             Destination.EarthquakeNotificationsRoute ->
-                Column {
+                Column(Modifier.fillMaxSize().testTag("Notifications pane")) {
                     Text("Notification destination")
                     TextButton(onClick = actions.onNotificationsClose) {
                         Text("Close notifications")

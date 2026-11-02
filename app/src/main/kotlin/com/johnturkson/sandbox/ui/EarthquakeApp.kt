@@ -5,6 +5,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,10 +53,12 @@ fun EarthquakeApp(
 ) {
     EarthquakeTheme {
         val activity = LocalActivity.current
+        val adaptiveInfo = currentWindowAdaptiveInfoV2()
         val backStack = rememberNavBackStack(EarthquakeListRoute, EarthquakeMapRoute)
         var compactView by rememberSaveable { mutableStateOf(EarthquakeView.Map) }
         var panelVisible by rememberSaveable { mutableStateOf(true) }
         var notificationsVisible by rememberSaveable { mutableStateOf(false) }
+        var animateExplorerPanes by remember(adaptiveInfo) { mutableStateOf(true) }
         var clusterVisible by rememberSaveable { mutableStateOf(false) }
         var revision by rememberSaveable { mutableStateOf(0L) }
         var pendingMapId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -76,18 +80,27 @@ fun EarthquakeApp(
         }
         LaunchedEffect(notificationEventId) {
             if (notificationEventId != null) {
+                animateExplorerPanes = false
                 notificationsVisible = false
                 clusterVisible = false
                 compactView = EarthquakeView.Map
             }
         }
-        val adaptiveInfo = currentWindowAdaptiveInfoV2()
         val expanded =
             adaptiveInfo.windowSizeClass.isAtLeastBreakpoint(
                 WIDTH_DP_EXPANDED_LOWER_BOUND,
                 HEIGHT_DP_MEDIUM_LOWER_BOUND,
             )
         Box(modifier.fillMaxSize()) {
+            val immediatePaneAnimation =
+                SupportingPaneSceneStrategy.paneAnimation(
+                    enterTransition = EnterTransition.None,
+                    exitTransition = ExitTransition.None,
+                    boundsAnimationSpec = snap(),
+                )
+            val explorerPaneAnimation =
+                if (animateExplorerPanes && !notificationsVisible) emptyMap()
+                else immediatePaneAnimation
             val listVisible = expanded && panelVisible && !notificationsVisible && !clusterVisible
             val showList =
                 if (expanded) panelVisible && !clusterVisible
@@ -122,14 +135,27 @@ fun EarthquakeApp(
                     expanded = expanded,
                     isListPanelVisible = listVisible,
                     notificationsVisible = notificationsVisible,
-                    onViewSelected = { compactView = it },
+                    onViewSelected = {
+                        animateExplorerPanes = !notificationsVisible
+                        compactView = it
+                    },
                     onListPanelVisibilityChanged = {
+                        animateExplorerPanes = !notificationsVisible
                         panelVisible = it
                         notificationsVisible = false
                     },
-                    onNotificationsClick = { notificationsVisible = true },
-                    onNotificationsClose = { notificationsVisible = false },
-                    onClusterVisibilityChanged = { clusterVisible = it },
+                    onNotificationsClick = {
+                        animateExplorerPanes = false
+                        notificationsVisible = true
+                    },
+                    onNotificationsClose = {
+                        animateExplorerPanes = false
+                        notificationsVisible = false
+                    },
+                    onClusterVisibilityChanged = {
+                        if (clusterVisible != it) animateExplorerPanes = !notificationsVisible
+                        clusterVisible = it
+                    },
                     onMapSelection = { publishSelection(it, fromMap = true) },
                     onListSelection = { publishSelection(it, fromMap = false) },
                     pendingMapSelection =
@@ -148,10 +174,18 @@ fun EarthquakeApp(
                 modifier = Modifier.fillMaxSize(),
                 onBack = {
                     when {
-                        notificationsVisible -> notificationsVisible = false
-                        expanded && listVisible -> panelVisible = false
-                        !expanded && compactView == EarthquakeView.List ->
+                        notificationsVisible -> {
+                            animateExplorerPanes = false
+                            notificationsVisible = false
+                        }
+                        expanded && listVisible -> {
+                            animateExplorerPanes = true
+                            panelVisible = false
+                        }
+                        !expanded && compactView == EarthquakeView.List -> {
+                            animateExplorerPanes = true
                             compactView = EarthquakeView.Map
+                        }
                         else -> activity?.finish()
                     }
                 },
@@ -170,7 +204,8 @@ fun EarthquakeApp(
                 entryProvider =
                     entryProvider {
                         entry<EarthquakeMapRoute>(
-                            metadata = SupportingPaneSceneStrategy.mainPane()
+                            metadata =
+                                SupportingPaneSceneStrategy.mainPane() + explorerPaneAnimation
                         ) { navKey ->
                             destinationContent(navKey, actions)
                         }
@@ -180,7 +215,8 @@ fun EarthquakeApp(
                                     SupportingPaneSceneStrategy.preferredPaneSize(
                                         width = earthquakeListPaneWidth + 32.dp
                                     ) +
-                                    SupportingPaneSceneStrategy.preferredPaneSize(height = 1f)
+                                    SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
+                                    explorerPaneAnimation
                         ) { navKey ->
                             destinationContent(navKey, actions)
                         }
@@ -190,7 +226,8 @@ fun EarthquakeApp(
                                     SupportingPaneSceneStrategy.preferredPaneSize(
                                         width = earthquakeListPaneWidth + 32.dp
                                     ) +
-                                    SupportingPaneSceneStrategy.preferredPaneSize(height = 1f)
+                                    SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
+                                    immediatePaneAnimation
                         ) { navKey ->
                             destinationContent(navKey, actions)
                         }
