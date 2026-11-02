@@ -91,7 +91,10 @@ class EarthquakeDetailsTest {
                 }
             }
         }
-        composeRule.onNodeWithText("Use my location").assertIsDisplayed().performClick()
+        composeRule
+            .onNodeWithContentDescription("Use my location")
+            .assertIsDisplayed()
+            .performClick()
         assertEquals(true, located)
     }
 
