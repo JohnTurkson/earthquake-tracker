@@ -192,7 +192,10 @@ class EarthquakeApiTest {
 
     @Test
     fun rejectsInvalidCoordinatesBeforeStorage() {
-        val valid = json.decodeFromString<EarthquakeNetworkModel>(fixture("earthquake-detail.json"))
+        val valid =
+            json.decodeFromString<EarthquakeNetworkModel>(
+                EarthquakeJsonFixtures.read("earthquake-detail.json")
+            )
         for (coordinates in
             listOf(listOf(1.0), listOf(0.0, 91.0, 0.0), listOf(Double.NaN, 0.0, 0.0))) {
             assertFailsWith<IllegalArgumentException> {
@@ -234,11 +237,8 @@ class EarthquakeApiTest {
 
     private fun MockRequestHandleScope.respondFixture(name: String): HttpResponseData {
         return respond(
-            fixture(name),
+            EarthquakeJsonFixtures.read(name),
             headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
         )
     }
-
-    private fun fixture(name: String): String =
-        checkNotNull(javaClass.getResource("/$name")).readText()
 }

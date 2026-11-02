@@ -392,7 +392,10 @@ class EarthquakeStorageTest {
 
     @Test
     fun workerDoesNotWritePartOfAnInvalidResponse() = runTest {
-        val collection = json.parseToJsonElement(fixture("earthquakes-summary.json")).jsonObject
+        val collection =
+            json
+                .parseToJsonElement(EarthquakeJsonFixtures.read("earthquakes-summary.json"))
+                .jsonObject
         val features = collection.getValue("features").jsonArray
         val invalid =
             JsonObject(
@@ -422,7 +425,7 @@ class EarthquakeStorageTest {
     fun historicalAliasesRetainAllObservedEventsThroughOfflineRefreshWhileCollecting() = runTest {
         val collection =
             json.decodeFromString<EarthquakeCollectionNetworkModel>(
-                fixture("earthquakes-summary.json")
+                EarthquakeJsonFixtures.read("earthquakes-summary.json")
             )
         val original =
             collection.features.first().let {
@@ -509,7 +512,7 @@ class EarthquakeStorageTest {
         val name = "earthquake-history-${UUID.randomUUID()}.db"
         val initial =
             json.decodeFromString<EarthquakeCollectionNetworkModel>(
-                fixture("earthquakes-summary.json")
+                EarthquakeJsonFixtures.read("earthquakes-summary.json")
             )
         val original = initial.features.first()
         val revised =
@@ -684,17 +687,8 @@ class EarthquakeStorageTest {
 
     private fun MockRequestHandleScope.respondFixture(name: String): HttpResponseData {
         return respond(
-            fixture(name),
+            EarthquakeJsonFixtures.read(name),
             headers = headersOf(HttpHeaders.ContentType, "application/json"),
         )
-    }
-
-    private fun fixture(name: String): String {
-        return InstrumentationRegistry.getInstrumentation()
-            .context
-            .assets
-            .open(name)
-            .bufferedReader()
-            .use { it.readText() }
     }
 }

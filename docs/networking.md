@@ -69,8 +69,8 @@ Extend [EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/Earthq
 with deterministic Ktor `MockEngine` fixtures. Check the HTTP method, path, query
 encoding, relevant headers or body, decoding, nulls, unknown fields, empty
 responses, status handling, malformed data, and meaningful argument boundaries.
-Use the suite's fixtures in `app/src/test/resources` or
-`app/src/androidTest/assets`; automated tests must not
+Use shared JSON fixtures in `app/src/testFixtures/resources` and unit-only
+fixtures in `app/src/test/resources`; automated tests must not
 call the live service. Test any new repository behavior at its owning boundary.
 
 Update this guide when an agreed network pattern is introduced and update the

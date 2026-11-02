@@ -171,11 +171,15 @@ the screenshot fixtures' `@Preview` and preview parameter providers.
 ## Earthquake data tests
 
 [EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeApiTest.kt)
-uses Ktor `MockEngine` and fixtures under `app/src/test/resources` to verify USGS
+uses Ktor `MockEngine` and deterministic JSON fixtures to verify USGS
 typed routes, query arguments, decoding, and failures without live requests.
-Instrumented tests load their own fixtures from `app/src/androidTest/assets`.
-Copy only the JSON inputs that the device tests use; keep equivalent responses
-consistent across suites when they exercise the same data.
+Keep JSON inputs shared by unit and instrumented tests once in
+[`app/src/testFixtures/resources`](../app/src/testFixtures/resources).
+Both suites load them through
+[EarthquakeJsonFixtures.read](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/EarthquakeJsonFixtures.kt),
+which reads classpath resources supplied by the built-in fixture dependency.
+Suite-specific inputs, such as the API detail response, stay in that suite's
+default resources directory. No asset copies or `sourceSets` overrides are needed.
 
 [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
 uses real Room with active Turbine collectors. Preserve coverage for new IDs,
