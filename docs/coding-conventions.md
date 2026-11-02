@@ -64,8 +64,10 @@ context.getString(
 
 [EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapItem.kt)
 retains nullable source title and place values. Its composable `earthquakeTitle`
-helper uses `stringResource` for the same fallback template, `unknown_location`,
-and the `unknown_magnitude` placeholder. List rows, selection cards, and map
+helper uses `stringResource` for the same fallback template, the one-decimal
+`earthquake_magnitude` format, `unknown_location`, and the `unknown_magnitude`
+placeholder. Numeric resource formatting follows the current resource locale,
+as the coordinate and cluster labels do. List rows, selection cards, and map
 marker titles resolve that text in composition, following the existing
 `earthquakeEventTime` helper pattern. SDK cluster wrappers receive the resolved
 title from the map composable.

@@ -5,7 +5,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.res.stringResource
 import com.johnturkson.sandbox.R
 import com.johnturkson.sandbox.data.EarthquakeDatabaseModel
-import java.util.Locale
 import kotlin.time.Instant
 
 @Immutable
@@ -36,7 +35,7 @@ internal fun earthquakeTitle(item: EarthquakeMapItem): String =
     item.title
         ?: stringResource(
             R.string.earthquake_fallback_title,
-            item.magnitude?.let { String.format(Locale.ROOT, "%.1f", it) }
+            item.magnitude?.let { stringResource(R.string.earthquake_magnitude, it) }
                 ?: stringResource(R.string.unknown_magnitude),
             item.place ?: stringResource(R.string.unknown_location),
         )
