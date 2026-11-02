@@ -79,7 +79,9 @@ fun EarthquakeNotificationsScreen(
     }
     fun enableNotifications() {
         when {
-            notificationSettingsRequired || Build.VERSION.SDK_INT < 33 ->
+            notificationState.permissionGranted ||
+                notificationSettingsRequired ||
+                Build.VERSION.SDK_INT < 33 ->
                 context.startActivity(
                     Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                         .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)

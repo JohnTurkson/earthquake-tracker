@@ -15,7 +15,6 @@ data class EarthquakeNotificationState(
     val minimumMagnitude: Int = 6,
     val settingsError: Boolean = false,
 ) {
-    val canPostAlerts: Boolean
-        get() =
-            !isChecking && permissionGranted && appEnabled && alertsChannelEnabled && alertsEnabled
+    val canPreviewAlert: Boolean
+        get() = !isChecking && permissionGranted && appEnabled && alertsChannelEnabled
 }

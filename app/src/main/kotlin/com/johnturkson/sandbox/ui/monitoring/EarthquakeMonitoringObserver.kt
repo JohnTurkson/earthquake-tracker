@@ -29,6 +29,7 @@ constructor(
                     WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Refresh.Queued
                     WorkInfo.State.FAILED -> EarthquakeMonitoringState.Refresh.Failed
                     WorkInfo.State.SUCCEEDED -> EarthquakeMonitoringState.Refresh.Succeeded
+                    WorkInfo.State.CANCELLED -> EarthquakeMonitoringState.Refresh.Cancelled
                     else -> EarthquakeMonitoringState.Refresh.Idle
                 }
             EarthquakeMonitoringState(status = monitoringStatus, refresh = refreshing)

@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.PauseCircleOutline
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -53,23 +51,15 @@ fun EarthquakeMonitoringCard(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val failed =
-        state.status == EarthquakeMonitoringState.Status.Failed ||
-            state.refresh == EarthquakeMonitoringState.Refresh.Failed
+    val failed = state.refresh == EarthquakeMonitoringState.Refresh.Failed
     val title =
-        when {
-            state.status == EarthquakeMonitoringState.Status.Checking ->
-                R.string.checking_monitoring
-            state.refresh == EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
-            state.isRefreshing -> R.string.refreshing_earthquakes
-            state.status == EarthquakeMonitoringState.Status.Failed -> R.string.monitoring_failed
-            failed -> R.string.refresh_failed
-            state.refresh == EarthquakeMonitoringState.Refresh.Succeeded ->
-                R.string.refresh_succeeded
-            state.status == EarthquakeMonitoringState.Status.Starting ->
-                R.string.monitoring_starting
-            state.isMonitoring -> R.string.live_monitoring
-            else -> R.string.monitoring_off
+        when (state.refresh) {
+            EarthquakeMonitoringState.Refresh.Idle -> R.string.refresh_idle
+            EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
+            EarthquakeMonitoringState.Refresh.Running -> R.string.refreshing_earthquakes
+            EarthquakeMonitoringState.Refresh.Succeeded -> R.string.refresh_succeeded
+            EarthquakeMonitoringState.Refresh.Failed -> R.string.refresh_failed
+            EarthquakeMonitoringState.Refresh.Cancelled -> R.string.refresh_cancelled
         }
     val lastUpdated =
         lastUpdatedLabel
@@ -79,20 +69,14 @@ fun EarthquakeMonitoringCard(
             }
     val shortTitle =
         stringResource(
-            when {
-                state.status == EarthquakeMonitoringState.Status.Checking ->
-                    R.string.monitoring_bar_checking
-                state.refresh == EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
-                state.isRefreshing -> R.string.monitoring_bar_refreshing
-                state.status == EarthquakeMonitoringState.Status.Failed ->
-                    R.string.monitoring_bar_failed
-                failed -> R.string.monitoring_bar_refresh_failed
-                state.refresh == EarthquakeMonitoringState.Refresh.Succeeded ->
+            when (state.refresh) {
+                EarthquakeMonitoringState.Refresh.Idle -> R.string.refresh_idle
+                EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
+                EarthquakeMonitoringState.Refresh.Running -> R.string.monitoring_bar_refreshing
+                EarthquakeMonitoringState.Refresh.Succeeded ->
                     R.string.monitoring_bar_refresh_succeeded
-                state.status == EarthquakeMonitoringState.Status.Starting ->
-                    R.string.monitoring_bar_starting
-                state.isMonitoring -> R.string.live_monitoring
-                else -> R.string.monitoring_bar_off
+                EarthquakeMonitoringState.Refresh.Failed -> R.string.monitoring_bar_refresh_failed
+                EarthquakeMonitoringState.Refresh.Cancelled -> R.string.refresh_cancelled
             }
         )
     val titleLabel = stringResource(title)
@@ -132,10 +116,10 @@ fun EarthquakeMonitoringCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
-                        when {
-                            failed -> Icons.Outlined.ErrorOutline
-                            state.isMonitoring -> Icons.Outlined.Sensors
-                            else -> Icons.Outlined.PauseCircleOutline
+                        if (failed) {
+                            Icons.Outlined.ErrorOutline
+                        } else {
+                            Icons.Outlined.Refresh
                         },
                         contentDescription = null,
                     )

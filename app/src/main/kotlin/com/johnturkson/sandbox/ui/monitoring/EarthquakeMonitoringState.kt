@@ -24,6 +24,7 @@ data class EarthquakeMonitoringState(
         Running,
         Succeeded,
         Failed,
+        Cancelled,
     }
 
     val isRefreshing: Boolean

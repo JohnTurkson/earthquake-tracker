@@ -287,7 +287,7 @@ The component state inventory is:
 | View switcher | Map/List selected with labels and with icons only, including dark and large text. |
 | Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
 | Location FAB and rationale | Icon-only request/settings actions and the rationale, with light/dark and large text. |
-| Monitoring card | Each status, each refresh outcome, available/missing update time and stored data, and concurrent checking/monitoring/failure with refresh work. |
+| Monitoring card | Each refresh state with available/missing update time; verify monitoring states cannot override refresh presentation. |
 | Notification page and rationale | Checking, denied/settings permission, alerts on/off, channel availability, each magnitude threshold and monitoring status, enabled/disabled preview, settings error, and rationale. |
 | Notification bell | Its ordinary appearance and placement through the explorer fixtures. |
 | Event snackbar | Visible unavailable-event message with normal and wrapped text. |
@@ -578,8 +578,9 @@ while it is running. Restore the original grant afterward and hold the shared
 emulator reservation throughout platform notification checks.
 
 `EarthquakeNotificationUiTest` exercises page capability changes, actions,
-threshold selection, disabled preview, refresh progress/failure, and the fixed
-expanded status across list scrolling and minimize/restore. It checks the compact
+threshold selection, preview availability with automatic alerts off, disabled
+channels, the general settings action after permission is granted, refresh
+progress/failure, and the fixed expanded status across list scrolling and minimize/restore. It checks the compact
 and expanded bars remain 64 dp for every monitoring/refresh combination. Compact
 List retains its scrolling card and restored list position. Status and update
 time are separate text nodes. Check the timestamp's normal font weight,
@@ -590,14 +591,15 @@ visual states, with narrow/large-font, dark, scrolled, expanded right-pane, and
 minimized fixtures. Review every provider-generated image as well as named
 previews. Host screenshots cover our controls, not native map pixels or Android's
 permission dialog and notification drawer.
-The monitoring provider includes concurrent refresh and session statuses, with
-no data, stored data without a timestamp, and a known update time. Preserve those
-combinations when extending the state contract. Render the monitoring provider
+The monitoring provider includes every refresh state with and without a known
+update time. Session status and stored-data presence do not change this banner.
+The UI test checks that session states cannot override the refresh result,
+including a retained monitoring failure. Render the monitoring provider
 in the compact floating bar and expanded app bar, including dark mode and large
 text. Include the expanded Minimize and Show list presentations, and visually
 verify one line at the same 64 dp height. The scrolled page-action provider
-keeps enabled preview, disabled preview, and settings-error pixels visible rather
-than relying on controls below a preview's viewport. Include checking with an
+keeps enabled preview with automatic alerts on and off, a disabled alert channel,
+and settings-error pixels visible rather than relying on controls below a preview's viewport. Include checking with an
 already-selected alerts toggle and the compact notification screen's placement.
 
 Also manually exercise a real foreground session, Stop, offline/reconnection,

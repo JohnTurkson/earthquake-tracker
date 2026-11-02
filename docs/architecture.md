@@ -769,7 +769,14 @@ on screen resume and recheck before every post. Foreground work still supplies
 its required notification when POST_NOTIFICATIONS is denied; ordinary alerts
 are suppressed. Request that permission only from a user action in the screen
 entry, with rationale and settings paths. Persist only the request attempt and
-user preferences, never an OS permission grant.
+user preferences, never an OS permission grant. Keep the general app-notification
+settings action available when permission is granted. The explicit preview
+requires app notification permission, app notifications, and the alerts channel;
+it does not require the automatic-alert opt-in. `canPreviewAlert` expresses that
+UI eligibility, while automatic delivery still checks the saved alerts setting.
+The monitoring foreground notification is supplied whenever the monitoring worker
+runs, including while the activity is visible, backgrounded, or removed from
+Recents. It describes the session rather than the refresh outcome.
 
 `EarthquakeAlertPolicy` requires the source's `earthquake` event type, event time
 within the past 60 seconds, and the chosen minimum magnitude. A magnitude
@@ -793,8 +800,14 @@ preferences and system capabilities in its own ViewModel and screen entry.
 `EarthquakeMonitoringState.status` uses its nested `Status` enum for the monitoring
 session; `refresh` describes the separate refresh operation, preserving
 WorkManager's `SUCCEEDED` as `Refresh.Succeeded` and `FAILED` as `Refresh.Failed`.
-Monitoring displays the latest success or failure alongside Room's last
-successful update time.
+The in-app banner uses only `refresh`, taken from the current unique
+`earthquake_refresh` request. It displays idle, queued, running, succeeded,
+failed, or cancelled alongside Room's last-successful-update time. Monitoring
+session state never changes its title, icon, or error color. WorkManager persists
+the refresh request across app reopening; do not add timestamp tags, a second
+status store, or cross-worker ordering metadata. A cancelled monitoring session
+maps to `Status.Stopped`; a failed session remains separately observable for the
+notification page's monitoring control.
 [`EarthquakeTopAppBar`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeTopAppBar.kt)
 places monitoring between Show list/Minimize and the refresh and notification
 actions in expanded windows, whether the list is open, minimized, or replaced
@@ -814,9 +827,9 @@ Measure the status and timestamp with their own styles, trying the full then
 short status. When both cannot fit, show the status alone and retain the complete
 status and known update time in accessibility semantics. Keep the refresh target
 available and ellipsize the final status if necessary; do not shrink fonts or
-grow the bar. Keep this formatting in the UI and retain the existing priority
-between monitoring and refresh states. A refresh keeps old data and its timestamp
-until storage succeeds.
+grow the bar. Keep this formatting in the UI. A refresh keeps old data and its
+timestamp until storage succeeds; monitoring never overrides the banner's
+refresh result.
 
 The bell has no badge. It occupies the expanded top app bar's final action slot
 and remains a floating button at the compact top end edge. Center

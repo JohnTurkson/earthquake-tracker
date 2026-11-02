@@ -90,7 +90,7 @@ constructor(
     }
 
     fun previewNotification() {
-        if (notifications.canPostAlerts) {
+        if (notifications.canPreviewAlert) {
             notificationManager.previewAlert()
         }
         refreshNotificationCapabilities()

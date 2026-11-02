@@ -132,7 +132,7 @@ class EarthquakeViewsTest {
 
         val monitoringBounds =
             composeRule
-                .onNodeWithContentDescription("Live monitoring", substring = true)
+                .onNodeWithContentDescription("Ready to refresh", substring = true)
                 .fetchSemanticsNode()
                 .boundsInRoot
         composeRule.runOnIdle { showLocation = true }
@@ -145,7 +145,7 @@ class EarthquakeViewsTest {
         assertEquals(
             monitoringBounds,
             composeRule
-                .onNodeWithContentDescription("Live monitoring", substring = true)
+                .onNodeWithContentDescription("Ready to refresh", substring = true)
                 .fetchSemanticsNode()
                 .boundsInRoot,
         )

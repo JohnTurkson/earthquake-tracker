@@ -115,6 +115,10 @@ fun EarthquakeNotificationPage(
                                 }
                             }
                         }
+                    else ->
+                        TextButton(onClick = onEnableNotifications) {
+                            Text(stringResource(R.string.open_notification_settings))
+                        }
                 }
             }
             item(key = "alerts") {
@@ -226,7 +230,7 @@ fun EarthquakeNotificationPage(
                     }
                     OutlinedButton(
                         onClick = onPreviewAlert,
-                        enabled = state.canPostAlerts,
+                        enabled = state.canPreviewAlert,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(stringResource(R.string.preview_alert))

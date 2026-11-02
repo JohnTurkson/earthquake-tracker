@@ -422,102 +422,15 @@ class EarthquakeNotificationsScreenshotTest {
 
 class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMonitoringState> {
     override val values =
-        sequenceOf(
-            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking),
-            EarthquakeMonitoringState(),
-            EarthquakeMonitoringState(lastUpdated = Instant.fromEpochMilliseconds(1)),
-            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Starting),
-            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Running,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed),
-            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Queued),
-            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Running),
-            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Failed),
-            EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.Failed,
-                hasStoredData = true,
-            ),
-            EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.Failed,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Running,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Queued,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Running,
-                refresh = EarthquakeMonitoringState.Refresh.Queued,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Running,
-                refresh = EarthquakeMonitoringState.Refresh.Running,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Failed,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Failed,
-                hasStoredData = true,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Failed,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Failed,
-                hasStoredData = true,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Failed,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Failed,
-                refresh = EarthquakeMonitoringState.Refresh.Queued,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Failed,
-                refresh = EarthquakeMonitoringState.Refresh.Running,
-            ),
-            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Succeeded),
-            EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Running,
-                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Running,
-                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Starting,
-                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Running,
-                refresh = EarthquakeMonitoringState.Refresh.Failed,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-        )
+        EarthquakeMonitoringState.Refresh.entries.asSequence().flatMap { refresh ->
+            sequenceOf(
+                EarthquakeMonitoringState(refresh = refresh),
+                EarthquakeMonitoringState(
+                    refresh = refresh,
+                    lastUpdated = Instant.fromEpochMilliseconds(1),
+                ),
+            )
+        }
 }
 
 class EarthquakeNotificationStateProvider : PreviewParameterProvider<EarthquakeNotificationState> {
@@ -562,5 +475,10 @@ class EarthquakeNotificationActionStateProvider :
             alertsEnabled = true,
         )
     override val values =
-        sequenceOf(enabled, enabled.copy(alertsEnabled = false), enabled.copy(settingsError = true))
+        sequenceOf(
+            enabled,
+            enabled.copy(alertsEnabled = false),
+            enabled.copy(settingsError = true),
+            enabled.copy(alertsChannelEnabled = false),
+        )
 }
