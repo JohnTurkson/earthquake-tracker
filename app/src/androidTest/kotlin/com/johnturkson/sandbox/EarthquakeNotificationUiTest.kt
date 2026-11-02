@@ -18,7 +18,6 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
@@ -85,7 +84,8 @@ class EarthquakeNotificationUiTest {
             assertEquals(1, previewRequests)
             assertEquals(true, state.alertsEnabled)
         }
-        rule.onNodeWithText("M 7.0+").performScrollTo().performClick()
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("M 7.0+"))
+        rule.onNodeWithText("M 7.0+").performClick()
         rule.onNodeWithText("M 7.0+").assertIsSelected()
     }
 
