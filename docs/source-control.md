@@ -82,14 +82,35 @@ before integration. Once the task's commits pass those checks, integrate them
 before finishing:
 
 1. Inspect the default branch's checkout and current instructions again. Confirm
-   the target branch and preserve any changes made since the task began.
-2. Integrate the focused commits using a fast-forward when possible or
-   cherry-pick them onto the latest integration target. Resolve conflicts within
-   the task's scope and review overlapping instruction edits so one session's
-   rewrite does not remove another session's rules.
-3. Run the appropriate checks from the [testing guide](testing.md) on the combined
-   result. Resolve failures caused by the integration before claiming completion.
-4. Verify all intended task changes are present on the default branch, record the
+   the target branch, record its current commit, and preserve any changes made
+   since the task began. The target is local `main` in this repository; fetching
+   or pushing is separate from local integration.
+2. Commit only the task's verified changes, then rebase the task branch onto the
+   latest target before updating the target checkout. Review the commits being
+   replayed; exclude unrelated commits inherited from another feature branch.
+   Rebase only task commits that no other session depends on. If the branch
+   contains shared or unrelated commits, prepare an isolated integration branch
+   from the latest target and cherry-pick only the task commits there instead.
+   Use a clean checkout for the replay; preserve unrelated uncommitted work
+   rather than stashing it or enabling autostash.
+3. Resolve conflicts in the task or isolated integration checkout. Read both
+   changes and preserve their intended behavior; do not select an entire side
+   with `ours` or `theirs`, or skip a commit, merely to clear a conflict. Review
+   overlapping instruction edits so one session's rewrite does not remove
+   another session's rules. Stage only the resolved task paths or hunks and
+   continue noninteractively. If the intended behaviors cannot be reconciled
+   within the agreed requirements, ask the user for the specific decision.
+4. Review the resulting commits and diff against the recorded target commit to
+   confirm that they contain only the task's changes. Run the appropriate checks
+   from the [testing guide](testing.md) on this combined result before updating
+   the default branch. Resolve failures caused by the integration.
+5. Recheck the target immediately before integration. If it advanced, replay the
+   task commits onto its new tip, review the result, and rerun affected checks.
+   Coordinate active operations on the target checkout and index, then use
+   `git merge --ff-only --no-autostash <task-branch>` from that checkout. If the
+   fast-forward fails because the target advanced, repeat the replay and checks;
+   do not force the branch reference or create an unreviewed merge to bypass it.
+6. Verify all intended task changes are present on the default branch, record the
    commit SHA there, and inspect its final status. If the original commits were
    retained, `git merge-base --is-ancestor <task-commit> <target-branch>` verifies
    reachability. If cherry-picking changed their SHAs, review the resulting
@@ -102,7 +123,7 @@ the verified task changes while preserving the other files and index entries.
 Do not reset, clean, stash, or overwrite someone else's work to force integration.
 Do not amend commits another session may already depend on.
 
-If a merge or cherry-pick would include or disturb unrelated staged changes,
+If the final fast-forward would include or disturb unrelated staged changes,
 prepare the integration against the latest target in an isolated checkout or
 index. Apply only the resulting task changes to the target and commit only the
 task paths or hunks. Review the resulting commit and confirm that unrelated work
@@ -119,6 +140,36 @@ verify the integration independently.
 If integration cannot proceed safely, report the task as incomplete with the
 specific blocker, preserved branch and commit SHAs, and required next step.
 Ending a turn because of a blocker does not satisfy the completion requirement.
+
+## Noninteractive Git commands
+
+Use the available shell execution tool for Git operations; no dedicated rebase
+API is required. Run without a PTY, close stdin, and use bounded command waits
+so an unexpected prompt can be detected and stopped. Git must not wait for an
+interactive editor or pager.
+
+Supply commit messages with `git commit -m "Describe the completed change"`.
+Use command-scoped editor overrides for rebase, including every continuation,
+and disable autostash and updates to other branch references:
+
+```sh
+GIT_EDITOR=true GIT_SEQUENCE_EDITOR=true git rebase --no-autostash --no-update-refs main
+```
+
+After resolving and explicitly staging conflicts, continue with:
+
+```sh
+GIT_EDITOR=true GIT_SEQUENCE_EDITOR=true git rebase --continue
+```
+
+These commands keep existing commit messages. Use ordinary rebase rather than
+`rebase -i`; use `git --no-pager diff` and `git --no-pager log` for inspection.
+For a cherry-pick continuation, use `GIT_EDITOR=true git cherry-pick --continue`.
+Keep these settings scoped to the command rather than changing the user's
+global Git configuration. Do not bypass hooks or verification to avoid a prompt.
+If an unexpected editor or prompt still starts, stop that invocation, inspect
+the operation's state, and resume with explicit noninteractive options. Never
+delete a Git lock file until its owning process is known to have exited.
 
 ## Before ending a turn
 
