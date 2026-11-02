@@ -5,10 +5,13 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.await
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeNotifications
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @HiltWorker
 class EarthquakeMonitoringWorker
@@ -16,21 +19,15 @@ class EarthquakeMonitoringWorker
 constructor(
     @Assisted context: Context,
     @Assisted parameters: WorkerParameters,
-    private val scheduler: EarthquakeWorkScheduler,
-    private val connectivity: EarthquakeConnection,
+    private val monitor: EarthquakeMonitor,
     private val notifications: EarthquakeNotifications,
 ) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
         setForeground(notifications.foreground(id))
-        EarthquakePollingLoop()
-            .run(
-                online = connectivity.online,
-                onPaused = { setForeground(notifications.foreground(id, offline = true)) },
-                onTick = {
-                    setForeground(notifications.foreground(id))
-                    scheduler.refresh().await()
-                },
-            )
+        while (currentCoroutineContext().isActive) {
+            monitor.refresh().await()
+            delay(1.minutes)
+        }
         return Result.success()
     }
 }

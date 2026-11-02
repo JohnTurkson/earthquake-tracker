@@ -13,11 +13,10 @@ import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.await
 import androidx.work.testing.TestListenableWorkerBuilder
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeNotifications
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import com.johnturkson.sandbox.work.EarthquakeMonitoringWorker
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
@@ -25,22 +24,26 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.Test
 
-class EarthquakeWorkSchedulerTest {
+class EarthquakeMonitorTest {
     @Test
     fun duplicateRefreshRequestsKeepExistingQueuedWork() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val manager = WorkManager.getInstance(context)
-        val scheduler = EarthquakeWorkScheduler(manager)
-        manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+        val scheduler = EarthquakeMonitor(manager)
+        manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         val request =
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>()
                 .setInitialDelay(1.days.toJavaDuration())
@@ -48,17 +51,17 @@ class EarthquakeWorkSchedulerTest {
         try {
             manager
                 .enqueueUniqueWork(
-                    EarthquakeWorkScheduler.RefreshWork,
+                    EarthquakeMonitor.RefreshWork,
                     ExistingWorkPolicy.KEEP,
                     request,
                 )
                 .await()
             repeat(3) { scheduler.refresh().await() }
-            val infos = manager.getWorkInfosForUniqueWork(EarthquakeWorkScheduler.RefreshWork).get()
+            val infos = manager.getWorkInfosForUniqueWork(EarthquakeMonitor.RefreshWork).get()
             assertEquals(listOf(request.id), infos.map { it.id })
             assertEquals(WorkInfo.State.ENQUEUED, infos.single().state)
         } finally {
-            manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+            manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         }
     }
 
@@ -67,8 +70,8 @@ class EarthquakeWorkSchedulerTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         assertOffline(context)
         val manager = WorkManager.getInstance(context)
-        val scheduler = EarthquakeWorkScheduler(manager)
-        manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+        val scheduler = EarthquakeMonitor(manager)
+        manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         try {
             scheduler.refresh().await()
             val first =
@@ -86,7 +89,7 @@ class EarthquakeWorkSchedulerTest {
             }
             assertEquals(second, scheduler.refreshWork.first())
         } finally {
-            manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+            manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         }
     }
 
@@ -94,8 +97,8 @@ class EarthquakeWorkSchedulerTest {
     fun stoppingMonitoringLeavesSharedRefreshQueued() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val manager = WorkManager.getInstance(context)
-        val scheduler = EarthquakeWorkScheduler(manager)
-        manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+        val scheduler = EarthquakeMonitor(manager)
+        manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         val request =
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>()
                 .setInitialDelay(1.days.toJavaDuration())
@@ -104,7 +107,7 @@ class EarthquakeWorkSchedulerTest {
         try {
             manager
                 .enqueueUniqueWork(
-                    EarthquakeWorkScheduler.RefreshWork,
+                    EarthquakeMonitor.RefreshWork,
                     ExistingWorkPolicy.KEEP,
                     request,
                 )
@@ -116,51 +119,60 @@ class EarthquakeWorkSchedulerTest {
             assertEquals(WorkInfo.State.ENQUEUED, manager.getWorkInfoById(request.id).get()!!.state)
             assertEquals(
                 listOf(request.id),
-                manager.getWorkInfosForUniqueWork(EarthquakeWorkScheduler.RefreshWork).get().map {
+                manager.getWorkInfosForUniqueWork(EarthquakeMonitor.RefreshWork).get().map {
                     it.id
                 },
             )
         } finally {
-            manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+            manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         }
     }
 
     @Test
-    fun monitoringTickQueuesTheSharedRefreshWorker() = runBlocking {
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    fun monitoringChecksEveryMinuteAfterFailureAndCancellationStopsChecks() = runTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         assertOffline(context)
         val manager = WorkManager.getInstance(context)
-        val scheduler = EarthquakeWorkScheduler(manager)
-        manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+        val scheduler = EarthquakeMonitor(manager)
+        manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         val monitoring =
-            async(start = CoroutineStart.UNDISPATCHED) {
+            backgroundScope.async(start = CoroutineStart.UNDISPATCHED) {
                 monitoringWorker(context, scheduler).doWork()
             }
         try {
-            val info =
-                withTimeout(45.seconds) {
-                    scheduler.refreshWork.filterNotNull().first {
-                        it.state == WorkInfo.State.FAILED
+            suspend fun nextFailure(previous: WorkInfo? = null) =
+                withContext(Dispatchers.IO) {
+                    withTimeout(45.seconds) {
+                        scheduler.refreshWork.filterNotNull().first {
+                            it.id != previous?.id && it.state == WorkInfo.State.FAILED
+                        }
                     }
                 }
-            assertEquals(WorkInfo.State.FAILED, info.state)
+            val first = nextFailure()
+            runCurrent()
+            advanceTimeBy(59_999)
+            runCurrent()
+            assertEquals(first.id, scheduler.refreshWork.first()?.id)
+            advanceTimeBy(1)
+            runCurrent()
+            val second = nextFailure(first)
+            assertNotEquals(first.id, second.id)
             assertFalse(monitoring.isCompleted)
+            monitoring.cancelAndJoin()
+            advanceTimeBy(180_000)
+            runCurrent()
+            assertEquals(second.id, scheduler.refreshWork.first()?.id)
         } finally {
             monitoring.cancelAndJoin()
-            manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
+            manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         }
     }
 
     private fun monitoringWorker(
         context: Context,
-        scheduler: EarthquakeWorkScheduler,
+        scheduler: EarthquakeMonitor,
     ): EarthquakeMonitoringWorker {
-        val connection =
-            object : EarthquakeConnection {
-                override val online = MutableStateFlow(true)
-
-                override fun isOnline() = online.value
-            }
         val factory =
             object : WorkerFactory() {
                 override fun createWorker(
@@ -172,7 +184,6 @@ class EarthquakeWorkSchedulerTest {
                         appContext,
                         workerParameters,
                         scheduler,
-                        connection,
                         EarthquakeNotifications(context),
                     )
             }

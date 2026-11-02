@@ -9,7 +9,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.google.android.gms.location.LocationServices
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
@@ -18,9 +17,8 @@ import com.johnturkson.sandbox.ui.Destination
 import com.johnturkson.sandbox.ui.EarthquakeMapFixtures
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringObserver
 import com.johnturkson.sandbox.ui.EarthquakeViewModel
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import kotlin.test.assertEquals
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -48,13 +46,7 @@ class EarthquakeClusterStateTest {
             )
         val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
         val repository = EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
-        val scheduler = EarthquakeWorkScheduler(WorkManager.getInstance(context))
-        val connection =
-            object : EarthquakeConnection {
-                override val online = MutableStateFlow(false)
-
-                override fun isOnline() = false
-            }
+        val scheduler = EarthquakeMonitor(WorkManager.getInstance(context))
         fun create(handle: SavedStateHandle) =
             EarthquakeViewModel(
                 Destination.EarthquakeMapRoute,
@@ -62,7 +54,7 @@ class EarthquakeClusterStateTest {
                 locationRepository,
                 provider,
                 repository,
-                EarthquakeMonitoringObserver(repository, scheduler, connection),
+                EarthquakeMonitoringObserver(repository, scheduler),
                 scheduler,
             )
         val stored = EarthquakeMonitoringFixtures.item(magnitude = 3.7)

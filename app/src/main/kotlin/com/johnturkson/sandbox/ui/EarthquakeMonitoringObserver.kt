@@ -1,9 +1,8 @@
 package com.johnturkson.sandbox.ui
 
 import androidx.work.WorkInfo
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeRepository
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import javax.inject.Inject
 import kotlinx.coroutines.flow.combine
 
@@ -11,22 +10,15 @@ class EarthquakeMonitoringObserver
 @Inject
 constructor(
     repository: EarthquakeRepository,
-    workScheduler: EarthquakeWorkScheduler,
-    connectivity: EarthquakeConnection,
+    monitor: EarthquakeMonitor,
 ) {
     private val work =
-        combine(
-            workScheduler.monitoringWork,
-            workScheduler.refreshWork,
-            connectivity.online,
-        ) { monitor, refresh, online ->
+        combine(monitor.monitoringWork, monitor.refreshWork) { monitoring, refresh ->
             val monitoringStatus =
-                when (monitor?.state) {
+                when (monitoring?.state) {
                     WorkInfo.State.ENQUEUED,
                     WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Status.Starting
-                    WorkInfo.State.RUNNING ->
-                        if (online) EarthquakeMonitoringState.Status.Running
-                        else EarthquakeMonitoringState.Status.Offline
+                    WorkInfo.State.RUNNING -> EarthquakeMonitoringState.Status.Running
                     WorkInfo.State.FAILED -> EarthquakeMonitoringState.Status.Failed
                     else -> EarthquakeMonitoringState.Status.Stopped
                 }
@@ -36,6 +28,7 @@ constructor(
                     WorkInfo.State.ENQUEUED,
                     WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Refresh.Queued
                     WorkInfo.State.FAILED -> EarthquakeMonitoringState.Refresh.Failed
+                    WorkInfo.State.SUCCEEDED -> EarthquakeMonitoringState.Refresh.Succeeded
                     else -> EarthquakeMonitoringState.Refresh.Idle
                 }
             EarthquakeMonitoringState(status = monitoringStatus, refresh = refreshing)

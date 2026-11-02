@@ -280,7 +280,7 @@ The component state inventory is:
 | View switcher | Map/List selected with labels and with icons only, including dark and large text. |
 | Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
 | Location FAB and rationale | Icon-only request/settings actions and the rationale, with light/dark and large text. |
-| Monitoring card | Each status, each refresh outcome, available/missing update time and stored data, and concurrent checking/monitoring/failure/offline with refresh work. |
+| Monitoring card | Each status, each refresh outcome, available/missing update time and stored data, and concurrent checking/monitoring/failure with refresh work. |
 | Notification page and rationale | Checking, denied/settings permission, alerts on/off, channel availability, each magnitude threshold and monitoring status, enabled/disabled preview, settings error, and rationale. |
 | Notification bell | Its ordinary appearance and placement through the explorer fixtures. |
 | Event snackbar | Visible unavailable-event message with normal and wrapped text. |
@@ -526,7 +526,7 @@ changes before staging. Follow the [source control guide](source-control.md).
 `EarthquakeRefreshRepositoryTest` uses real Room and Ktor MockEngine for exception
 propagation, retained data after failed requests, atomic rollback, cancellation,
 and separate post-commit alert delivery. Its transaction-failure fixture verifies
-that both event rows and refresh metadata roll back. `EarthquakeWorkSchedulerTest` uses real
+that both event rows and refresh metadata roll back. `EarthquakeMonitorTest` uses real
 WorkManager with delayed refresh work to verify duplicate requests keep the
 existing request and stopping monitoring leaves it queued. It checks fresh
 failed outcomes through the same `WorkInfo` Flow used by the screen and verifies
@@ -534,17 +534,20 @@ that a monitoring tick enqueues the shared refresh worker. Run these tests with
 device internet disabled under the shared reservation. MockEngine fixtures
 provide controlled responses without live earthquake feed requests.
 `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
-`EarthquakePollingLoopTest` advances a coroutine test scheduler through minute
-boundaries, slow requests, offline pauses, reconnection, and cancellation;
-no real-minute sleeps are needed. Supply its monotonic clock from that scheduler.
+`EarthquakeMonitorTest` also builds the actual monitoring worker and advances a
+coroutine test scheduler through the minute boundary after a failed refresh, then
+verifies cancellation prevents later checks. Only coroutine delay uses virtual
+time; real WorkManager observations run on the IO dispatcher with bounded waits.
+No separate pacing helper or injected monotonic clock is required.
 `EarthquakeAlertPolicyTest` covers magnitude and age boundaries and revisions;
 `EarthquakeAlertDeliveryTest` covers delivery deduplication and suppressed posts.
 
 On the Resizable API 37 emulator, `EarthquakeMonitoringStorageTest` checks durable data and
 alert history after reopening, transaction rollback, alias-aware alert deduplication, retained history after empty feeds, and the additive version-2-to-3 migration.
 `EarthquakeRefreshWorkerTest` uses TestListenableWorkerBuilder with a controlled
-refresher to check save-before-alert order, propagation of refresh exceptions and
-cancellation, and best-effort notification failure isolation. Calling `doWork()`
+refresher to check offline failure before fetching or alert delivery,
+save-before-alert order, propagation of refresh exceptions and cancellation, and
+best-effort notification failure isolation. Calling `doWork()`
 directly does not run WorkManager's exception-to-failed-state handling; assert
 those exceptions in builder tests and assert `WorkInfo.State.FAILED` through the
 real WorkManager integration tests. The UI has one generic refresh failure,
@@ -583,15 +586,19 @@ already-selected alerts toggle and the compact notification screen's placement.
 Also manually exercise a real foreground session, Stop, offline/reconnection,
 notification permission denial/settings return, channel settings, event taps,
 and compact/expanded resizing with selected events. Confirm that worker state,
-foreground notification, and the displayed snapshot agree. Do not treat virtual
+foreground notification, and the displayed snapshot agree. Offline refreshes must
+fail immediately while monitoring remains active; reconnection must not trigger
+an additional check before the next minute tick. Do not treat virtual
 clock tests as evidence that Android will grant indefinite runtime or exact
 minute delivery.
 
 Run the data, notification, UI and offline-worker checks with internet access
-disabled under the shared reservation. Production activity startup schedules a
-refresh; disabling internet prevents those checks from calling live earthquake feed
-endpoints. API/repository tests use MockEngine. Run native-map checks separately
-online; the complementary selections exercise the complete device suite:
+disabled under the shared reservation. Map/List startup does not schedule a
+refresh. Disabling internet also makes explicit and monitoring refreshes fail
+immediately at their network precheck, without calling live earthquake feed
+endpoints. API/repository tests use MockEngine. Run
+native-map checks separately online; the complementary selections exercise the
+complete device suite:
 
 ```sh
 ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
@@ -606,8 +613,9 @@ ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
 ```
 
 The offline WorkManager integration test asserts its network precondition and
-leaves connectivity changes to the parent reservation owner. It verifies the
-offline foreground title when notifications are permitted, and that Stop removes
+leaves connectivity changes to the parent reservation owner. It verifies that
+offline refresh failure leaves the foreground session active with its ordinary
+monitoring title when notifications are permitted, and that Stop removes
 foreground status while an ordinary alert remains. Restore recorded
 network settings after manual Maps-tile and real monitoring checks, then complete
 the shared idle-home cleanup.

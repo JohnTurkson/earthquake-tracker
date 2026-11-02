@@ -8,8 +8,8 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import androidx.work.WorkManager
+import androidx.work.await
 import com.google.android.gms.location.LocationServices
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
@@ -19,9 +19,9 @@ import com.johnturkson.sandbox.ui.EarthquakeListViewModel
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringObserver
 import com.johnturkson.sandbox.ui.EarthquakeSelectionResult
 import com.johnturkson.sandbox.ui.EarthquakeViewModel
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import kotlin.test.assertEquals
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -49,13 +49,10 @@ class EarthquakeDestinationStateTest {
             )
         val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
         val repository = EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
-        val scheduler = EarthquakeWorkScheduler(WorkManager.getInstance(context))
-        val connection =
-            object : EarthquakeConnection {
-                override val online = MutableStateFlow(false)
-
-                override fun isOnline() = false
-            }
+        val scheduler = EarthquakeMonitor(WorkManager.getInstance(context))
+        scheduler.stop().await()
+        WorkManager.getInstance(context).cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
+        val originalRefresh = scheduler.refreshWork.first()
         fun create(handle: SavedStateHandle) =
             EarthquakeViewModel(
                 Destination.EarthquakeMapRoute,
@@ -63,7 +60,7 @@ class EarthquakeDestinationStateTest {
                 locationRepository,
                 provider,
                 repository,
-                EarthquakeMonitoringObserver(repository, scheduler, connection),
+                EarthquakeMonitoringObserver(repository, scheduler),
                 scheduler,
             )
         val item = EarthquakeMonitoringFixtures.item(magnitude = 3.7)
@@ -72,7 +69,7 @@ class EarthquakeDestinationStateTest {
             composeRule.runOnUiThread {
                 val map = create(SavedStateHandle())
                 val listHandle = SavedStateHandle()
-                val observer = EarthquakeMonitoringObserver(repository, scheduler, connection)
+                val observer = EarthquakeMonitoringObserver(repository, scheduler)
                 val list =
                     EarthquakeListViewModel(
                         Destination.EarthquakeListRoute,
@@ -129,6 +126,7 @@ class EarthquakeDestinationStateTest {
                 restored.consumeScrollRequest(repeated)
                 assertEquals(latest, restored.scrollRequest)
             }
+            assertEquals(originalRefresh, scheduler.refreshWork.first())
         } finally {
             composeRule.runOnUiThread { composeRule.activity.viewModelStore.clear() }
             database.close()

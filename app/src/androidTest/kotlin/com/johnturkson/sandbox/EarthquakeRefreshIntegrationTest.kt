@@ -150,7 +150,12 @@ class EarthquakeRefreshIntegrationTest {
                         workerParameters: WorkerParameters,
                     ): ListenableWorker? =
                         if (workerClassName == EarthquakeRefreshWorker::class.java.name)
-                            EarthquakeRefreshWorker(appContext, workerParameters, refresher)
+                            EarthquakeRefreshWorker(
+                                appContext,
+                                workerParameters,
+                                refresher,
+                                EarthquakeMonitoringFixtures.connection(),
+                            )
                         else null
                 }
             suspend fun runWorker() =

@@ -14,7 +14,6 @@ import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.PauseCircleOutline
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sensors
-import androidx.compose.material.icons.outlined.WifiOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -53,7 +52,6 @@ fun EarthquakeMonitoringCard(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val offline = state.status == EarthquakeMonitoringState.Status.Offline
     val failed =
         state.status == EarthquakeMonitoringState.Status.Failed ||
             state.refresh == EarthquakeMonitoringState.Refresh.Failed
@@ -65,7 +63,8 @@ fun EarthquakeMonitoringCard(
             state.isRefreshing -> R.string.refreshing_earthquakes
             state.status == EarthquakeMonitoringState.Status.Failed -> R.string.monitoring_failed
             failed -> R.string.refresh_failed
-            offline -> R.string.monitoring_offline
+            state.refresh == EarthquakeMonitoringState.Refresh.Succeeded ->
+                R.string.refresh_succeeded
             state.status == EarthquakeMonitoringState.Status.Starting ->
                 R.string.monitoring_starting
             state.isMonitoring -> R.string.live_monitoring
@@ -87,7 +86,8 @@ fun EarthquakeMonitoringCard(
                 state.status == EarthquakeMonitoringState.Status.Failed ->
                     R.string.monitoring_bar_failed
                 failed -> R.string.monitoring_bar_refresh_failed
-                offline -> R.string.monitoring_bar_offline
+                state.refresh == EarthquakeMonitoringState.Refresh.Succeeded ->
+                    R.string.monitoring_bar_refresh_succeeded
                 state.status == EarthquakeMonitoringState.Status.Starting ->
                     R.string.monitoring_bar_starting
                 state.isMonitoring -> R.string.live_monitoring
@@ -100,7 +100,7 @@ fun EarthquakeMonitoringCard(
         updatedLabel?.let { stringResource(R.string.monitoring_bar_summary, titleLabel, it) }
             ?: titleLabel
     val color =
-        if (offline || failed) MaterialTheme.colorScheme.errorContainer
+        if (failed) MaterialTheme.colorScheme.errorContainer
         else MaterialTheme.colorScheme.surfaceContainer
     Surface(
         modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
@@ -118,7 +118,6 @@ fun EarthquakeMonitoringCard(
                     Icon(
                         when {
                             failed -> Icons.Outlined.ErrorOutline
-                            offline -> Icons.Outlined.WifiOff
                             state.isMonitoring -> Icons.Outlined.Sensors
                             else -> Icons.Outlined.PauseCircleOutline
                         },

@@ -90,7 +90,7 @@ class EarthquakeNotificationsTest {
                     posted[1].notification.contentIntent,
                 )
             }
-            val foreground = notifications.foreground(UUID.randomUUID(), offline = true)
+            val foreground = notifications.foreground(UUID.randomUUID())
             assertEquals(EarthquakeNotifications.MonitoringId, foreground.notificationId)
             assertEquals(
                 EarthquakeNotifications.MonitoringChannel,

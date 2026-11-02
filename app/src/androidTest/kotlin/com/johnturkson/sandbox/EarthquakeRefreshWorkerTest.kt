@@ -19,6 +19,14 @@ import org.junit.Test
 
 class EarthquakeRefreshWorkerTest {
     @Test
+    fun offlineCheckFailsBeforeFetchingOrPublishingAlerts() = runBlocking {
+        val operations = mutableListOf<String>()
+        val worker = worker({ operations += "save" }, { operations += "alerts" }, online = false)
+        assertEquals(ListenableWorker.Result.failure(), worker.doWork())
+        assertEquals(emptyList(), operations)
+    }
+
+    @Test
     fun successCommitsDataBeforePublishingAlerts() = runBlocking {
         val operations = mutableListOf<String>()
         val worker = worker({ operations += "save" }, { operations += "alerts" })
@@ -63,6 +71,7 @@ class EarthquakeRefreshWorkerTest {
     private fun worker(
         onRefresh: suspend () -> Unit = {},
         onAlerts: suspend () -> Unit = {},
+        online: Boolean = true,
     ): EarthquakeRefreshWorker {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val factory =
@@ -80,6 +89,7 @@ class EarthquakeRefreshWorkerTest {
 
                             override suspend fun publishAlerts() = onAlerts()
                         },
+                        EarthquakeMonitoringFixtures.connection(online),
                     )
             }
         return TestListenableWorkerBuilder<EarthquakeRefreshWorker>(context)

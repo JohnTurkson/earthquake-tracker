@@ -8,7 +8,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.map
 
 @Singleton
-class EarthquakeWorkScheduler @Inject constructor(private val manager: WorkManager) {
+class EarthquakeMonitor @Inject constructor(private val manager: WorkManager) {
     val refreshWork = manager.getWorkInfosForUniqueWorkFlow(RefreshWork).map { it.singleOrNull() }
     val monitoringWork =
         manager.getWorkInfosForUniqueWorkFlow(MonitoringWork).map { it.singleOrNull() }
@@ -20,14 +20,14 @@ class EarthquakeWorkScheduler @Inject constructor(private val manager: WorkManag
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>().build(),
         )
 
-    fun startMonitoring() =
+    fun start() =
         manager.enqueueUniqueWork(
             MonitoringWork,
             ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<EarthquakeMonitoringWorker>().build(),
         )
 
-    fun stopMonitoring() = manager.cancelUniqueWork(MonitoringWork)
+    fun stop() = manager.cancelUniqueWork(MonitoringWork)
 
     companion object {
         const val RefreshWork = "earthquake_refresh"

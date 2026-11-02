@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.ui.EarthquakeNotificationsViewModel.Factory
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -23,7 +23,7 @@ constructor(
     @Assisted val navKey: Destination.EarthquakeNotificationsRoute,
     private val settingsRepository: EarthquakeSettingsRepository,
     private val notificationManager: EarthquakeNotifications,
-    private val workScheduler: EarthquakeWorkScheduler,
+    private val monitor: EarthquakeMonitor,
     monitoringObserver: EarthquakeMonitoringObserver,
 ) : ViewModel(), EarthquakeNotificationsState {
     private var settingsLoaded = false
@@ -54,7 +54,7 @@ constructor(
     }
 
     fun setMonitoring(enabled: Boolean) {
-        if (enabled) workScheduler.startMonitoring() else workScheduler.stopMonitoring()
+        if (enabled) monitor.start() else monitor.stop()
     }
 
     fun refreshNotificationCapabilities() {

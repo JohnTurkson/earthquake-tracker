@@ -45,7 +45,7 @@
     </plurals>
     <string name="refreshing_earthquakes">Refreshing earthquakes…</string>
     <string name="existing_data_visible">Existing data remains visible</string>
-    <string name="monitoring_offline">Offline · Monitoring paused</string>
+    <string name="refresh_succeeded">Earthquakes updated</string>
     <string name="refresh_failed">Couldn’t refresh earthquakes</string>
     <string name="monitoring_starting">Starting live monitoring…</string>
     <string name="live_monitoring">Live monitoring</string>
@@ -93,7 +93,7 @@
     <string name="monitoring_bar_refreshing">Refreshing…</string>
     <string name="monitoring_bar_failed">Monitoring failed</string>
     <string name="monitoring_bar_refresh_failed">Refresh failed</string>
-    <string name="monitoring_bar_offline">Offline · Paused</string>
+    <string name="monitoring_bar_refresh_succeeded">Refreshed</string>
     <string name="monitoring_bar_starting">Starting…</string>
     <string name="monitoring_bar_off">Monitoring off</string>
     <string name="monitoring_bar_updated">Updated %1$s</string>

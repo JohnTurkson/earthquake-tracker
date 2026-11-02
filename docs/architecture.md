@@ -620,7 +620,7 @@ implementing API operations.
 Use the existing path for runtime earthquake data:
 
 ```text
-EarthquakeWorkScheduler -> EarthquakeRefreshWorker -> EarthquakeRefreshRepository
+EarthquakeMonitor -> EarthquakeRefreshWorker -> EarthquakeRefreshRepository
 EarthquakeRefreshRepository -> EarthquakeApi -> Earthquake feed
 EarthquakeRefreshRepository -> MainDatabase -> EarthquakeDao
 EarthquakeDao + EarthquakeMonitoringDao -> EarthquakeRepository -> EarthquakeViewModel
@@ -661,7 +661,10 @@ one Room transaction. It returns normally on success and lets network, decoding,
 validation, and storage exceptions propagate. It does not catch transport error
 types, classify failures, check connectivity, or own work status.
 
-`EarthquakeRefreshWorker` calls the repository and returns `Result.success()`.
+`EarthquakeRefreshWorker` checks `EarthquakeConnection.isOnline()` before calling
+the repository. No validated active network returns `Result.failure()` immediately,
+without fetching or publishing alerts. Otherwise it calls the repository and
+returns `Result.success()`.
 An exception escaping `doWork()` is handled by WorkManager as failed work. The
 ViewModel maps `WorkInfo.State.FAILED` to the generic refresh-failed presentation;
 it does not inspect exception types or parse custom result codes. Cancellation
@@ -673,7 +676,7 @@ successfully saved data into a failed refresh, and cancellation still propagates
 Read typed instants directly with `Clock.System.now()` for refresh metadata and
 alert freshness; do not add a dedicated class that only forwards that system call.
 
-[`EarthquakeWorkScheduler`](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeWorkScheduler.kt)
+[`EarthquakeMonitor`](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeMonitor.kt)
 routes manual refresh and every monitoring tick through the same unique one-time
 `EarthquakeRefreshWorker` with `ExistingWorkPolicy.KEEP`. Enqueue directly instead
 of checking for running work first; WorkManager keeps the existing pending work.
@@ -682,29 +685,35 @@ Do not add another mutex, running flag, or completion coordinator around it.
 The screen observes `getWorkInfosForUniqueWorkFlow` through `refreshWork` for
 queued/running/failed state and successful completion. No separate result enum or
 error-code payload is needed for generic refresh feedback.
+Map and List ViewModels only observe stored data and work; creating or restoring
+a destination does not enqueue a refresh. Explicit refresh actions and active
+monitoring request updates.
 Each unique name contains a single one-time request, so use its current `WorkInfo`
 without timestamp tags or a separate ordering scheme. Room independently supplies
 stored earthquakes and the last-successful-refresh timestamp.
 
 `EarthquakeMonitoringWorker` calls `setForeground` with the `dataSync` service
-type. `EarthquakePollingLoop` owns cancellable minute pacing, skips catch-up
-bursts, and wakes on reconnection. Each tick calls `refresh().await()` to finish
-enqueueing; that operation does not wait for the refresh to finish. Later ticks
-may enqueue again while a refresh is active because `KEEP` coalesces those
-requests. The monitoring worker does not observe, await, or copy refresh results.
+type, then directly loops over `monitor.refresh().await()` and `delay(1.minutes)`.
+The first request is immediate; every following request waits a full minute after
+the enqueue operation completes. That operation does not wait for the refresh to
+finish. Later ticks may enqueue again while a refresh is active because `KEEP`
+coalesces those requests. There is no separate polling helper, clock arithmetic,
+connectivity flow, offline pause, or reconnection-triggered request. The monitoring
+worker does not observe, await, or copy refresh results.
 
-The foreground notification describes the monitoring session: active or paused
-offline. The screen observes the separate refresh work for fetch progress and
-failures. Do not mirror refresh state into monitoring progress or notification
-state. Keep the monitoring session as separate unique one-time work with `KEEP`.
+The foreground notification describes the active monitoring session. The screen
+observes the separate refresh work for fetch progress and failures. Do not mirror
+refresh state into monitoring progress or notification state. Keep the monitoring session as separate unique one-time work with `KEEP`.
 Stopping it cancels future ticks while any shared refresh already queued or
 running finishes independently.
 
-Neither request has a network constraint. Refresh attempts use the normal network
-operation and its 30-second timeout; an offline attempt can fail without waiting
-for connectivity. Do not add a refresh connectivity precheck or exception-type
-catalog. The monitoring session separately observes connectivity so it retains
-foreground status while paused offline.
+Neither request has a network constraint, so offline checks produce failed work
+instead of remaining queued until connectivity returns. The refresh worker's
+synchronous connectivity check is a fast-failure optimization, not proof that
+USGS is reachable. An online request still uses the normal network operation and
+its 30-second timeout. Do not classify exception types or copy refresh results
+into the monitoring worker. A failed refresh leaves monitoring active until its
+next minute check.
 Workers receive dependencies through `@HiltWorker` and the application's injected
 `HiltWorkerFactory`. `EarthquakeApplication` supplies WorkManager's on-demand
 configuration; remove only WorkManager's initializer from AndroidX Startup.
@@ -740,11 +749,14 @@ message.
 `EarthquakeMonitoringState` and `EarthquakeNotificationState` are immutable
 rendering values exposed by the relevant destination's read-only contract.
 [EarthquakeMonitoringObserver](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMonitoringObserver.kt)
-combines worker, repository, and connectivity observations without owning event
+combines worker and repository observations without owning event
 selection. Each destination collects it independently. Notifications observes
 preferences and system capabilities in its own ViewModel and screen entry.
 `EarthquakeMonitoringState.status` uses its nested `Status` enum for the monitoring
-session; `refresh` describes the separate refresh operation.
+session; `refresh` describes the separate refresh operation, preserving
+WorkManager's `SUCCEEDED` as `Refresh.Succeeded` and `FAILED` as `Refresh.Failed`.
+Monitoring displays the latest success or failure alongside Room's last
+successful update time.
 [`EarthquakeExplorerTopAppBar`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerTopAppBar.kt)
 places monitoring between Show list/Minimize and the refresh and notification
 actions in expanded windows, whether the list is open, minimized, or replaced
@@ -799,12 +811,15 @@ Notification taps and existing selection resolve through the same repository's
 alias-aware single-event query. Notification history has no cascading foreign key
 to preferred earthquake rows.
 
-`EarthquakeConnection` describes current connectivity and its observable changes;
-`EarthquakeConnectivity` is the Android implementation. Hilt supplies the validated-network source to monitoring and the ViewModel.
-Refresh execution does not depend on this connectivity snapshot. Tests use
-MockEngine to control network outcomes while the device is offline. The refresh repository bounds its own summary request with a
-30-second coroutine timeout, preserving the shared client's other endpoint
-behavior.
+`EarthquakeConnection` exposes only the synchronous `isOnline()` check.
+`EarthquakeConnectivity` reads `ConnectivityManager.activeNetwork` and
+`getNetworkCapabilities()` for `NET_CAPABILITY_VALIDATED`. Hilt supplies it to the
+refresh worker; neither monitoring nor presentation observes network callbacks or
+a `StateFlow`. Tests provide a fixed connection through
+`EarthquakeMonitoringFixtures.connection()` and use MockEngine to control network
+outcomes while the device is offline. The refresh repository bounds its own
+summary request with a 30-second coroutine timeout, preserving the shared
+client's other endpoint behavior.
 
 Follow the [date and time conventions](date-time.md) for typed instants and
 durations, ISO storage, SDK conversions, and timestamp serialization.

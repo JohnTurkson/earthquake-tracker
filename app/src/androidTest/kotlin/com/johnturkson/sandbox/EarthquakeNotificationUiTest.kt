@@ -209,20 +209,11 @@ class EarthquakeNotificationUiTest {
             .onNodeWithContentDescription("Couldn’t refresh earthquakes", substring = true)
             .assertIsDisplayed()
         rule.onNodeWithContentDescription("Updated 10:42", substring = true).assertIsDisplayed()
-        rule.runOnIdle {
-            state =
-                state.copy(
-                    status = EarthquakeMonitoringState.Status.Offline,
-                    refresh = EarthquakeMonitoringState.Refresh.Failed,
-                )
-        }
+        rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Succeeded) }
         rule
-            .onNodeWithContentDescription("Couldn’t refresh earthquakes", substring = true)
+            .onNodeWithContentDescription("Earthquakes updated", substring = true)
             .assertIsDisplayed()
-        rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Idle) }
-        rule
-            .onNodeWithContentDescription("Offline · Monitoring paused", substring = true)
-            .assertIsDisplayed()
+        rule.onNodeWithContentDescription("Updated 10:42", substring = true).assertIsDisplayed()
         rule.onNodeWithContentDescription("Refresh earthquake data").assertIsEnabled()
         rule.runOnIdle {
             state = EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed)

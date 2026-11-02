@@ -13,7 +13,7 @@ import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.ui.EarthquakeViewModel.Factory
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -33,7 +33,7 @@ constructor(
     private val locationProvider: EarthquakeLocationProvider,
     private val repository: EarthquakeRepository,
     monitoringObserver: EarthquakeMonitoringObserver,
-    private val workScheduler: EarthquakeWorkScheduler,
+    private val monitor: EarthquakeMonitor,
 ) : ViewModel(), EarthquakeState {
     private var locationUpdates: Job? = null
     override var initialMapLocation: EarthquakeLocation? by mutableStateOf(null)
@@ -96,7 +96,6 @@ constructor(
             }
         }
         viewModelScope.launch { monitoringObserver.states.collect { monitoring = it } }
-        workScheduler.refresh()
     }
 
     fun applySelection(result: EarthquakeSelectionResult, focus: Boolean = true) {
@@ -144,7 +143,7 @@ constructor(
     }
 
     fun refresh() {
-        workScheduler.refresh()
+        monitor.refresh()
     }
 
     fun openNotificationEvent(eventId: String, onSelected: (String) -> Unit = {}) {

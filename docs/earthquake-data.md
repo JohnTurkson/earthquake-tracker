@@ -5,7 +5,7 @@ lookups, and the last successful refresh timestamp. WorkManager owns all runtime
 updates. Hilt provides the shared Ktor client, `MainDatabase`, and `EarthquakeDao`; constructor injection
 provides `EarthquakeApi` and `EarthquakeRepository`. The explorer observes the
 unrestricted stored history. `EarthquakeRefreshRepository` reuses this API and
-merge path for the shared one-time refresh worker. Manual refresh, startup, and
+merge path for the shared one-time refresh worker. Manual refresh and
 every foreground-monitoring tick enqueue that same unique work.
 
 ## Feed formats and revisions
@@ -41,7 +41,7 @@ times, or magnitudes alone do not establish that two earthquakes are the same.
 ## Calling the data layer
 
 Inject `EarthquakeRepository` for observable local reads. It has no network
-client or write methods. Inject `EarthquakeWorkScheduler` to request refreshes:
+client or write methods. Inject `EarthquakeMonitor` to request refreshes:
 
 ```kotlin
 val earthquakes = repository.getEarthquakesFlow()
@@ -52,18 +52,22 @@ val recent = repository.getEarthquakesFlow(
     endTime = Instant.parse("2026-11-01T00:00:00Z"),
     minimumMagnitude = 2.5,
 )
-workScheduler.refresh()
+monitor.refresh()
 ```
 
-`EarthquakeRefreshWorker` alone calls `EarthquakeRefreshRepository.refresh()`.
+`EarthquakeRefreshWorker` first checks `EarthquakeConnection.isOnline()` and
+returns failed work immediately without a validated active network. It alone
+calls `EarthquakeRefreshRepository.refresh()`.
 The repository fetches the all-day summary, validates the complete response, and
 merges records and the successful-refresh timestamp in one Room transaction.
 The foreground monitoring worker enqueues that same unique one-time work every
-minute while active. It awaits only the enqueue operation; it does not wait for
+minute while active, starting immediately and delaying one minute after each
+enqueue. Offline failures do not end the session; reconnection waits for the next
+minute check. The worker awaits only the enqueue operation; it does not wait for
 the refresh or copy its result. `KEEP` coalesces manual and monitoring requests.
 Stopping monitoring cancels future polling, leaving an already queued or running
 refresh to finish. Android can delay or stop work; the minute interval is a
-requested cadence.
+requested cadence. Opening or restoring Map/List only observes stored data.
 
 Observe WorkManager for queued/running state and success or generic failure.
 Observe Room independently for earthquake records and successful-refresh metadata. Reading a Flow does not initiate network access. No in-memory

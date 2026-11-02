@@ -650,7 +650,12 @@ class EarthquakeStorageTest {
                     workerClassName: String,
                     workerParameters: WorkerParameters,
                 ): ListenableWorker =
-                    EarthquakeRefreshWorker(appContext, workerParameters, refresher)
+                    EarthquakeRefreshWorker(
+                        appContext,
+                        workerParameters,
+                        refresher,
+                        EarthquakeMonitoringFixtures.connection(),
+                    )
             }
         val result = runCatching {
             TestListenableWorkerBuilder<EarthquakeRefreshWorker>(context)

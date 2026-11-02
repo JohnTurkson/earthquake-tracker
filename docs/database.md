@@ -52,7 +52,7 @@ columns. Product metadata and separate detail snapshots are not stored.
 
 `EarthquakeRepository` exposes only observable Room reads, including
 `getRefreshFlow()` for the last successful refresh. It has no network dependency
-or refresh methods. UI callers enqueue `EarthquakeWorkScheduler.refresh()`;
+or refresh methods. UI callers enqueue `EarthquakeMonitor.refresh()`;
 `EarthquakeRefreshWorker` alone invokes the refresh repository to fetch and save.
 
 Register entities and DAO accessors in

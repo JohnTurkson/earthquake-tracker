@@ -11,7 +11,7 @@ import androidx.work.WorkManager
 import androidx.work.await
 import com.johnturkson.sandbox.app.EarthquakeActivity
 import com.johnturkson.sandbox.data.EarthquakeNotifications
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -27,11 +27,11 @@ import org.junit.Test
 
 class EarthquakeWorkIntegrationTest {
     @Test
-    fun realOfflineRefreshFailsAndForegroundSessionPausesUntilStopped() = runBlocking {
+    fun realOfflineRefreshFailsWhileForegroundSessionContinuesUntilStopped() = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         val manager = WorkManager.getInstance(context)
-        val scheduler = EarthquakeWorkScheduler(manager)
+        val scheduler = EarthquakeMonitor(manager)
         val network = context.getSystemService(ConnectivityManager::class.java)
         val notifications = EarthquakeNotifications(context)
         val systemNotifications = context.getSystemService(NotificationManager::class.java)
@@ -48,21 +48,19 @@ class EarthquakeWorkIntegrationTest {
                 "Run the device suite with Wi-Fi and mobile data disabled under the shared reservation",
             )
             ActivityScenario.launch(EarthquakeActivity::class.java).use {
+                scheduler.refresh().await()
                 withTimeout(45.seconds) {
-                    manager
-                        .getWorkInfosForUniqueWorkFlow(EarthquakeWorkScheduler.RefreshWork)
-                        .first { infos ->
-                            infos.any { info -> info.state == WorkInfo.State.FAILED }
-                        }
+                    manager.getWorkInfosForUniqueWorkFlow(EarthquakeMonitor.RefreshWork).first {
+                        infos ->
+                        infos.any { info -> info.state == WorkInfo.State.FAILED }
+                    }
                 }
-                scheduler.startMonitoring()
-                scheduler.startMonitoring()
+                scheduler.start()
+                scheduler.start()
                 val running =
                     withTimeout(45.seconds) {
                             manager
-                                .getWorkInfosForUniqueWorkFlow(
-                                    EarthquakeWorkScheduler.MonitoringWork
-                                )
+                                .getWorkInfosForUniqueWorkFlow(EarthquakeMonitor.MonitoringWork)
                                 .first { infos ->
                                     infos.any { info -> info.state == WorkInfo.State.RUNNING }
                                 }
@@ -81,7 +79,7 @@ class EarthquakeWorkIntegrationTest {
                             systemNotifications.activeNotifications.none {
                                 it.id == EarthquakeNotifications.MonitoringId &&
                                     it.notification.extras.getString(Notification.EXTRA_TITLE) ==
-                                        context.getString(R.string.monitoring_offline)
+                                        context.getString(R.string.monitor_notification_title)
                             }
                         ) delay(50.milliseconds)
                     }
@@ -94,7 +92,7 @@ class EarthquakeWorkIntegrationTest {
                         ) delay(50.milliseconds)
                     }
                 }
-                val notification = notifications.foreground(id, offline = true).notification
+                val notification = notifications.foreground(id).notification
                 notification.actions
                     .single { action -> action.title == "Stop monitoring" }
                     .actionIntent
@@ -118,13 +116,13 @@ class EarthquakeWorkIntegrationTest {
                 assertEquals(
                     0,
                     manager
-                        .getWorkInfosForUniqueWork(EarthquakeWorkScheduler.MonitoringWork)
+                        .getWorkInfosForUniqueWork(EarthquakeMonitor.MonitoringWork)
                         .get()
                         .count { info -> !info.state.isFinished },
                 )
             }
         } finally {
-            scheduler.stopMonitoring().await()
+            scheduler.stop().await()
             systemNotifications.cancel(alert.id, EarthquakeNotifications.AlertId)
         }
     }

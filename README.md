@@ -53,13 +53,16 @@ coordinates remain accessible through the cluster list.
 
 The screen observes a Room database populated from the all-day GeoJSON feed.
 Manual refresh and live-monitoring checks share one unique one-time WorkManager
-refresh request and preserve stored data on failure. Refresh attempts run without a
-network constraint and report a generic failure when they cannot complete,
-retaining saved data. Live monitoring uses a
-foreground WorkManager worker that checks every minute while active, pauses
-offline, and resumes on reconnection. Android can stop or delay work; the screen
-observes the actual worker state and refresh result. Stopping a session cancels
-future checks while letting an already queued or running refresh finish.
+refresh request and preserve stored data on failure. Each refresh checks
+Android's active network capabilities first and fails immediately when no
+validated network is available. Requests otherwise report a generic failure when
+they cannot complete, retaining saved data. Live monitoring uses a foreground
+WorkManager worker that requests a refresh immediately, then waits one minute
+between requests, including after an offline failure. Reconnection does not
+trigger an extra request. Opening Map or List reads stored data without starting
+a refresh. Android can stop or delay work; the screen observes the actual worker
+state and refresh result. Stopping a session cancels future checks while letting
+an already queued or running refresh finish.
 
 The separate bell opens the Notifications destination full-screen in compact
 windows and as a floating right pane in expanded windows. Material Adaptive

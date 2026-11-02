@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.ui.EarthquakeListViewModel.Factory
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
+import com.johnturkson.sandbox.work.EarthquakeMonitor
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -26,7 +26,7 @@ constructor(
     savedStateHandle: SavedStateHandle,
     repository: EarthquakeRepository,
     monitoringObserver: EarthquakeMonitoringObserver,
-    private val workScheduler: EarthquakeWorkScheduler,
+    private val monitor: EarthquakeMonitor,
 ) : ViewModel(), EarthquakeListState {
     override var mapItems: List<EarthquakeMapItem> by mutableStateOf(emptyList())
         private set
@@ -69,7 +69,6 @@ constructor(
             }
         }
         viewModelScope.launch { monitoringObserver.states.collect { monitoring = it } }
-        workScheduler.refresh()
     }
 
     fun applySelection(result: EarthquakeSelectionResult, scroll: Boolean = true) {
@@ -83,7 +82,7 @@ constructor(
         if (scrollRequest == request) scrollRequest = null
     }
 
-    fun refresh() = workScheduler.refresh()
+    fun refresh() = monitor.refresh()
 
     @AssistedFactory
     interface Factory {

@@ -294,8 +294,24 @@ class EarthquakeNotificationsScreenshotTest {
     fun darkMonitoring() {
         EarthquakeTheme(darkTheme = true, dynamicColor = false) {
             EarthquakeMonitoringCard(
-                EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Offline),
+                EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Failed),
                 {},
+            )
+        }
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 360, locale = "en-US")
+    @Composable
+    fun darkSuccessfulRefresh() {
+        EarthquakeTheme(darkTheme = true, dynamicColor = false) {
+            EarthquakeMonitoringCard(
+                EarthquakeMonitoringState(
+                    status = EarthquakeMonitoringState.Status.Running,
+                    refresh = EarthquakeMonitoringState.Refresh.Succeeded,
+                ),
+                {},
+                lastUpdatedLabel = "10:42",
             )
         }
     }
@@ -391,10 +407,6 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
                 status = EarthquakeMonitoringState.Status.Running,
                 lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Offline,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Queued),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Running),
@@ -407,7 +419,6 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
                 refresh = EarthquakeMonitoringState.Refresh.Failed,
                 lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
-            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Offline),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
                 refresh = EarthquakeMonitoringState.Refresh.Running,
@@ -451,27 +462,33 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
                 lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Offline,
-                hasStoredData = true,
-            ),
-            EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Failed,
-                refresh = EarthquakeMonitoringState.Refresh.Queued,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Offline,
                 refresh = EarthquakeMonitoringState.Refresh.Queued,
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Failed,
                 refresh = EarthquakeMonitoringState.Refresh.Running,
             ),
+            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Succeeded),
             EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Offline,
-                refresh = EarthquakeMonitoringState.Refresh.Running,
+                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Offline,
+                status = EarthquakeMonitoringState.Status.Running,
+                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Running,
+                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Starting,
+                refresh = EarthquakeMonitoringState.Refresh.Succeeded,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Running,
                 refresh = EarthquakeMonitoringState.Refresh.Failed,
                 lastUpdated = Instant.fromEpochMilliseconds(1),
             ),

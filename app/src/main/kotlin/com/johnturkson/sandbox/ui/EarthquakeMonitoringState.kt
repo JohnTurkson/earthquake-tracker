@@ -15,7 +15,6 @@ data class EarthquakeMonitoringState(
         Stopped,
         Starting,
         Running,
-        Offline,
         Failed,
     }
 
@@ -23,6 +22,7 @@ data class EarthquakeMonitoringState(
         Idle,
         Queued,
         Running,
+        Succeeded,
         Failed,
     }
 
@@ -30,5 +30,5 @@ data class EarthquakeMonitoringState(
         get() = refresh == Refresh.Queued || refresh == Refresh.Running
 
     val isMonitoring: Boolean
-        get() = status == Status.Starting || status == Status.Running || status == Status.Offline
+        get() = status == Status.Starting || status == Status.Running
 }
