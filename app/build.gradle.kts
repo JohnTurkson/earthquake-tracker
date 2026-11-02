@@ -23,7 +23,11 @@ android {
 
     namespace = "com.johnturkson.sandbox"
 
-    compileSdk { version = release(37) { minorApiLevel = 0 } }
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
 
     defaultConfig {
         applicationId = "com.johnturkson.sandbox"
