@@ -343,17 +343,13 @@ fun EarthquakeApp(
                         },
                 )
             }
-            BackHandler(
-                enabled =
-                    !notificationsVisible &&
-                        !clusterVisible &&
-                        (detailsVisible ||
-                            if (expanded) {
-                                !listVisible
-                            } else {
-                                compactView == EarthquakeView.Map
-                            })
-            ) {
+            val hasPriorityBackHandler = notificationsVisible || clusterVisible
+            val canExitFromCurrentView =
+                if (expanded) !listVisible else compactView == EarthquakeView.Map
+            val backHandlerEnabled =
+                !hasPriorityBackHandler && (detailsVisible || canExitFromCurrentView)
+
+            BackHandler(enabled = backHandlerEnabled) {
                 if (detailsVisible) {
                     actions.onDetailsClose()
                 } else {

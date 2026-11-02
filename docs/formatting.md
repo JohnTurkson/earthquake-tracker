@@ -14,11 +14,15 @@ for Kotlin sources and Gradle Kotlin scripts. Do not add ktfmt Gradle or IDE
 plugins. Agents must run the formatter and its check explicitly before committing
 Kotlin or build changes; formatting is independent of Gradle's `check` tasks.
 
-Use braces for every `if` and `else` branch, with the branch body on separate
-lines. Apply this to early returns, single actions, and expressions that produce
-values, including arguments and test fixtures. Keep `else if` conditions together,
-with braces around each body. Format existing instances by default; flag any
-proposed readability exception for review with its location and specific reason.
+Use braces for multiline `if` and `else` branches, with each branch body on
+separate lines. A simple `if` or two-branch `if` / `else` may omit braces when the
+entire conditional fits on one line within the 100-character limit. An assignment
+may wrap before that single-line conditional. If the condition or either branch
+wraps, use braces for every branch. Apply these rules to early returns, single
+actions, and expressions that produce values, including arguments and test
+fixtures. Keep `else if` conditions together, with braces around each body.
+Format existing instances by default; flag any proposed readability exception
+for review with its location and specific reason.
 
 [`EarthquakeRefreshWorker.doWork`](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeRefreshWorker.kt)
 uses a braced early return:
@@ -39,6 +43,14 @@ requestedMapFocusId =
     } else {
         null
     }
+```
+
+[`EarthquakeApp`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeApp.kt)
+keeps a short conditional on one line without braces:
+
+```kotlin
+val canExitFromCurrentView =
+    if (expanded) !listVisible else compactView == EarthquakeView.Map
 ```
 
 Pass `--kotlinlang-style --enable-editorconfig` on every invocation.
