@@ -27,4 +27,11 @@ class EarthquakeAlertPolicyTest {
         assertTrue(policy.qualifies(item.copy(magnitude = 6.1, updated = 120_000), 6, 120_000))
         assertFalse(policy.qualifies(item.copy(updated = 200_000), 6, 200_000))
     }
+
+    @Test
+    fun otherSeismicEventTypesDoNotProduceEarthquakeAlerts() {
+        assertFalse(policy.qualifies(item.copy(type = "quarry blast"), 6, 100_000))
+        assertFalse(policy.qualifies(item.copy(type = "explosion"), 6, 100_000))
+        assertFalse(policy.qualifies(item.copy(type = null), 6, 100_000))
+    }
 }

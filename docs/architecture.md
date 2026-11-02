@@ -397,8 +397,9 @@ are suppressed. Request that permission only from a user action in the screen
 entry, with rationale and settings paths. Persist only the request attempt and
 user preferences, never an OS permission grant.
 
-`EarthquakeAlertPolicy` uses event time within the past 60 seconds and the chosen
-minimum magnitude. A magnitude revision may qualify while the event is fresh;
+`EarthquakeAlertPolicy` requires the USGS `earthquake` event type, event time
+within the past 60 seconds, and the chosen minimum magnitude. A magnitude
+revision may qualify while the event is fresh;
 `EarthquakeAlertDelivery` records successful delivery by USGS event ID in Room.
 Stable notification tags update the same event rather than creating duplicates.
 The database commit and Android notification post are separate operations;
