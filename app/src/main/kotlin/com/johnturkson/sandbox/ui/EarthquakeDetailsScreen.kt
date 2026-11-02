@@ -167,7 +167,16 @@ fun EarthquakeDetailsCard(
         rememberSaveable(item.mapItem.id) { mutableStateOf(initialShakingExpanded) }
     val unavailable = stringResource(R.string.earthquake_detail_unavailable)
     val locale = LocalConfiguration.current.locales[0]
-    val magnitude = item.mapItem.magnitude?.let { String.format(locale, "%.1f", it) } ?: "?"
+    val magnitude = item.mapItem.magnitude
+    val magnitudeValue =
+        magnitude?.let { String.format(locale, "%.1f", it) }
+            ?: stringResource(R.string.unknown_magnitude)
+    val magnitudeText =
+        if (magnitude != null) {
+            stringResource(R.string.earthquake_magnitude_value, magnitudeValue)
+        } else {
+            magnitudeValue
+        }
     val status =
         when (item.status) {
             "reviewed" -> stringResource(R.string.earthquake_status_reviewed)
@@ -207,7 +216,7 @@ fun EarthquakeDetailsCard(
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            stringResource(R.string.earthquake_magnitude_value, magnitude),
+                            magnitudeText,
                             style = MaterialTheme.typography.headlineMedium,
                         )
                         Text(
@@ -240,7 +249,7 @@ fun EarthquakeDetailsCard(
                 item {
                     EarthquakeDetailValue(
                         stringResource(R.string.earthquake_magnitude_label),
-                        listOfNotNull(magnitude, item.magnitudeType).joinToString(" "),
+                        listOfNotNull(magnitudeValue, item.magnitudeType).joinToString(" "),
                     )
                 }
                 item {

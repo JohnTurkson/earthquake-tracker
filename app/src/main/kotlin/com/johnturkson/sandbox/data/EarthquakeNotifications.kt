@@ -110,12 +110,20 @@ constructor(@ApplicationContext private val context: Context) {
         val capability = capabilities()
         if (!capability.permissionGranted || !capability.appEnabled || !capability.alertsEnabled)
             return false
+        val magnitude = item.magnitude
+        val magnitudeText =
+            if (magnitude != null) {
+                context.getString(R.string.earthquake_magnitude_value, magnitude.toString())
+            } else {
+                context.getString(R.string.unknown_magnitude)
+            }
+        val placeText = item.place ?: context.getString(R.string.unknown_location)
         val title =
             item.title?.takeIf { it.isNotBlank() }?.replaceFirst(Regex("^M\\s+"), "M")
                 ?: context.getString(
                     R.string.earthquake_fallback_title,
-                    item.magnitude.toString(),
-                    item.place ?: context.getString(R.string.unknown_location),
+                    magnitudeText,
+                    placeText,
                 )
         val notification =
             NotificationCompat.Builder(context, AlertsChannel)

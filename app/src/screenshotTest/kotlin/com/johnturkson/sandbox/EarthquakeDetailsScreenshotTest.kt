@@ -76,6 +76,13 @@ class EarthquakeDetailsScreenshotTest {
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 720, locale = "en-US")
+    @Preview(
+        widthDp = 384,
+        heightDp = 720,
+        locale = "en-US",
+        uiMode = Configuration.UI_MODE_NIGHT_YES,
+    )
+    @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
     @Composable
     fun missingMeasurements() {
         Theme {
@@ -86,7 +93,7 @@ class EarthquakeDetailsScreenshotTest {
                             mapItem.copy(
                                 snippet = null,
                                 magnitude = null,
-                                title = "M? - Unknown location",
+                                title = null,
                             ),
                         place = null,
                         depth = -0.4,

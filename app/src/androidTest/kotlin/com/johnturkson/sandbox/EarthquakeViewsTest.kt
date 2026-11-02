@@ -288,13 +288,13 @@ class EarthquakeViewsTest {
             }
         }
 
-        composeRule.onNodeWithText("M? – Unknown location").performClick()
-        composeRule.onNodeWithText("M? – Unknown location").assertIsSelected()
+        composeRule.onNodeWithText("Unknown Magnitude – Unknown location").performClick()
+        composeRule.onNodeWithText("Unknown Magnitude – Unknown location").assertIsSelected()
         composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
-        composeRule.onNodeWithText("M? – Unknown location").assertIsDisplayed()
+        composeRule.onNodeWithText("Unknown Magnitude – Unknown location").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
         composeRule.onNodeWithText("Show list").performClick()
-        composeRule.onNodeWithText("M? – Unknown location").assertIsSelected()
+        composeRule.onNodeWithText("Unknown Magnitude – Unknown location").assertIsSelected()
         composeRule.runOnIdle { assertEquals(item.id, selectedId) }
     }
 }

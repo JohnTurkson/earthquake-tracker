@@ -57,22 +57,28 @@ for display formatting.
 
 [EarthquakeNotifications](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNotifications.kt)
 uses a nonblank source title with the established magnitude-label formatting and
-otherwise formats `earthquake_fallback_title` with the event's magnitude and place,
-using `unknown_location` when the place is null:
+otherwise formats `earthquake_fallback_title` with named `magnitudeText` and
+`placeText` values. Known magnitudes include the `M` prefix through
+`earthquake_magnitude_value`; missing values use `unknown_magnitude` and
+`unknown_location`:
 
 ```kotlin
 context.getString(
     R.string.earthquake_fallback_title,
-    item.magnitude.toString(),
-    item.place ?: context.getString(R.string.unknown_location),
+    magnitudeText,
+    placeText,
 )
 ```
 
 [EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapItem.kt)
 retains nullable source title and place values. Its composable `earthquakeTitle`
 helper uses `stringResource` for the same fallback template, the one-decimal
-`earthquake_magnitude` format, `unknown_location`, and the `unknown_magnitude`
-placeholder. Numeric resource formatting follows the current resource locale,
+`earthquake_magnitude` format (including its `M` prefix), `unknown_location`, and
+`unknown_magnitude`. Missing magnitudes display **Unknown Magnitude** without an
+`M` prefix. `EarthquakeDetailsCard` uses `unknown_magnitude` for its header and
+event-information row. Keep the fallback title template independent of the
+magnitude prefix so it can accept either a known value or the missing-value text.
+Numeric resource formatting follows the current resource locale,
 as the coordinate and cluster labels do. List rows, selection cards, and map
 marker titles resolve that text in composition, following the existing
 `earthquakeEventTime` helper pattern. SDK cluster wrappers receive the resolved
@@ -83,11 +89,3 @@ Keep fallback formatting readable with a block body and explicit returns, as in
 `magnitudeText` and `placeText` values before passing them to the fallback template.
 Keep the numeric `magnitude` separate from its formatted text instead of nesting
 resource calls and scope functions inside the template arguments.
-
-Escape a literal leading question mark in string resources with `\?`, following
-[Android's special-character rules](https://developer.android.com/guide/topics/resources/string-resource#escaping_quotes).
-The unknown-magnitude placeholder in `strings.xml` uses:
-
-```xml
-<string name="unknown_magnitude">\?</string>
-```

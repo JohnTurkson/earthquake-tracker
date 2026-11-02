@@ -1,6 +1,7 @@
 package com.johnturkson.sandbox
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationManager
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
@@ -53,7 +54,7 @@ class EarthquakeNotificationsTest {
                 time = now,
                 updated = now,
             )
-        val second = first.copy(id = "${first.id}-second")
+        val second = first.copy(id = "${first.id}-second", magnitude = null, place = null)
         try {
             assertEquals(wasGranted, notifications.capabilities().permissionGranted)
             val allowed =
@@ -80,6 +81,11 @@ class EarthquakeNotificationsTest {
                 }
             assertEquals(expected, posted.size)
             if (allowed) {
+                val titles = posted.associate {
+                    it.tag to it.notification.extras.getString(Notification.EXTRA_TITLE)
+                }
+                assertEquals("M6.0 – Pacific", titles[first.id])
+                assertEquals("Unknown Magnitude – Unknown location", titles[second.id])
                 assertTrue(
                     posted.all {
                         it.notification.channelId == EarthquakeNotifications.AlertsChannel

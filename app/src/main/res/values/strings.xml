@@ -78,10 +78,10 @@
     <string name="stop_monitoring">Stop monitoring</string>
     <string name="monitor_notification_title">Monitoring earthquakes</string>
     <string name="monitor_notification_detail">Checks every minute · Tap to open</string>
-    <string name="earthquake_fallback_title">M%1$s – %2$s</string>
-    <string name="earthquake_magnitude">%1$.1f</string>
+    <string name="earthquake_fallback_title">%1$s – %2$s</string>
+    <string name="earthquake_magnitude">M%1$.1f</string>
     <string name="unknown_location">Unknown location</string>
-    <string name="unknown_magnitude">\?</string>
+    <string name="unknown_magnitude">Unknown Magnitude</string>
     <string name="preview_alert_title">Example earthquake alert</string>
     <string name="preview_alert_detail">This is a preview of your earthquake alerts.</string>
     <string name="monitoring_failed">Couldn’t start monitoring · Try again</string>
