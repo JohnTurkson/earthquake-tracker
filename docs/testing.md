@@ -400,8 +400,9 @@ transparent pane margins; it is not a map fixture.
 [EarthquakePaneTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakePaneTest.kt)
 checks actual device pixels above the floating notification card, interaction
 with the underlying destination, Close and Back, and saved notification state
-across compact/expanded changes. Run it with the same minimum 900 dp device
-width required by the navigation tests.
+across compact/expanded changes. Use `DeviceConfigurationOverride.WindowSize`
+for those fixtures and run it with the same minimum 900 dp by 600 dp device
+window required by the navigation tests.
 
 [EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDestinationStateTest.kt)
 uses the real Map and List ViewModels with test-local Room data to check

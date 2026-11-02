@@ -4,7 +4,6 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,6 +20,8 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.WindowSize
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
@@ -29,6 +30,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.johnturkson.sandbox.ui.Destination
 import com.johnturkson.sandbox.ui.EarthquakeApp
@@ -85,10 +87,11 @@ class EarthquakePaneTest {
     private fun Content() {
         density = LocalDensity.current.density
         require(LocalWindowInfo.current.containerSize.width / density >= 900f)
-        Box(Modifier.fillMaxSize()) {
-            EarthquakeApp(Modifier.width(if (expanded) 900.dp else 400.dp).testTag("pane-host")) {
-                route,
-                actions ->
+        require(LocalWindowInfo.current.containerSize.height / density >= 600f)
+        DeviceConfigurationOverride(
+            DeviceConfigurationOverride.WindowSize(DpSize(if (expanded) 900.dp else 400.dp, 600.dp))
+        ) {
+            EarthquakeApp(Modifier.fillMaxSize().testTag("pane-host")) { route, actions ->
                 when (route) {
                     Destination.EarthquakeMapRoute ->
                         Box(Modifier.fillMaxSize().background(background)) {
