@@ -14,9 +14,7 @@ room { schemaDirectory("$projectDir/schemas") }
 
 secrets {
     propertiesFileName = gradle.gradleUserHomeDir.resolve("gradle.properties").absolutePath
-    defaultPropertiesFileName =
-        if (rootProject.file("local.properties").isFile) "local.properties"
-        else "local.defaults.properties"
+    defaultPropertiesFileName = "local.properties"
     ignoreList.add("^(?!MAPS_API_KEY$).*")
 }
 
@@ -31,7 +29,6 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-        manifestPlaceholders["MAPS_API_KEY"] = "DEFAULT_API_KEY"
     }
 
     buildFeatures {

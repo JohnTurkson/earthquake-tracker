@@ -31,7 +31,8 @@ separate JDK 21 installation is required.
 
 Google's Secrets Gradle Plugin reads `MAPS_API_KEY` from your machine's
 `~/.gradle/gradle.properties`, falling back to the repository's ignored
-`local.properties`. No custom debug signing is required.
+`local.properties`. That local file must exist, and a key is required to build.
+No custom debug signing is required.
 
 For guided setup with Codex, use `$build-project` in this repository. The
 [project build skill](.agents/skills/build-project/SKILL.md) follows the same guide.
