@@ -189,11 +189,11 @@ class EarthquakeMonitorTest {
 
     private fun assertOffline(context: Context) {
         val network = context.getSystemService(ConnectivityManager::class.java)
-        assertFalse(
+        assertNotEquals(
             network
                 .getNetworkCapabilities(network.activeNetwork)
-                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true,
-            "Run with Wi-Fi and mobile data disabled under the shared emulator reservation",
+                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
+            true, "Run with Wi-Fi and mobile data disabled under the shared emulator reservation"
         )
     }
 }
