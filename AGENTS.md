@@ -1,3 +1,9 @@
+# Project requirements
+
+Read [README.md](README.md) before planning or changing this project. It defines
+USGS Tracker's high-level product requirements. Keep the app Android-only and use
+these requirements to guide design, implementation, and testing.
+
 # Formatting
 
 - Do not add comments to code.
