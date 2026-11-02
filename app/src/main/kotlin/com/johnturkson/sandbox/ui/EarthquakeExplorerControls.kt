@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
@@ -75,13 +74,25 @@ fun EarthquakeExplorerControls(
     Box(modifier.fillMaxSize()) {
         if (showListPanel && renderListContent) {
             EarthquakeListPanel(
-                items, selectedItemId, onItemClick, { onListPanelVisibilityChanged(false) },
+                items,
+                selectedItemId,
+                onItemClick,
+                { onListPanelVisibilityChanged(false) },
                 listState,
-                Modifier.align(Alignment.CenterStart).padding(contentPadding).padding(16.dp)
-                    .width(earthquakeListPaneWidth).fillMaxHeight(),
-                monitoring, onRefresh,
+                Modifier.align(Alignment.CenterStart)
+                    .padding(contentPadding)
+                    .padding(16.dp)
+                    .width(earthquakeListPaneWidth)
+                    .fillMaxHeight(),
+                monitoring,
+                onRefresh,
             )
-        } else if (renderListContent && !expanded && selectedView == EarthquakeView.List && !notificationsVisible) {
+        } else if (
+            renderListContent &&
+                !expanded &&
+                selectedView == EarthquakeView.List &&
+                !notificationsVisible
+        ) {
             EarthquakeList(
                 items = items,
                 selectedItemId = selectedItemId,

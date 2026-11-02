@@ -161,7 +161,7 @@ serve instrumented and screenshot tests.
 supplies the same event values to unit and instrumented tests.
 Fixtures compile separately from production code, so
 declare their required dependencies with `testFixturesImplementation`.
-The preview state exposes `Destination.EarthquakeRoute`, whose `NavKey` supertype
+The preview state exposes `Destination.EarthquakeMapRoute`, whose `NavKey` supertype
 requires `testFixturesImplementation(libs.androidx.navigation3.runtime)`.
 
 Declare test-only dependencies in the matching test configuration.
