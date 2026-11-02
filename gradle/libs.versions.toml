@@ -18,6 +18,7 @@ ksp = "2.3.12"
 ktfmt = "0.27.0"
 ktor = "3.6.0"
 lifecycle = "2.11.0"
+maps-compose = "9.0.1"
 nav3 = "1.2.0"
 room = "2.8.5"
 slf4j = "2.0.20"
@@ -65,6 +66,7 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock" }
 ktor-client-resources = { module = "io.ktor:ktor-client-resources" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
+maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }

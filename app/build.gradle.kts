@@ -22,6 +22,8 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders["MAPS_API_KEY"] =
+            providers.gradleProperty("MAPS_API_KEY").orElse("").get()
     }
 
     buildFeatures { compose = true }
@@ -48,6 +50,8 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
 
     implementation(libs.hilt.android)
+
+    implementation(libs.maps.compose)
 
     implementation(libs.room.runtime)
 
