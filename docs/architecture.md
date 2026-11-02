@@ -250,22 +250,49 @@ Decide which values must restore when introducing state. Keep one authoritative
 owner and derive dependent values from it. Saved state supports UI restoration;
 durable application data belongs in storage accessed through the repository.
 
+## Window size classes
+
+Use AndroidX `WindowSizeClass` for compact, medium, and expanded layout decisions
+throughout the app, including changes as a window resizes. A resizable window can
+belong to any size class; choose the presentation from its current size class.
+Read it through Material Adaptive's
+`currentWindowAdaptiveInfoV2().windowSizeClass`.
+
+Use `isAtLeastBreakpoint`, `isWidthAtLeastBreakpoint`, or
+`isHeightAtLeastBreakpoint` with the named AndroidX breakpoint constants. Width
+and height are classified independently. Do not recreate size-class boundaries
+with numeric dimension comparisons or infer the class from device type,
+orientation, or fold state. Use at-least checks so large and extra-large widths
+also receive the expanded presentation.
+
+[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
+uses the current adaptive information for both its presentation decision and pane
+directive:
+
+```kotlin
+val adaptiveInfo = currentWindowAdaptiveInfoV2()
+val expanded =
+    adaptiveInfo.windowSizeClass.isAtLeastBreakpoint(
+        WIDTH_DP_EXPANDED_LOWER_BOUND,
+        HEIGHT_DP_MEDIUM_LOWER_BOUND,
+    )
+```
+
+Keep classification in the UI and derive it from the current window information
+so resizing updates the layout. Do not persist the size class in a ViewModel or
+saved state. Use actual dimensions for content measurements and proportional
+sizing after choosing the presentation; `EarthquakeClusterSheet` uses its height
+class to select a fraction and its measured window height to calculate the cap.
+
 ## Map and list presentation
 
 Map and List are separate Navigation 3 destinations. Compact windows show one at
 a time, selected with `EarthquakeViewSwitcher`; expanded windows keep the map
-full-screen with a floating list at the start edge. Read the window size class
-through Material Adaptive's `currentWindowAdaptiveInfoV2().windowSizeClass`.
-Use AndroidX `WindowSizeClass` breakpoint APIs and named constants instead of
-comparing dimensions with numeric thresholds. Keep these layout decisions in
-the UI; do not infer them from hardware or fold state.
-
+full-screen with a floating list at the start edge.
 [EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
 and [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
-enable the expanded presentation with
-`isAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND, HEIGHT_DP_MEDIUM_LOWER_BOUND)`.
-This includes expanded, large, and extra-large widths when height is at least
-medium. The host uses the same adaptive information for its pane directive.
+enable this expanded presentation for expanded-or-larger width and
+medium-or-larger height using the window size class check above.
 
 [EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
 uses an opaque floating surface with flush Material single-choice segments and
