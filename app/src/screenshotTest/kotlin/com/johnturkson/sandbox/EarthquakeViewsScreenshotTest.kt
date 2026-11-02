@@ -43,13 +43,6 @@ class EarthquakeViewsScreenshotTest {
     }
 
     @PreviewTest
-    @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
-    @Composable
-    fun expandedList() {
-        ListScreen()
-    }
-
-    @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
     @Composable
     fun selectedList() {

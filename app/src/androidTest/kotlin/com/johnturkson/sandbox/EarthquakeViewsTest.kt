@@ -4,13 +4,16 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.johnturkson.sandbox.theme.EarthquakeTheme
+import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.EarthquakePreviewState
 import com.johnturkson.sandbox.ui.EarthquakeScreen
@@ -21,6 +24,38 @@ import org.junit.Test
 
 class EarthquakeViewsTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun expandedPanelKeepsSelectionWithoutViewSwitching() {
+        val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M 6.0 - Shima, Japan")
+        var selectedId by mutableStateOf<String?>(null)
+        var viewSwitches = 0
+        composeRule.setContent {
+            EarthquakeTheme {
+                EarthquakeExplorerControls(
+                    items = listOf(item),
+                    selectedItemId = selectedId,
+                    selectedView = EarthquakeView.List,
+                    expanded = true,
+                    onItemClick = { selectedId = it.id },
+                    onClearSelection = { selectedId = null },
+                    onViewSelected = { viewSwitches++ },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Map").assertDoesNotExist()
+        composeRule.onNodeWithText("List").assertDoesNotExist()
+        composeRule.onNodeWithText(item.title).performClick()
+        composeRule.onAllNodesWithText(item.title).assertCountEquals(2)
+        composeRule.runOnIdle {
+            assertEquals(item.id, selectedId)
+            assertEquals(0, viewSwitches)
+        }
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").performClick()
+        composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
+        composeRule.runOnIdle { assertEquals(null, selectedId) }
+    }
 
     @Test
     fun listSelectionAndViewSwitchingKeepTheSameEarthquake() {

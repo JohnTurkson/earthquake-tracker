@@ -121,17 +121,30 @@ blue selected dot, both with a white border. The preview background and 48 dp
 bounds are fixed; no network, database, dynamic color, or clock is involved.
 
 [EarthquakeViewsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsScreenshotTest.kt)
-covers the ordinary Compose explorer visuals: compact and expanded List,
+covers the ordinary Compose explorer visuals: compact List,
 selected and empty List, dark mode, large text at narrow width, the Map-selected
 switcher, rows with no time, and selected-event cards with and without time.
 List previews render the real `EarthquakeScreen` List branch. Use deterministic
 snippet strings for time labels in pixel fixtures so host time zones do not
 change their pixels. These images do not cover the native map surface.
 
+[EarthquakeExplorerControlsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeExplorerControlsScreenshotTest.kt)
+renders the actual controls layer independently of the native map. Cover the
+compact map switcher with no selection, selected events with and without time,
+dark mode, and large text. Cover the expanded floating panel with empty and
+populated items, selected and unselected events, missing time, dark mode, and
+large text. The fixture's neutral background only makes overlay bounds visible;
+it is not a substitute map or coverage of map pixels. Do not render blank native
+map previews to claim coverage of these controls.
+
 [EarthquakeViewsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsTest.kt)
 checks selecting an event from List, opening it on Map, retaining its highlight
-when switching back, and clearing the shared selection. Exercise window resizing
-and activity recreation on a device as well as switching presentations.
+when switching back, and clearing the shared selection. It also checks the
+expanded controls' shared selection and absence of a view toggle. Use a dedicated
+Resizable API 37 emulator and Android CLI to verify the real screen across the
+840 dp width breakpoint, including selection retention, the compact view choice,
+and unobscured native-map attribution. Exercise activity recreation as well as
+switching presentations.
 
 Generate references only for an intentional visual change:
 

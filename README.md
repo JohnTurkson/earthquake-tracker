@@ -16,11 +16,12 @@ using the USGS Earthquake API.
 
 ## Current explorer screen
 
-The main screen has separate full-screen Map and List views, selected with a
-floating control at the top in compact and expanded windows. Both views show
-the same earthquakes and share selection. Selecting a list row opens its map
-location; switching views preserves the camera and list scroll position.
-The list stays centered at a readable width on larger windows.
+Compact windows have separate full-screen Map and List views, selected with a
+floating control at the top. Expanded windows show a floating earthquake list
+over the map, with no view toggle. The panel includes details for the selected
+earthquake. Both layouts show the same earthquakes and share selection.
+Selecting a list row centers its map location; the camera, list scroll position,
+and compact view choice survive layout changes.
 
 The reusable
 `EarthquakeMap` component accepts immutable item values, selection callbacks,

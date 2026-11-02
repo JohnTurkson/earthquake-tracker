@@ -154,7 +154,7 @@ durable application data belongs in storage accessed through the repository.
 
 ## Map and list presentation
 
-Use separate full-screen Map and List views in compact and expanded windows.
+Use separate full-screen Map and List views in compact windows.
 [EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
 places Material single-choice segmented buttons in an opaque floating surface
 at the top, clear of system insets. Changing presentation is a screen action,
@@ -162,22 +162,39 @@ not a new Navigation 3 back-stack entry. Keep destination navigation in
 `EarthquakeApp` when adding actual destinations.
 
 [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
-renders one presentation at a time. Both consume the same `mapItems` and selected
-ID. Selecting a list row updates selection, centers the map on that item, and
-switches to Map. Switching back to List highlights the same item. Clearing
-selection on the map clears the list highlight too.
+classifies its available constraints in the UI. At widths of at least 840 dp
+and heights of at least 480 dp, keep the map visible and show a floating 360 dp
+list panel at the start edge, with no Map/List toggle. Shorter or narrower
+windows use the compact presentation. Avoid hardware or fold-state checks.
 
-Keep `rememberCameraPositionState` and `rememberLazyListState` above the
-presentation branch so changing views does not discard them. These are UI-owned
-layout states; the ViewModel owns only the active presentation and selected ID.
-Adapt to available constraints without checking whether the device is folded.
-The list fills compact windows and is centered with a maximum width of 840 dp
-in wider windows. Rows wrap rather than truncate event locations or times.
+[EarthquakeExplorerControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerControls.kt)
+renders the ordinary Compose content around the native map. Its `expanded`
+input comes from the screen's layout decision. Compact Map shows the floating
+switcher and an optional selection card; compact List shows the same switcher
+above the full list. The expanded panel contains the list and, when selected,
+the event details in its footer. `EarthquakeList(isSupportingPane = true)` uses
+a smaller heading and a short local-time label. Its rows omit the forward arrow
+because selection updates the adjacent map rather than opening another presentation.
+
+Both layouts consume the same `mapItems` and selected ID. Selecting a list row
+updates selection and centers the map on that item. Only compact list selection
+switches to Map. Expanded selection leaves the compact view preference unchanged.
+Returning to compact restores that preference. Clearing selection on the map or
+in the details clears the list highlight too.
+
+Keep `rememberCameraPositionState` and `rememberLazyListState` above the layout
+branch so changing views or resizing does not discard them. These are UI-owned
+layout states; the ViewModel owns only the compact presentation and selected ID.
+The list fills compact windows. Rows wrap rather than truncate event locations
+or times. Reserve the expanded panel's width plus its outer spacing in the map's
+start content padding so the camera center and attribution stay in the visible
+map area.
 
 [EarthquakeSelectionCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionCard.kt)
-shows the selected event's title, available time, and coordinates over the map.
-Measure its rendered height in the UI and include that height in map content
-padding so native attribution remains visible at larger font sizes.
+shows the selected event's title, available time, and coordinates. In compact
+Map, measure its rendered height in the UI and include that height in map
+content padding so native attribution remains visible at larger font sizes.
+In expanded windows, place it inside the floating list panel.
 
 ## Dependency injection and storage
 

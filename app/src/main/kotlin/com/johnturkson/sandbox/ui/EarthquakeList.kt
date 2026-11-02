@@ -42,6 +42,7 @@ fun EarthquakeList(
     onItemClick: (EarthquakeMapItem) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
+    isSupportingPane: Boolean = false,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -53,7 +54,9 @@ fun EarthquakeList(
             Column(Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) {
                 Text(
                     stringResource(R.string.recent_earthquakes),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style =
+                        if (isSupportingPane) MaterialTheme.typography.titleLarge
+                        else MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
@@ -67,7 +70,10 @@ fun EarthquakeList(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    stringResource(R.string.list_explanation),
+                    stringResource(
+                        if (isSupportingPane) R.string.local_event_times
+                        else R.string.list_explanation
+                    ),
                     modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -90,6 +96,7 @@ fun EarthquakeList(
                 item = item,
                 isSelected = item.id == selectedItemId,
                 onClick = { onItemClick(item) },
+                showMapAction = !isSupportingPane,
             )
         }
     }
@@ -101,6 +108,7 @@ fun EarthquakeListRow(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showMapAction: Boolean = true,
 ) {
     Surface(
         onClick = onClick,
@@ -141,7 +149,9 @@ fun EarthquakeListRow(
                     )
                 }
             }
-            Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
+            if (showMapAction) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
+            }
         }
     }
 }
