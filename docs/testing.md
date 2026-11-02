@@ -75,6 +75,15 @@ their own reservation. Leave this emulator running for the next agent. If cleanu
 fails, retain the reservation and report incomplete cleanup. Reservations never
 expire automatically; coordinate with an interrupted owner before recovery.
 
+The shared emulator's installed app and stored history must survive device runs.
+`gradle.properties` sets
+`android.injected.androidTest.leaveApksInstalledAfterRun=true` because AGP's
+default cleanup uninstalls the target and test APKs. Keep this setting enabled;
+do not clear app data or uninstall the shared app to prepare tests. Use
+test-local databases and preference files for isolated fixtures. Install only a
+build compatible with the existing Room schema and verify retained data after
+device runs.
+
 Device tests use `androidx.test.runner.AndroidJUnitRunner`, configured in
 [the app module](../app/build.gradle.kts). Export the actual `ANDROID_SERIAL`
 confirmed by `adb -s SERIAL emu avd name`, and pass `--device="$ANDROID_SERIAL"`
@@ -201,14 +210,17 @@ empty, unknown-magnitude, dark, narrow large-text, and short large-text states.
 checks the real modal container, scrolling to the last member, retained selection
 after dismissal, back dismissal through the real screen, and disappearing members.
 [EarthquakeClusterStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterStateTest.kt)
-checks serialization and restoration of the ViewModel's cluster member IDs and
-independent event selection. Extend native map behavior tests with
+checks serialization and restoration of the ViewModel's cluster member IDs,
+independent event selection, numeric magnitude mapping from Room, and cluster
+dismissal when a notification opens another event. Use test-local in-memory
+Room data and a MockEngine client; run it with the offline UI selection below.
+Extend native map behavior tests with
 coincident pairs at maximum zoom, current members after updates, zoom splitting,
 and selected marker interaction. Use deterministic dense fixtures, including
 identical coordinates, from `EarthquakeMapFixtures.denseItems`. These synthetic
 events are test inputs, not reported earthquake activity.
 
-On the dedicated Resizable API 37 emulator, inspect native cluster counts and
+On the shared Resizable API 37 emulator, inspect native cluster counts and
 individual markers at multiple zoom levels, open and scroll the actual modal
 sheet, select an event, and verify attribution above the sheet. Include dark and
 large-text configurations and an expanded window. Host sheet-content references
