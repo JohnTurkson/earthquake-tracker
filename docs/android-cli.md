@@ -82,13 +82,13 @@ remove only your reservation when done. Leave it running, even if you started it
 Run from the repository root:
 
 ```sh
-android build ':app@debug'
+android build app@debug
 android install --device="$ANDROID_SERIAL" app/build/outputs/apk/debug/app-debug.apk
 android run --device="$ANDROID_SERIAL" app/build/outputs/apk/debug/app-debug.apk
 ```
 
 Build references identify the Gradle module and variant. To build, deploy, and
-launch in one step, use `android run --device="$ANDROID_SERIAL" ':app@debug'`.
+launch in one step, use `android run --device="$ANDROID_SERIAL" app@debug`.
 Inspect the reported build log and confirm the expected APK exists. Run the
 formatting, lint, and test commands from the testing guide as required.
 
@@ -96,13 +96,13 @@ formatting, lint, and test commands from the testing guide as required.
 
 The Gradle root project is named `earthquake-tracker` in
 [`settings.gradle.kts`](../settings.gradle.kts). The Android application is the
-`:app` subproject. Select both its module and variant with `:app@debug`; this
-builds `:app:assembleDebug`.
+`:app` subproject. From the repository root, select its module and variant with
+`app@debug`; this builds `:app:assembleDebug`.
 
 Android CLI 1.1.16717390 treats `android build :app` as a request for the Gradle
 task `:app`, producing `Cannot locate tasks that match ':app'`. Google's
 [command reference](https://developer.android.com/tools/agents/android-cli/commands/build)
-lists that module-only form, but use `android build ':app@debug'` with this
+lists that module-only form, but use `android build app@debug` with this
 installed version. Renaming the root project does not change task selection.
 
 To select the app's default debug variant without naming the variant, use the
@@ -187,8 +187,8 @@ use a deterministic Compose preview, discover its fully qualified name, and
 render it without a device:
 
 ```sh
-android preview list ':app@debug' --format=json
-android preview render ':app@debug' --fqn='actual.package.ActualPreview' \
+android preview list app@debug --format=json
+android preview render app@debug --fqn='actual.package.ActualPreview' \
   --component-tree --output="$ARTIFACT_DIR/previews" --format=json
 ```
 
