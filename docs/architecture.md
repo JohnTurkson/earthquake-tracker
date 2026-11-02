@@ -41,6 +41,13 @@ and deterministic
 [EarthquakeNotificationsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsState.kt)
 is implemented by
 [EarthquakeNotificationsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsViewModel.kt).
+[EarthquakeDetailsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeDetailsState.kt)
+is implemented by its own assisted
+[EarthquakeDetailsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeDetailsViewModel.kt).
+It observes `EarthquakeRepository.getEarthquakeFlow(navKey.earthquakeId)` and maps
+the retained record to an immutable `EarthquakeDetailsItem`. Keep the route ID
+as the lookup input so retained aliases continue resolving after source ID changes.
+The read-only state exposes loading, an available item, or an unavailable item.
 Each destination owns its state independently in its decorated navigation entry.
 Map and List observe the same repository data and communicate selection changes
 through navigation results. Do not introduce a shared selection ViewModel or a
@@ -309,7 +316,12 @@ scale; use accessible icon-only segments when both labels cannot fit, and restor
 labels when space permits. Keep controls on one row, clear of system insets.
 
 Use Material Adaptive's `rememberSupportingPaneSceneStrategy` with the Map entry
-as `mainPane`, List as `supportingPane`, and Notifications as `extraPane`.
+as `mainPane`, both List and Details as `supportingPane`, and Notifications as
+`extraPane`. List and Details take turns in the same start pane; the current
+entry for that role is rendered. Keep the library scene and destination-specific
+decorators. Opening explicit details places List beneath it so Back returns to the
+retained list, including after a compact/expanded transition. Notifications hides
+the left pane temporarily; closing it restores the previous List or Details entry.
 In expanded windows, configure the two secondary roles with
 `AdaptStrategy.Levitate`, aligned to the bottom start and bottom end respectively, without a
 scrim so the map remains interactive. Set one expanded horizontal partition so
@@ -321,7 +333,7 @@ resizing. Use the library's scene layout rather than a custom `Scene`.
 Keep notification navigation immediate and independent of explorer motion.
 `EarthquakeApp` uses `SupportingPaneSceneStrategy.paneAnimation` with
 `EnterTransition.None`, `ExitTransition.None`, and `snap()` bounds for
-Notifications. Apply the same metadata to Map and List when opening or closing
+Notifications. Apply the same metadata to Map, List, and Details when opening or closing
 Notifications, including Back, so the replaced or restored pane does not slide.
 Map/List and expanded-list controls restore the library's default pane motion
 when Notifications is closed. Keep this transient animation choice in the host;
@@ -332,7 +344,9 @@ through `LocalAnimatedPaneOverride` around the navigation display. The library's
 levitated pane adds a rectangular shadow to the whole container, including its
 transparent spacing. Our floating panes omit that outer shadow; their opaque,
 rounded `Surface` components own the visible 6 dp shadow. Keep the container
-transparent so the map remains unchanged outside those surfaces.
+transparent so the map remains unchanged outside those surfaces. Pass the active
+supporting destination title to the override so its accessibility pane announces
+Details or List correctly.
 
 Limit this override to the app's nonmodal, nonresizable levitated panes. Preserve
 preferred sizes, scaffold visibility transitions, entry saveable state, focus,
@@ -351,9 +365,9 @@ aggregate explorer fixture. Standalone panels can retain their own Minimize
 control. The preferred
 outer pane width is 392 dp, including 16 dp outer spacing on each side, leaving
 the established 360 dp surface. Use `EarthquakeList(isSupportingPane = true,
-showTitle = false)` inside it. Rows omit the forward arrow in expanded windows.
-Compact rows select the earthquake and navigate to Map; expanded rows update
-Map through results while keeping the panel open.
+showTitle = false)` inside it. The independently clickable detail arrow appears
+in both layouts. Compact rows select the earthquake and navigate to Map;
+expanded rows update Map through results while keeping the panel open.
 
 [EarthquakeExplorerControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerControls.kt)
 owns a Material `Scaffold`, its expanded `topBar`, map content slot, and compact
@@ -361,7 +375,7 @@ overlays. Pass the native map through `content` so it fills the scaffold beneath
 the app bar. Consume scaffold window insets without applying its top padding to
 the map surface; reserve the bar in the map's own content padding instead.
 Keep safe-drawing insets separate from the 64 dp bar content height. Expanded
-list and notification pane containers start below the safe top inset and bar.
+list, detail, and notification pane containers start below the safe top inset and bar.
 Set the adaptive directive's `defaultPanePreferredHeight` from the measured host
 height minus those values, and bottom-align them through the adaptive scene.
 Keep this changing height out of entry metadata so resizing updates existing
@@ -397,6 +411,41 @@ minimized, with a maximum width of 480 dp. Measure the bottom controls' combined
 rendered height in the UI and include it in map content padding so native
 attribution remains visible at larger font sizes. Never show the selection card
 alongside the open expanded list.
+The card's explicit `onMoreDetails` callback opens the Details destination.
+`EarthquakeListRow.onMoreDetails` renders an independently clickable arrow with
+an event-specific accessibility label. Its parent row keeps the existing selection
+action; neither a row nor a marker opens details merely by being selected.
+The list entry applies and publishes selection before opening details. Opening
+details makes List the return destination in both layouts, including entry from a
+minimized map card. Keep that distinction when adding entry points. Suppress the map selection card while the full detail card is visible.
+
+[EarthquakeDetailsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeDetailsScreen.kt)
+renders one card with a magnitude/location/time header, depth/status/felt metrics,
+and the event-information rows. Close returns to List without clearing selection.
+Its content scrolls inside one Material surface, leaving Close accessible; camera
+and list state remain in their original entries. Format numbers
+and times in the UI; `EarthquakeDetailsCard` receives the already-formatted update
+label from its screen. Screenshot fixtures pass a deterministic label to that
+component. Keep loading and unavailable states closable. The USGS event-page
+action uses a callback at the component boundary and opens only a supported
+HTTPS USGS URL from the screen entry.
+
+`EarthquakeReportSection` receives its expanded value and change callback.
+The card keeps report expansion in `rememberSaveable` keyed by event ID, as
+presentation state. DYFI uses retained `felt` and `cdi` values; absent measurements
+stay unavailable, and zero felt reports remains zero. These summary values do
+not establish that a published image is available.
+
+`EarthquakeReportImage` uses Coil for a supplied published USGS image URL, with
+loading, retryable failure, and loaded states. The application's single Coil
+loader reuses the injected Ktor client through `earthquakeReportImageLoader`.
+Memory and disk caches are null, and both request cache policies are disabled.
+Reopening a report can therefore download it again. Image loading is transient
+presentation work; it does not update Room or start a second earthquake writer.
+Keep product discovery separate from this component, which accepts a URL and
+source-opening callback. The debug-only `EarthquakeReportPrototypeActivity`
+provides a fixed real event and versioned USGS images for manual verification;
+it has no launcher entry and does not populate stored history.
 
 [EarthquakeClusterSheet](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterSheet.kt)
 uses Material `ModalBottomSheet` with a fixed count heading and Close control, and a bounded `LazyColumn`
@@ -479,7 +528,8 @@ dispatchers into feature logic.
 
 Use Navigation 3 and serializable keys in
 [Destination](../app/src/main/kotlin/com/johnturkson/sandbox/ui/Destination.kt).
-The explorer has `EarthquakeMapRoute`, `EarthquakeListRoute`, and `EarthquakeNotificationsRoute`.
+The explorer has `EarthquakeMapRoute`, `EarthquakeListRoute`,
+`EarthquakeNotificationsRoute`, and `EarthquakeDetailsRoute(earthquakeId)`.
 [EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
 owns the back stack, entry provider, Material scene strategy, and navigation
 callbacks. Preserve the saveable state holder, ViewModel store, and result event
@@ -494,6 +544,25 @@ when closed. Back closes Notifications, minimizes an open expanded list, or
 returns compact List to Map; Back from the Map root exits the activity.
 The notification and expanded-list choices restore independently of the compact
 view preference.
+
+Keep the requested detail ID in saveable navigation-host state. Add its
+serializable Details key above the existing Map and List keys when an explicit
+More details action requests it. Register Details as `supportingPane`, using the
+same start-aligned Levitate strategy and 392 dp outer width as List. Opening
+Details makes List its return destination in both layouts. Expanded Details
+replaces List instead of showing a second floating card. Reserve only the left
+pane width in Map content padding, leaving the location control clear on the
+right. Folding changes the presentation while retaining the current detail key,
+selected event, and entry-owned scroll positions.
+
+Back and Close remove the detail entry before changing the underlying view or
+list visibility. While details are open, an ordinary new selection replaces the
+current detail ID rather than adding another detail-history entry. Clearing
+selection closes details. A notification event returns to Map and closes details;
+opening notification settings keeps the detail key below Notifications so closing
+settings restores it. A modal cluster temporarily suppresses the detail pane.
+Keep these transitions in `EarthquakeApp` and pass them through
+`EarthquakeNavigationActions`; components do not mutate the back stack.
 
 Selection results use `map_selection` and `list_selection` keys with
 [EarthquakeSelectionResult](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionResult.kt)

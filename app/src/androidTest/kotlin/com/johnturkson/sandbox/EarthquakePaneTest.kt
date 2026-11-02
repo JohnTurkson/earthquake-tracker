@@ -109,6 +109,7 @@ class EarthquakePaneTest {
                             }
                         }
                     Destination.EarthquakeListRoute -> Text("List destination")
+                    is Destination.EarthquakeDetailsRoute -> Text("Details destination")
                     Destination.EarthquakeNotificationsRoute -> {
                         var magnitude by rememberSaveable { mutableIntStateOf(6) }
                         EarthquakeNotificationsScreen(

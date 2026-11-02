@@ -15,4 +15,7 @@ data class EarthquakeNavigationActions(
     val pendingListSelection: EarthquakeSelectionResult?,
     val onMapSelectionConsumed: (EarthquakeSelectionResult) -> Unit,
     val onListSelectionConsumed: (EarthquakeSelectionResult) -> Unit,
+    val detailsVisible: Boolean = false,
+    val onMoreDetails: (String) -> Unit = {},
+    val onDetailsClose: () -> Unit = {},
 )

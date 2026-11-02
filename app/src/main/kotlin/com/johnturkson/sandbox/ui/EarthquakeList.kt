@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,6 +47,7 @@ fun EarthquakeList(
     showTitle: Boolean = true,
     monitoring: EarthquakeMonitoringState? = null,
     onRefresh: () -> Unit = {},
+    onMoreDetails: ((EarthquakeMapItem) -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -118,6 +120,7 @@ fun EarthquakeList(
                 isSelected = item.id == selectedItemId,
                 onClick = { onItemClick(item) },
                 showMapAction = !isSupportingPane,
+                onMoreDetails = onMoreDetails?.let { { it(item) } },
             )
         }
     }
@@ -130,6 +133,7 @@ fun EarthquakeListRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     showMapAction: Boolean = true,
+    onMoreDetails: (() -> Unit)? = null,
 ) {
     Surface(
         onClick = onClick,
@@ -164,7 +168,18 @@ fun EarthquakeListRow(
                     )
                 }
             }
-            if (showMapAction) {
+            if (onMoreDetails != null) {
+                IconButton(onClick = onMoreDetails) {
+                    Icon(
+                        Icons.AutoMirrored.Outlined.ArrowForward,
+                        contentDescription =
+                            stringResource(
+                                R.string.more_earthquake_details_for,
+                                earthquakeTitle(item),
+                            ),
+                    )
+                }
+            } else if (showMapAction) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
             }
         }

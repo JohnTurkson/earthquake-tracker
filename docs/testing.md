@@ -275,7 +275,8 @@ The component state inventory is:
 | Cluster sheet content | Empty, populated, selected, missing magnitude/time, and the last scrolled member; include short windows. |
 | List | Empty/single/multiple events with each title/supporting-pane presentation; monitoring present and absent in parent fixtures. |
 | List row | Selected/unselected, available/missing time, map arrow shown/hidden, and fallback titles with available/missing magnitude and place. |
-| Selection card | Available/missing time, wrapped text, and fallback titles with available/missing magnitude and place. |
+| Selection card | Available/missing time, wrapped text, More details shown/hidden, and fallback titles with available/missing magnitude and place. |
+| Earthquake details | Populated/missing measurements, loading/unavailable, source rows after scrolling, dark, RTL, narrow large text, expanded left-pane replacement, report expansion, and Close. |
 | View switcher | Map/List selected with labels and with icons only, including dark and large text. |
 | Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
 | Location button and rationale | Request/settings labels and the rationale, with light/dark and large text. |
@@ -417,6 +418,24 @@ uses the real Map and List ViewModels with test-local Room data to check
 independent selection, saved result revisions, pending scroll restoration,
 stale-result rejection, clearing, and repeated selection of the same event.
 Receiving a result must not publish another one or erase a newer request.
+
+[EarthquakeDetailsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDetailsTest.kt)
+uses the real Details ViewModel and test-local Room to verify alias lookup,
+observable source revisions, unavailable records, late arrivals, and zero felt
+reports. No runtime API request is needed to read details. Extend
+`EarthquakeNavigationTest` with explicit map-card/list-arrow entry, return to the
+retained List, replacement of List by Details in the expanded left pane, list
+minimize/restore, selection changes while open, Notifications return, saved-state
+restoration, and resizing. Ordinary row/marker selection must not open details.
+
+[EarthquakeDetailsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeDetailsScreenshotTest.kt)
+renders the real card, header, row action, and expanded panel components. Supply a
+deterministic update label to `EarthquakeDetailsCard`, and include its lower
+source rows with a hoisted initial list position. Capture loading/unavailable
+screen wrappers separately. The neutral expanded fixture background exposes pane
+bounds without claiming coverage of native Maps pixels. On the shared emulator,
+verify the real same-left-pane arrangement, map attribution and location
+control clearance, both detail entry points, and retained camera/list state.
 
 Reserve the shared Earthquake Project emulator and use Android CLI to verify
 the runtime destinations across the 840 dp width breakpoint. Include selection
@@ -591,3 +610,13 @@ retention, preferred-ID changes, alert deduplication/permission gating, and a
 network failure that preserves rows and refresh metadata. Run it with ordinary
 notification permission granted and denied. Platform notification assertions
 wait for the expected active tags because Android enqueues posts asynchronously.
+
+`EarthquakeReportImageTest` uses Ktor MockEngine and a generated PNG to verify
+that reopening an image downloads it again, both caches remain absent, a failed
+load can retry, and the full-size source action receives the correct URL.
+`EarthquakeReportScreenshotTest` uses Coil's inspection-mode preview handler for
+deterministic loading, error, and success fixtures. Its synthetic image verifies
+component layout rather than a particular USGS report's pixels. Include dark and
+narrow large-text configurations and expanded/collapsed report sections. Manual
+verification of `EarthquakeReportPrototypeActivity` checks actual published
+ShakeMap and DYFI images separately; automated tests must not call live USGS.

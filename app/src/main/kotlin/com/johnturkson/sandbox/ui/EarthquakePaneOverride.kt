@@ -36,8 +36,10 @@ import com.johnturkson.sandbox.R
     ExperimentalMaterial3AdaptiveApi::class,
     ExperimentalMaterial3AdaptiveComponentOverrideApi::class,
 )
-class EarthquakePaneOverride(private val defaultOverride: AnimatedPaneOverride) :
-    AnimatedPaneOverride {
+class EarthquakePaneOverride(
+    private val defaultOverride: AnimatedPaneOverride,
+    private val supportingPaneTitle: String? = null,
+) : AnimatedPaneOverride {
     @Composable
     override fun <
         Role : PaneScaffoldRole,
@@ -50,10 +52,9 @@ class EarthquakePaneOverride(private val defaultOverride: AnimatedPaneOverride) 
             return
         }
         val title =
-            stringResource(
-                if (scope.paneRole == SupportingPaneScaffoldRole.Extra) R.string.earthquake_alerts
-                else R.string.recent_earthquakes
-            )
+            if (scope.paneRole == SupportingPaneScaffoldRole.Extra)
+                stringResource(R.string.earthquake_alerts)
+            else supportingPaneTitle ?: stringResource(R.string.recent_earthquakes)
         val intBoundsSpec = boundsAnimationSpec
         val boundsSpec =
             remember(intBoundsSpec) {

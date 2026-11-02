@@ -63,14 +63,16 @@ fun EarthquakeExplorerControls(
     onNotificationsClose: () -> Unit = {},
     notificationContent: @Composable (Modifier) -> Unit = {},
     onMonitoringCardSizeChanged: (Int) -> Unit = {},
+    onMoreDetails: ((String) -> Unit)? = null,
+    detailsVisible: Boolean = false,
     showControls: Boolean = true,
     content: @Composable () -> Unit = {},
 ) {
     val selectedItem = items.find { it.id == selectedItemId }
-    val showListPanel = expanded && isListPanelVisible && !notificationsVisible
+    val showListPanel = expanded && isListPanelVisible && !notificationsVisible && !detailsVisible
     val showMapCard =
-        if (expanded) !showListPanel
-        else selectedView == EarthquakeView.Map && !notificationsVisible
+        if (expanded) !showListPanel && !detailsVisible
+        else selectedView == EarthquakeView.Map && !notificationsVisible && !detailsVisible
     val showLocation =
         showLocationButton &&
             (expanded || selectedView == EarthquakeView.Map) &&
@@ -118,6 +120,7 @@ fun EarthquakeExplorerControls(
                             .width(earthquakeListPaneWidth)
                             .fillMaxHeight(),
                         showMinimizeAction = false,
+                        onMoreDetails = onMoreDetails?.let { callback -> { callback(it.id) } },
                     )
                 } else if (
                     renderListContent &&
@@ -137,6 +140,7 @@ fun EarthquakeExplorerControls(
                         listState = listState,
                         monitoring = monitoring,
                         onRefresh = onRefresh,
+                        onMoreDetails = onMoreDetails?.let { callback -> { callback(it.id) } },
                     )
                 }
                 if (showLocation || showMapCard && selectedItem != null) {
@@ -161,6 +165,10 @@ fun EarthquakeExplorerControls(
                             EarthquakeSelectionCard(
                                 item = selectedItem,
                                 onDismiss = onClearSelection,
+                                onMoreDetails =
+                                    onMoreDetails?.let { callback ->
+                                        { callback(selectedItem.id) }
+                                    },
                                 modifier =
                                     Modifier.align(Alignment.CenterHorizontally)
                                         .widthIn(max = 480.dp)

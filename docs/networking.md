@@ -82,3 +82,14 @@ service limits. Run and report the applicable checks from the testing guide.
 Follow the [date and time conventions](date-time.md). Keep catalog time filters
 typed as `Instant`; Ktor Resources serializes them as ISO-8601 query values.
 The feed's numeric wire representation does not determine the storage format.
+
+## Published report images
+
+Coil loads report images as transient presentation content through the shared
+Ktor client. `EarthquakeApplication` supplies the singleton loader using
+`earthquakeReportImageLoader`; UI report components accept published image URLs
+and source callbacks. Both memory and disk caching are disabled for this
+prototype, with no separate image downloader or stored image files. This does
+not change Room's source-of-truth role for earthquake metadata or introduce
+network requests from database reads. Product discovery is independent of image
+rendering and is not implemented by the debug report prototype.

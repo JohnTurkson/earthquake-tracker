@@ -73,6 +73,8 @@ fun EarthquakeScreen(
         hiltViewModel<EarthquakeViewModel, EarthquakeViewModel.Factory>(
             creationCallback = { factory -> factory.create(navKey) }
         ),
+    onMoreDetails: (String) -> Unit = {},
+    detailsVisible: Boolean = false,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -142,6 +144,8 @@ fun EarthquakeScreen(
         onNotificationsClick = onNotificationsClick,
         isListPanelVisible = isListPanelVisible,
         notificationsVisible = notificationsVisible,
+        detailsVisible = detailsVisible,
+        onMoreDetails = onMoreDetails,
         renderListContent = false,
         onRefresh = viewModel::refresh,
         onMapFocusHandled = viewModel::consumeMapFocus,
@@ -220,6 +224,8 @@ fun EarthquakeScreen(
         val location = EarthquakeLocation.Default
         position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 10f)
     },
+    onMoreDetails: ((String) -> Unit)? = null,
+    detailsVisible: Boolean = false,
 ) {
     var hasInitializedCamera by rememberSaveable { mutableStateOf(false) }
     val initialMapLocation = state.initialMapLocation
@@ -292,7 +298,12 @@ fun EarthquakeScreen(
             .windowSizeClass
             .isAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND, HEIGHT_DP_MEDIUM_LOWER_BOUND)
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
-        val showListPanel = expanded && isListPanelVisible && !notificationsVisible && !showCluster
+        val showListPanel =
+            expanded &&
+                isListPanelVisible &&
+                !notificationsVisible &&
+                !showCluster &&
+                !detailsVisible
         EarthquakeExplorerControls(
             items = state.mapItems,
             selectedItemId = state.selectedMapItemId,
@@ -324,6 +335,8 @@ fun EarthquakeScreen(
             monitoring = state.monitoring,
             onRefresh = onRefresh,
             notificationsVisible = notificationsVisible,
+            detailsVisible = detailsVisible,
+            onMoreDetails = onMoreDetails,
             onNotificationsClick = onNotificationsClick,
             onNotificationsClose = onNotificationsClose,
             notificationContent = notificationContent,
@@ -359,7 +372,11 @@ fun EarthquakeScreen(
                             PaddingValues(
                                 start =
                                     safePadding.calculateStartPadding(layoutDirection) +
-                                        if (showListPanel) earthquakeListPaneWidth + 32.dp
+                                        if (
+                                            showListPanel ||
+                                                expanded && detailsVisible && !showCluster
+                                        )
+                                            earthquakeListPaneWidth + 32.dp
                                         else 0.dp,
                                 end =
                                     safePadding.calculateEndPadding(layoutDirection) +

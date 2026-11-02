@@ -30,6 +30,7 @@ fun EarthquakeListScreen(
     onRefresh: () -> Unit = {},
     onScrollHandled: (EarthquakeSelectionResult) -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
+    onMoreDetails: (EarthquakeMapItem) -> Unit = {},
 ) {
     val request = state.scrollRequest
     LaunchedEffect(request, state.mapItems, expanded) {
@@ -67,6 +68,7 @@ fun EarthquakeListScreen(
                     )
                     .padding(16.dp),
             showMinimizeAction = false,
+            onMoreDetails = onMoreDetails,
         )
     } else {
         Box(
@@ -94,6 +96,7 @@ fun EarthquakeListScreen(
                         listState = listState,
                         monitoring = state.monitoring,
                         onRefresh = onRefresh,
+                        onMoreDetails = onMoreDetails,
                     )
                 },
             )

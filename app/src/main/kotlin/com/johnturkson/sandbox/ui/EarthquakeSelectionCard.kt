@@ -12,6 +12,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -23,6 +24,7 @@ fun EarthquakeSelectionCard(
     item: EarthquakeMapItem,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onMoreDetails: (() -> Unit)? = null,
 ) {
     Surface(
         modifier = modifier,
@@ -30,27 +32,39 @@ fun EarthquakeSelectionCard(
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 6.dp,
     ) {
-        Row(Modifier.padding(start = 20.dp, top = 12.dp, bottom = 20.dp, end = 8.dp)) {
-            Column(
-                Modifier.weight(1f).padding(top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(earthquakeTitle(item), style = MaterialTheme.typography.titleMedium)
-                earthquakeEventTime(item)?.let {
-                    Text(it, style = MaterialTheme.typography.bodyMedium)
+        EarthquakeSelectionHeader(item, onDismiss, onMoreDetails = onMoreDetails)
+    }
+}
+
+@Composable
+internal fun EarthquakeSelectionHeader(
+    item: EarthquakeMapItem,
+    onDismiss: () -> Unit,
+    onMoreDetails: (() -> Unit)? = null,
+) {
+    Row(Modifier.padding(start = 20.dp, top = 12.dp, bottom = 20.dp, end = 8.dp)) {
+        Column(
+            Modifier.weight(1f).padding(top = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(earthquakeTitle(item), style = MaterialTheme.typography.titleMedium)
+            earthquakeEventTime(item)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            Text(
+                stringResource(R.string.earthquake_coordinates, item.latitude, item.longitude),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (onMoreDetails != null) {
+                TextButton(onClick = onMoreDetails) {
+                    Text(stringResource(R.string.more_earthquake_details))
                 }
-                Text(
-                    stringResource(R.string.earthquake_coordinates, item.latitude, item.longitude),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
-            IconButton(onClick = onDismiss) {
-                Icon(
-                    Icons.Outlined.Close,
-                    contentDescription = stringResource(R.string.clear_selection),
-                )
-            }
+        }
+        IconButton(onClick = onDismiss) {
+            Icon(
+                Icons.Outlined.Close,
+                contentDescription = stringResource(R.string.clear_selection),
+            )
         }
     }
 }

@@ -31,6 +31,7 @@ fun EarthquakeListPanel(
     monitoring: EarthquakeMonitoringState? = null,
     onRefresh: () -> Unit = {},
     showMinimizeAction: Boolean = true,
+    onMoreDetails: ((EarthquakeMapItem) -> Unit)? = null,
 ) {
     Surface(
         modifier = modifier,
@@ -66,6 +67,7 @@ fun EarthquakeListPanel(
                 showTitle = false,
                 monitoring = monitoring,
                 onRefresh = onRefresh,
+                onMoreDetails = onMoreDetails,
             )
         }
     }

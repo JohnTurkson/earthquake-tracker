@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -41,7 +42,9 @@ import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorat
 import androidx.navigation3.ui.NavDisplay
 import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
+import com.johnturkson.sandbox.R
 import com.johnturkson.sandbox.theme.EarthquakeTheme
+import com.johnturkson.sandbox.ui.Destination.EarthquakeDetailsRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeListRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeMapRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeNotificationsRoute
@@ -69,6 +72,7 @@ fun EarthquakeApp(
         var notificationsVisible by rememberSaveable { mutableStateOf(false) }
         var animateExplorerPanes by remember(adaptiveInfo) { mutableStateOf(true) }
         var clusterVisible by rememberSaveable { mutableStateOf(false) }
+        var detailEarthquakeId by rememberSaveable { mutableStateOf<String?>(null) }
         var revision by rememberSaveable { mutableStateOf(0L) }
         var pendingMapId by rememberSaveable { mutableStateOf<String?>(null) }
         var pendingMapRevision by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -76,6 +80,7 @@ fun EarthquakeApp(
         var pendingListRevision by rememberSaveable { mutableStateOf<Long?>(null) }
         fun publishSelection(id: String?, fromMap: Boolean): EarthquakeSelectionResult {
             revision++
+            if (detailEarthquakeId != null) detailEarthquakeId = id
             if (fromMap) {
                 pendingMapRevision = null
                 pendingListId = id
@@ -91,6 +96,7 @@ fun EarthquakeApp(
             if (notificationEventId != null) {
                 animateExplorerPanes = false
                 notificationsVisible = false
+                detailEarthquakeId = null
                 clusterVisible = false
                 compactView = EarthquakeView.Map
             }
@@ -117,16 +123,25 @@ fun EarthquakeApp(
             val explorerPaneAnimation =
                 if (animateExplorerPanes && !notificationsVisible) emptyMap()
                 else immediatePaneAnimation
-            val listVisible = expanded && panelVisible && !notificationsVisible && !clusterVisible
+            val listVisible =
+                expanded &&
+                    panelVisible &&
+                    !notificationsVisible &&
+                    !clusterVisible &&
+                    detailEarthquakeId == null
+            val detailsVisible =
+                detailEarthquakeId != null && !notificationsVisible && !clusterVisible
             val showList =
                 if (expanded) panelVisible && !clusterVisible
                 else compactView == EarthquakeView.List
-            LaunchedEffect(showList, notificationsVisible) {
+            LaunchedEffect(showList, notificationsVisible, detailEarthquakeId, clusterVisible) {
                 val entries =
                     if (showList) listOf(EarthquakeMapRoute, EarthquakeListRoute)
                     else listOf(EarthquakeListRoute, EarthquakeMapRoute)
                 backStack.clear()
                 backStack.addAll(entries)
+                if (!clusterVisible)
+                    detailEarthquakeId?.let { backStack.add(EarthquakeDetailsRoute(it)) }
                 if (notificationsVisible) backStack.add(EarthquakeNotificationsRoute)
             }
             val directive =
@@ -155,12 +170,26 @@ fun EarthquakeApp(
                     expanded = expanded,
                     isListPanelVisible = listVisible,
                     notificationsVisible = notificationsVisible,
+                    detailsVisible = detailsVisible,
+                    onMoreDetails = {
+                        animateExplorerPanes = !notificationsVisible
+                        detailEarthquakeId = it
+                        compactView = EarthquakeView.List
+                        panelVisible = true
+                        notificationsVisible = false
+                        clusterVisible = false
+                    },
+                    onDetailsClose = {
+                        animateExplorerPanes = true
+                        detailEarthquakeId = null
+                    },
                     onViewSelected = {
                         animateExplorerPanes = !notificationsVisible
                         compactView = it
                     },
                     onListPanelVisibilityChanged = {
                         animateExplorerPanes = !notificationsVisible
+                        if (it) detailEarthquakeId = null
                         panelVisible = it
                         notificationsVisible = false
                     },
@@ -190,8 +219,14 @@ fun EarthquakeApp(
                     },
                 )
             val defaultPaneOverride = LocalAnimatedPaneOverride.current
+            val supportingPaneTitle =
+                stringResource(
+                    if (detailsVisible) R.string.earthquake_details else R.string.recent_earthquakes
+                )
             val paneOverride =
-                remember(defaultPaneOverride) { EarthquakePaneOverride(defaultPaneOverride) }
+                remember(defaultPaneOverride, supportingPaneTitle) {
+                    EarthquakePaneOverride(defaultPaneOverride, supportingPaneTitle)
+                }
             CompositionLocalProvider(LocalAnimatedPaneOverride provides paneOverride) {
                 NavDisplay(
                     backStack = backStack,
@@ -201,6 +236,10 @@ fun EarthquakeApp(
                             notificationsVisible -> {
                                 animateExplorerPanes = false
                                 notificationsVisible = false
+                            }
+                            detailEarthquakeId != null -> {
+                                animateExplorerPanes = true
+                                detailEarthquakeId = null
                             }
                             expanded && listVisible -> {
                                 animateExplorerPanes = true
@@ -247,6 +286,16 @@ fun EarthquakeApp(
                             ) { navKey ->
                                 destinationContent(navKey, actions)
                             }
+                            entry<EarthquakeDetailsRoute>(
+                                metadata =
+                                    SupportingPaneSceneStrategy.supportingPane() +
+                                        SupportingPaneSceneStrategy.preferredPaneSize(
+                                            width = earthquakeListPaneWidth + 32.dp
+                                        ) +
+                                        explorerPaneAnimation
+                            ) { navKey ->
+                                destinationContent(navKey, actions)
+                            }
                             entry<EarthquakeNotificationsRoute>(
                                 metadata =
                                     SupportingPaneSceneStrategy.extraPane() +
@@ -263,6 +312,7 @@ fun EarthquakeApp(
             BackHandler(
                 enabled =
                     !notificationsVisible &&
+                        detailEarthquakeId == null &&
                         !clusterVisible &&
                         (if (expanded) !listVisible else compactView == EarthquakeView.Map)
             ) {
@@ -303,6 +353,8 @@ private fun EarthquakeDestination(
                 onClusterVisibilityChanged = actions.onClusterVisibilityChanged,
                 isListPanelVisible = actions.isListPanelVisible,
                 notificationsVisible = actions.notificationsVisible,
+                detailsVisible = actions.detailsVisible,
+                onMoreDetails = actions.onMoreDetails,
             )
         }
         EarthquakeListRoute -> {
@@ -328,6 +380,17 @@ private fun EarthquakeDestination(
                 onNotificationsClick = actions.onNotificationsClick,
                 onRefresh = viewModel::refresh,
                 onScrollHandled = viewModel::consumeScrollRequest,
+                onMoreDetails = {
+                    viewModel.applySelection(actions.onListSelection(it.id), scroll = false)
+                    actions.onMoreDetails(it.id)
+                },
+            )
+        }
+        is EarthquakeDetailsRoute -> {
+            EarthquakeDetailsScreen(
+                navKey = navKey,
+                onClose = actions.onDetailsClose,
+                expanded = actions.expanded,
             )
         }
         EarthquakeNotificationsRoute -> {

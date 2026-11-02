@@ -27,6 +27,21 @@ opened.
 Selecting a list row centers its map location; the camera, list scroll position,
 and compact view choice survive layout changes.
 
+The map selection card has a More details action, and each list row has a separate
+detail arrow. Those explicit actions open an earthquake Details destination;
+ordinary marker and row selection retain their existing behavior. Compact windows
+show details full-screen and return to List on Close or Back. Expanded windows
+replace List with the detail card in the same left pane. Folding changes the
+presentation without closing the event; Back restores the retained list and its
+selection. Notifications opens separately on the right and restores the previous
+left-pane view when closed. An already-open detail pane follows
+new earthquake selections. The detail destination reads the saved Room record,
+including the magnitude, place, time, depth, review status, felt reports,
+coordinates, and source information. Did You Feel It? expands to show saved
+community-report information. A debug-only report prototype exercises published
+ShakeMap and DYFI images with Coil; image caching is disabled and runtime detail
+reads do not fetch or store products.
+
 The reusable
 `EarthquakeMap` component accepts immutable item values, selection callbacks,
 map properties/UI settings, padding, and UI-owned camera state.

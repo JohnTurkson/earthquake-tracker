@@ -17,7 +17,9 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.WindowSize
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -29,6 +31,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -273,6 +276,92 @@ class EarthquakeNavigationTest {
         composeRule.waitForIdle()
     }
 
+    @Test
+    fun compactDetailArrowReturnsToListWithoutChangingRowSelectionBehavior() {
+        composeRule.setContent { Content() }
+        composeRule.onNodeWithText("Select last earthquake").performClick()
+        composeRule.onNodeWithText("Detail event:", substring = true).assertDoesNotExist()
+        composeRule.onNodeWithText("Open list").performClick()
+        composeRule.onNodeWithContentDescription("More details for Earthquake 79").performClick()
+        composeRule.onNodeWithText("Detail event: event-79").assertIsDisplayed()
+        composeRule.onNodeWithText("Map destination").assertDoesNotExist()
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.onNodeWithText("List").assertIsSelected()
+        assertLastEarthquakeSelected()
+        composeRule.onNodeWithText("Earthquake 79").performClick()
+        composeRule.onNodeWithText("Map selection: event-79").assertIsDisplayed()
+        composeRule.onNodeWithText("Detail event:", substring = true).assertDoesNotExist()
+        composeRule.onNodeWithText("More map details").performClick()
+        composeRule.onNodeWithText("Detail event: event-79").assertIsDisplayed()
+        composeRule.onNodeWithText("Close details").performClick()
+        composeRule.onNodeWithText("List").assertIsSelected()
+        assertLastEarthquakeSelected()
+    }
+
+    @Test
+    fun expandedDetailsReplaceListAndNotificationsRestoreThePreviousLeftPane() {
+        windowSize = DpSize(900.dp, 600.dp)
+        composeRule.setContent { Content() }
+        composeRule
+            .onNodeWithContentDescription("More details for Earthquake 0")
+            .performScrollTo()
+            .performClick()
+        composeRule.onNodeWithText("Detail event: event-0").assertIsDisplayed()
+        composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
+        composeRule.onNodeWithText("Select last earthquake").performClick()
+        composeRule.onNodeWithText("Detail event: event-79").assertIsDisplayed()
+        assertTrue(paneBounds("Details pane").right < paneBounds("Map pane").center.x)
+        assertPaneBelowAppBar("Details pane")
+        composeRule
+            .onNode(
+                SemanticsMatcher.expectValue(SemanticsProperties.PaneTitle, "Earthquake details")
+            )
+            .assertIsDisplayed()
+        assertImmediateNotifications(
+            "Notifications shortcut",
+            "Details pane",
+            paneBounds("Details pane"),
+            back = false,
+        )
+        composeRule.onNodeWithText("Detail event: event-79").assertIsDisplayed()
+        composeRule.onNodeWithText("Close details").performClick()
+        assertLastEarthquakeSelected()
+        composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
+        composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
+        composeRule.onNodeWithText("More map details").performClick()
+        composeRule.onNodeWithText("Detail event: event-79").assertIsDisplayed()
+        composeRule.onNodeWithText("Close details").performClick()
+        composeRule.onNodeWithText("Recent earthquakes").assertIsDisplayed()
+        assertLastEarthquakeSelected()
+    }
+
+    @Test
+    fun detailDestinationRestoresAndFoldsBackToTheRetainedList() {
+        windowSize = DpSize(900.dp, 600.dp)
+        val restoration = StateRestorationTester(composeRule)
+        restoration.setContent { Content() }
+        composeRule
+            .onNodeWithContentDescription("More details for Earthquake 0")
+            .performScrollTo()
+            .performClick()
+        restoration.emulateSavedInstanceStateRestore()
+        composeRule.onNodeWithText("Detail event: event-0").assertIsDisplayed()
+        composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
+        composeRule.runOnIdle { windowSize = DpSize(400.dp, 600.dp) }
+        composeRule.onNodeWithText("Detail event: event-0").assertIsDisplayed()
+        composeRule.onNodeWithText("Map destination").assertDoesNotExist()
+        composeRule.runOnIdle { windowSize = DpSize(900.dp, 600.dp) }
+        composeRule.onNodeWithText("Detail event: event-0").assertIsDisplayed()
+        composeRule.runOnIdle { windowSize = DpSize(400.dp, 600.dp) }
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.onNodeWithText("List").assertIsSelected()
+        composeRule.onNodeWithText("Earthquake 0").assertIsSelected()
+        composeRule.runOnIdle { windowSize = DpSize(900.dp, 600.dp) }
+        composeRule.onNodeWithText("Recent earthquakes").assertIsDisplayed()
+        composeRule.onNodeWithText("Earthquake 0").assertIsSelected()
+        composeRule.onNodeWithText("Map destination").assertIsDisplayed()
+    }
+
     @Composable
     private fun Content() {
         val availableSize =
@@ -338,6 +427,11 @@ class EarthquakeNavigationTest {
                         TextButton(onClick = actions.onNotificationsClick) {
                             Text("Notifications shortcut")
                         }
+                        TextButton(
+                            onClick = { owner.selectedMapItemId?.let(actions.onMoreDetails) }
+                        ) {
+                            Text("More map details")
+                        }
                     }
                 }
             }
@@ -360,8 +454,21 @@ class EarthquakeNavigationTest {
                     onViewSelected = actions.onViewSelected,
                     onNotificationsClick = actions.onNotificationsClick,
                     onScrollHandled = { owner.scrollRequest = null },
+                    onMoreDetails = {
+                        owner.applySelection(actions.onListSelection(it.id), false)
+                        actions.onMoreDetails(it.id)
+                    },
                 )
             }
+            is Destination.EarthquakeDetailsRoute ->
+                Column(
+                    Modifier.fillMaxSize()
+                        .testTag("Details pane")
+                        .padding(top = if (actions.expanded) 100.dp else 20.dp)
+                ) {
+                    Text("Detail event: ${route.earthquakeId}")
+                    TextButton(onClick = actions.onDetailsClose) { Text("Close details") }
+                }
             Destination.EarthquakeNotificationsRoute ->
                 Column(Modifier.fillMaxSize().testTag("Notifications pane")) {
                     Text("Notification destination")

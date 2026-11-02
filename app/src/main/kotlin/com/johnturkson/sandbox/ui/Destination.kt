@@ -9,4 +9,6 @@ sealed interface Destination : NavKey {
     @Serializable data object EarthquakeListRoute : Destination
 
     @Serializable data object EarthquakeNotificationsRoute : Destination
+
+    @Serializable data class EarthquakeDetailsRoute(val earthquakeId: String) : Destination
 }
