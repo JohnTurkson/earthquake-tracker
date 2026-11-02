@@ -60,8 +60,6 @@
     <string name="minimum_magnitude">Minimum magnitude</string>
     <string name="magnitude_threshold">M%1$d.0+</string>
     <string name="monitoring_session_explanation">Checks every minute during an active session.</string>
-    <string name="monitoring_active">Monitoring active · Stop any time</string>
-    <string name="monitoring_stopped">Monitoring stopped</string>
     <string name="monitor_channel_disabled">Monitoring status channel is disabled. Monitoring can still run.</string>
     <string name="monitoring_channel_settings">Monitoring notification settings</string>
     <string name="alert_channel_settings">Earthquake alert settings</string>

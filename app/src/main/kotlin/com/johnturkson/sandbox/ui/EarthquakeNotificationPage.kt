@@ -195,25 +195,6 @@ fun EarthquakeNotificationPage(
                                 Modifier.notificationToggleSemantics(R.string.live_monitoring),
                         )
                     }
-                    Text(
-                        stringResource(
-                            when (monitoring.status) {
-                                EarthquakeMonitoringState.Status.Checking ->
-                                    R.string.checking_monitoring
-                                EarthquakeMonitoringState.Status.Starting ->
-                                    R.string.monitoring_starting
-                                EarthquakeMonitoringState.Status.Offline ->
-                                    R.string.monitoring_offline
-                                EarthquakeMonitoringState.Status.Failed ->
-                                    R.string.monitoring_failed
-                                EarthquakeMonitoringState.Status.Running ->
-                                    R.string.monitoring_active
-                                EarthquakeMonitoringState.Status.Stopped ->
-                                    R.string.monitoring_stopped
-                            }
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
                     if (
                         !state.monitoringChannelEnabled &&
                             state.permissionGranted &&
