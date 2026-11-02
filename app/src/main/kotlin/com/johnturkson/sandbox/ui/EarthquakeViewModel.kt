@@ -27,6 +27,18 @@ constructor(
             .getValue(this, this::selectedMapItemId)
         private set
 
+    override var selectedView: EarthquakeView by
+        savedStateHandle
+            .saved(serializer = MutableStateSerializer<EarthquakeView>()) {
+                mutableStateOf(EarthquakeView.Map)
+            }
+            .getValue(this, this::selectedView)
+        private set
+
+    fun selectView(view: EarthquakeView) {
+        selectedView = view
+    }
+
     fun selectMapItem(item: EarthquakeMapItem) {
         selectedMapItemId = item.id
     }

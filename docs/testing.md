@@ -120,6 +120,19 @@ It covers every marker artwork state: the small red unselected dot and larger
 blue selected dot, both with a white border. The preview background and 48 dp
 bounds are fixed; no network, database, dynamic color, or clock is involved.
 
+[EarthquakeViewsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsScreenshotTest.kt)
+covers the ordinary Compose explorer visuals: compact and expanded List,
+selected and empty List, dark mode, large text at narrow width, the Map-selected
+switcher, rows with no time, and selected-event cards with and without time.
+List previews render the real `EarthquakeScreen` List branch. Use deterministic
+snippet strings for time labels in pixel fixtures so host time zones do not
+change their pixels. These images do not cover the native map surface.
+
+[EarthquakeViewsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsTest.kt)
+checks selecting an event from List, opening it on Map, retaining its highlight
+when switching back, and clearing the shared selection. Exercise window resizing
+and activity recreation on a device as well as switching presentations.
+
 Generate references only for an intentional visual change:
 
 ```sh
@@ -136,7 +149,7 @@ Validate without changing references:
 ./gradlew :app:validateDebugScreenshotTest
 ```
 
-Check that both preview tests were discovered and passed, rather than accepting
+Check that the intended preview tests were discovered and passed, rather than accepting
 an empty suite. The HTML report is under
 `app/build/reports/screenshotTest/preview/debug/`. Keep reports, actual renders,
 and diff images in ignored `build/`. Reference PNGs are intentionally tracked

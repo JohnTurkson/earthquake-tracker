@@ -14,13 +14,20 @@ using the USGS Earthquake API.
 - Make data availability and refresh failures clear.
 - Keep information easy to understand and navigation straightforward.
 
-## Current map screen
+## Current explorer screen
 
-The main screen is a full-screen Google Maps Compose view. Its reusable
+The main screen has separate full-screen Map and List views, selected with a
+floating control at the top in compact and expanded windows. Both views show
+the same earthquakes and share selection. Selecting a list row opens its map
+location; switching views preserves the camera and list scroll position.
+The list stays centered at a readable width on larger windows.
+
+The reusable
 `EarthquakeMap` component accepts immutable item values, selection callbacks,
 map properties/UI settings, padding, and UI-owned camera state.
 
-The screen uses fixed earthquake fixtures for UI development. Keep UI components
+The screen uses a fixed USGS snapshot for UI development, rather than a live
+feed. Keep UI components
 independent of runtime API and storage access by passing marker presentation
 values through the screen's state contract.
 

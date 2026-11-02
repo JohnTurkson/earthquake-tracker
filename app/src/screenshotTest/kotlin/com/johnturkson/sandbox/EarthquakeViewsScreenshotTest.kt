@@ -1,0 +1,154 @@
+package com.johnturkson.sandbox
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.android.tools.screenshot.PreviewTest
+import com.johnturkson.sandbox.theme.EarthquakeTheme
+import com.johnturkson.sandbox.ui.EarthquakeListRow
+import com.johnturkson.sandbox.ui.EarthquakeMapItem
+import com.johnturkson.sandbox.ui.EarthquakePreviewState
+import com.johnturkson.sandbox.ui.EarthquakeScreen
+import com.johnturkson.sandbox.ui.EarthquakeSelectionCard
+import com.johnturkson.sandbox.ui.EarthquakeView
+import com.johnturkson.sandbox.ui.EarthquakeViewSwitcher
+
+class EarthquakeViewsScreenshotTest {
+    private val item =
+        EarthquakeMapItem(
+            id = "shima",
+            latitude = 33.822,
+            longitude = 136.9854,
+            title = "M 6.0 - 58 km SSE of Shima, Japan",
+            snippet = "Oct 31, 2026 · 10:15 PM",
+        )
+    private val second =
+        EarthquakeMapItem(
+            id = "alaska",
+            latitude = 51.6994,
+            longitude = -172.7931,
+            title = "M 4.5 - 111 km ESE of Atka, Alaska",
+        )
+
+    @PreviewTest
+    @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Composable
+    fun compactList() {
+        ListScreen()
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
+    @Composable
+    fun expandedList() {
+        ListScreen()
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Composable
+    fun selectedList() {
+        ListScreen(selectedId = item.id)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Composable
+    fun emptyListView() {
+        ListScreen(items = emptyList())
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Composable
+    fun darkList() {
+        ListScreen(dark = true)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
+    @Composable
+    fun largeTextList() {
+        ListScreen(selectedId = item.id)
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
+    fun selectedMapSwitcher() {
+        EarthquakeTheme(dynamicColor = false) {
+            Box(Modifier.padding(12.dp)) {
+                EarthquakeViewSwitcher(EarthquakeView.Map, {}, Modifier.width(280.dp))
+            }
+        }
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
+    fun selectedEarthquake() {
+        EarthquakeTheme(dynamicColor = false) {
+            Box(Modifier.padding(12.dp)) {
+                EarthquakeSelectionCard(item, {}, Modifier.width(360.dp))
+            }
+        }
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US", fontScale = 1.5f)
+    @Composable
+    fun largeTextSelectedEarthquake() {
+        EarthquakeTheme(dynamicColor = false) {
+            Box(Modifier.padding(12.dp)) {
+                EarthquakeSelectionCard(item, {}, Modifier.width(296.dp))
+            }
+        }
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
+    fun earthquakeWithoutTime() {
+        EarthquakeTheme(dynamicColor = false) {
+            Surface(Modifier.width(384.dp)) {
+                EarthquakeListRow(second, isSelected = false, onClick = {})
+            }
+        }
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
+    fun selectedEarthquakeWithoutTime() {
+        EarthquakeTheme(dynamicColor = false) {
+            Box(Modifier.padding(12.dp)) {
+                EarthquakeSelectionCard(second, {}, Modifier.width(360.dp))
+            }
+        }
+    }
+
+    @Composable
+    private fun ListScreen(
+        items: List<EarthquakeMapItem> = listOf(item, second),
+        selectedId: String? = null,
+        dark: Boolean = false,
+    ) {
+        EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
+            EarthquakeScreen(
+                state =
+                    EarthquakePreviewState(
+                        mapItems = items,
+                        selectedMapItemId = selectedId,
+                        selectedView = EarthquakeView.List,
+                    ),
+                onMapItemClick = {},
+                onMapClick = {},
+            )
+        }
+    }
+}

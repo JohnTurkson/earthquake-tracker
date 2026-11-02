@@ -64,6 +64,11 @@ Check the AVD's hardware profile and system image in Device Manager or its
 name alone does not establish its configuration. After starting it, confirm the
 running API level with `getprop` as shown below; it must report `37`.
 
+For mockup testing, create a uniquely named dedicated emulator instance and
+leave other active emulators unchanged. Record its AVD name and actual connected
+serial, target that serial for every command, restore temporary settings, and
+stop the instance when finished.
+
 Start an AVD by its listed name, then select its actual connected serial.
 Replace the example name and serial below with those values:
 

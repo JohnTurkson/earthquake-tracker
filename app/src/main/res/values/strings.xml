@@ -1,4 +1,17 @@
 <resources>
     <string name="app_name">USGS Tracker</string>
     <string name="earthquake_map">Earthquake map</string>
+    <string name="map_view">Map</string>
+    <string name="list_view">List</string>
+    <string name="recent_earthquakes">Recent earthquakes</string>
+    <string name="list_explanation">Select an earthquake to view it on the map. Times are local.</string>
+    <string name="no_earthquakes">No earthquake information available.</string>
+    <string name="selected_earthquake">Selected earthquake</string>
+    <string name="earthquake_event_time">%1$s · %2$s</string>
+    <string name="earthquake_coordinates">Latitude %1$.2f° · Longitude %2$.2f°</string>
+    <string name="clear_selection">Clear earthquake selection</string>
+    <plurals name="earthquake_snapshot_count">
+        <item quantity="one">%d earthquake · USGS snapshot</item>
+        <item quantity="other">%d earthquakes · USGS snapshot</item>
+    </plurals>
 </resources>

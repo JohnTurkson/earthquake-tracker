@@ -9,4 +9,5 @@ data class EarthquakeMapItem(
     val longitude: Double,
     val title: String,
     val snippet: String? = null,
+    val eventTimeMillis: Long? = null,
 )

@@ -30,10 +30,11 @@ provides an implementation without a ViewModel. Follow that interface and
 implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
 
-`EarthquakeState` exposes `navKey`, read-only `mapItems`, and `selectedMapItemId`.
+`EarthquakeState` exposes `navKey`, read-only `mapItems`, `selectedMapItemId`, and
+`selectedView`.
 `EarthquakeScreen` has a Hilt entry overload and a rendering overload that accepts
-`EarthquakeState` and callbacks. Extend this read-only contract when expanding
-screen state and provide deterministic preview and test implementations.
+`EarthquakeState` and callbacks. Extend this read-only contract when expanding screen
+state and provide deterministic preview and test implementations.
 
 `EarthquakeViewModel` exposes selection through `EarthquakeState` with a private
 setter and owns changes through `selectMapItem` and `clearMapSelection`. UI
@@ -56,7 +57,10 @@ EarthquakeMap(
 ```
 
 `EarthquakeMapItem` is an immutable presentation value with a stable unique ID,
-coordinates, title, and optional snippet. It has no network or database
+coordinates, title, optional snippet, and optional event time in epoch
+milliseconds. The explorer uses the same values for its map and list. Format
+event times in the UI using the device's locale and time preferences; do not
+store formatted time strings as feature state. It has no network or database
 annotations. Map markers are keyed by that ID; `rememberUpdatedMarkerState`
 applies coordinate changes without turning the SDK marker into feature state.
 Marker clicks emit the current item and map-background clicks emit a callback.
@@ -86,7 +90,7 @@ Use fixed development inputs such as
 [EarthquakeMapFixtures](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
 to render deterministic map states without live API or storage access. Pass only
 the presentation values needed by markers: ID, coordinates, title, and an
-optional event-time snippet. Keep these values independent of network and
+optional event time or snippet. Keep these values independent of network and
 database models, and supply runtime feature data through the ViewModel's state
 contract.
 
@@ -125,6 +129,10 @@ coverage is still missing and must be reported.
 change that single restorable value. The map does not keep a second selection.
 Camera restoration remains UI-owned through `rememberCameraPositionState`.
 
+`EarthquakeViewModel.selectedView` uses the same `SavedStateHandle.saved` and
+`MutableStateSerializer` pattern with the serializable `EarthquakeView` enum.
+It restores the Map/List choice independently of earthquake selection.
+
 Inject `SavedStateHandle` into the ViewModel for state that needs restoration.
 Use the existing serialization pattern instead of maintaining an unrelated
 saved copy of the same state:
@@ -140,6 +148,33 @@ override var selectedMapItemId: String? by
 Decide which values must restore when introducing state. Keep one authoritative
 owner and derive dependent values from it. Saved state supports UI restoration;
 durable application data belongs in storage accessed through the repository.
+
+## Map and list presentation
+
+Use separate full-screen Map and List views in compact and expanded windows.
+[EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
+places Material single-choice segmented buttons in an opaque floating surface
+at the top, clear of system insets. Changing presentation is a screen action,
+not a new Navigation 3 back-stack entry. Keep destination navigation in
+`EarthquakeApp` when adding actual destinations.
+
+[EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
+renders one presentation at a time. Both consume the same `mapItems` and selected
+ID. Selecting a list row updates selection, centers the map on that item, and
+switches to Map. Switching back to List highlights the same item. Clearing
+selection on the map clears the list highlight too.
+
+Keep `rememberCameraPositionState` and `rememberLazyListState` above the
+presentation branch so changing views does not discard them. These are UI-owned
+layout states; the ViewModel owns only the active presentation and selected ID.
+Adapt to available constraints without checking whether the device is folded.
+The list fills compact windows and is centered with a maximum width of 840 dp
+in wider windows. Rows wrap rather than truncate event locations or times.
+
+[EarthquakeSelectionCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionCard.kt)
+shows the selected event's title, available time, and coordinates over the map.
+Measure its rendered height in the UI and include that height in map content
+padding so native attribution remains visible at larger font sizes.
 
 ## Dependency injection and storage
 

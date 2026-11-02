@@ -1,0 +1,161 @@
+package com.johnturkson.sandbox.ui
+
+import android.text.format.DateFormat
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import com.johnturkson.sandbox.R
+import java.util.Date
+
+@Composable
+fun EarthquakeList(
+    items: List<EarthquakeMapItem>,
+    selectedItemId: String?,
+    onItemClick: (EarthquakeMapItem) -> Unit,
+    modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState(),
+) {
+    LazyColumn(
+        modifier = modifier,
+        state = listState,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        item(key = "heading") {
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) {
+                Text(
+                    stringResource(R.string.recent_earthquakes),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    pluralStringResource(
+                        R.plurals.earthquake_snapshot_count,
+                        items.size,
+                        items.size,
+                    ),
+                    modifier = Modifier.padding(top = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    stringResource(R.string.list_explanation),
+                    modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                HorizontalDivider()
+            }
+        }
+        if (items.isEmpty()) {
+            item(key = "empty") {
+                Text(
+                    stringResource(R.string.no_earthquakes),
+                    Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+        items(items, key = { it.id }) { item ->
+            EarthquakeListRow(
+                item = item,
+                isSelected = item.id == selectedItemId,
+                onClick = { onItemClick(item) },
+            )
+        }
+    }
+}
+
+@Composable
+fun EarthquakeListRow(
+    item: EarthquakeMapItem,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().semantics { selected = isSelected },
+        shape = RoundedCornerShape(20.dp),
+        color =
+            if (isSelected) MaterialTheme.colorScheme.secondaryContainer
+            else MaterialTheme.colorScheme.surface,
+    ) {
+        Row(
+            Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Icon(
+                    Icons.Outlined.LocationOn,
+                    contentDescription = null,
+                    modifier = Modifier.padding(12.dp).size(24.dp),
+                )
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(item.title, style = MaterialTheme.typography.titleMedium)
+                earthquakeEventTime(item)?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (isSelected) {
+                    Text(
+                        stringResource(R.string.selected_earthquake),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+            }
+            Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
+        }
+    }
+}
+
+@Composable
+internal fun earthquakeEventTime(item: EarthquakeMapItem): String? {
+    val context = LocalContext.current
+    LocalConfiguration.current
+    return item.eventTimeMillis?.let { time ->
+        val date = Date(time)
+        stringResource(
+            R.string.earthquake_event_time,
+            DateFormat.getMediumDateFormat(context).format(date),
+            DateFormat.getTimeFormat(context).format(date),
+        )
+    } ?: item.snippet
+}
