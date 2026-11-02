@@ -149,9 +149,10 @@ uses Room's `MigrationTestHelper` and tracked schema exports to validate the
 additive upgrade from version 1 while retaining existing rows. Generate schema
 exports through Room; never hand-edit them.
 
-Run these tests on the required Resizable API 37 emulator. Continue to run the
-normal build, formatting, unit, and lint checks. Storage-only changes do not add
-UI states or screenshot baselines.
+Run these tests on the shared Earthquake Project emulator under the exclusive
+reservation described above. Continue to run the normal build, formatting,
+unit, and lint checks. Storage-only changes do not add UI states or screenshot
+baselines.
 
 ## Map behavior and screenshot coverage
 
