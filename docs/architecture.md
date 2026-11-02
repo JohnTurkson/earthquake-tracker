@@ -320,7 +320,9 @@ as `mainPane`, both List and Details as `supportingPane`, and Notifications as
 `extraPane`. List and Details take turns in the same start pane; the current
 entry for that role is rendered. Keep the library scene and destination-specific
 decorators. Opening explicit details places List beneath it so Back returns to the
-retained list, including after a compact/expanded transition. Notifications hides
+retained list, including after a compact/expanded transition. The host handles
+Back while Details is visible before applying the explorer root-exit policy;
+closing Details clears its route selection and keeps List active. Notifications hides
 the left pane temporarily; closing it restores the previous List or Details entry.
 In expanded windows, configure the two secondary roles with
 `AdaptStrategy.Levitate`, aligned to the bottom start and bottom end respectively, without a

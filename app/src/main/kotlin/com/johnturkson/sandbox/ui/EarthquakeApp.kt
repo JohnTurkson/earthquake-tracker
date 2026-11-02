@@ -312,11 +312,11 @@ fun EarthquakeApp(
             BackHandler(
                 enabled =
                     !notificationsVisible &&
-                        detailEarthquakeId == null &&
                         !clusterVisible &&
-                        (if (expanded) !listVisible else compactView == EarthquakeView.Map)
+                        (detailsVisible ||
+                            if (expanded) !listVisible else compactView == EarthquakeView.Map)
             ) {
-                activity?.finish()
+                if (detailsVisible) actions.onDetailsClose() else activity?.finish()
             }
         }
     }
