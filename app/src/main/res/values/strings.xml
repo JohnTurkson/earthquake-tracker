@@ -50,13 +50,6 @@
     <string name="monitoring_starting">Starting live monitoring…</string>
     <string name="live_monitoring">Live monitoring</string>
     <string name="monitoring_off">Live monitoring is off</string>
-    <string name="saved_data_updated">Saved data · Updated %1$s</string>
-    <string name="no_saved_data">No saved data available</string>
-    <string name="waiting_to_start">Waiting for Android</string>
-    <string name="checks_every_minute_updated">Checks every minute · Updated %1$s</string>
-    <string name="checks_every_minute">Checks every minute</string>
-    <string name="data_updated">Updated %1$s · Manual refresh available</string>
-    <string name="manual_refresh_available">Manual refresh available</string>
     <string name="refresh_earthquakes">Refresh earthquake data</string>
     <string name="earthquake_alerts">Earthquake alerts</string>
     <string name="close_earthquake_alerts">Close earthquake alerts</string>
@@ -96,7 +89,6 @@
     <string name="checking_monitoring">Checking monitoring status…</string>
     <string name="alerts_manual_only">Alerts on refresh · Start monitoring for live alerts</string>
     <string name="refresh_queued">Refresh queued</string>
-    <string name="saved_data_available">Saved earthquake data is available</string>
     <string name="monitoring_bar_checking">Checking…</string>
     <string name="monitoring_bar_refreshing">Refreshing…</string>
     <string name="monitoring_bar_failed">Monitoring failed</string>
@@ -105,9 +97,6 @@
     <string name="monitoring_bar_starting">Starting…</string>
     <string name="monitoring_bar_off">Monitoring off</string>
     <string name="monitoring_bar_updated">Updated %1$s</string>
-    <string name="monitoring_bar_saved">Saved %1$s</string>
-    <string name="monitoring_bar_saved_data">Saved data</string>
-    <string name="monitoring_bar_no_data">No saved data</string>
     <string name="earthquake_status_reviewed">Reviewed</string>
     <string name="earthquake_status_automatic">Automatic</string>
     <string name="earthquake_magnitude_label">Magnitude</string>

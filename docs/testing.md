@@ -279,7 +279,7 @@ The component state inventory is:
 | Earthquake details | Populated/missing measurements, loading/unavailable, source rows after scrolling, dark, RTL, narrow large text, expanded left-pane replacement, report expansion, and Close. |
 | View switcher | Map/List selected with labels and with icons only, including dark and large text. |
 | Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
-| Location button and rationale | Request/settings labels and the rationale, with light/dark and large text. |
+| Location FAB and rationale | Icon-only request/settings actions and the rationale, with light/dark and large text. |
 | Monitoring card | Each status, each refresh outcome, available/missing update time and stored data, and concurrent checking/monitoring/failure/offline with refresh work. |
 | Notification page and rationale | Checking, denied/settings permission, alerts on/off, channel availability, each magnitude threshold and monitoring status, enabled/disabled preview, settings error, and rationale. |
 | Notification bell | Its ordinary appearance and placement through the explorer fixtures. |
@@ -317,12 +317,17 @@ do not cover the SDK surface, the modal scrim, or its drag handle; inspect those
 in actual device captures and report the native pixel-regression gap.
 
 [EarthquakeLocationScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeLocationScreenshotTest.kt)
-covers the request button, app-settings button, and permission rationale using
+covers the request FAB, app-settings FAB, and permission rationale using
 the real stateless components, including dark and large-text fixtures. It also
 renders the actual controls layer with Locate in compact, open expanded, and
 minimized expanded windows, plus compact selected, dark, and narrow large-text
-layouts with live monitoring. `EarthquakeViewsTest` verifies that the bottom-right
-location action does not move the monitoring banner or cover the selection card.
+layouts with live monitoring. Selected fixtures include More details, with and
+without a snackbar, in portrait, landscape, and narrow large-text windows.
+`EarthquakeViewsTest` verifies that the bottom-right
+location FAB does not move the monitoring banner or cover the selection card,
+keeps its 56 dp square size at large font scales, exposes the request/settings
+accessibility names, retains the More details action, and follows Map visibility
+across compact/expanded views.
 These fixtures do not substitute for native-map pixels. Keep Android permission
 dialogs out of host previews. On the Resizable API 37 device,
 exercise first request, denial, rationale, grant, settings return/revocation,
@@ -556,7 +561,10 @@ emulator reservation throughout platform notification checks.
 threshold selection, disabled preview, refresh progress/failure, and the fixed
 expanded status across list scrolling and minimize/restore. It checks the compact
 and expanded bars remain 64 dp for every monitoring/refresh combination. Compact
-List retains its scrolling card and restored list position. The
+List retains its scrolling card and restored list position. Status and update
+time are separate text nodes. Check the timestamp's normal font weight,
+retention through refresh/failure, and omission when no successful update time
+is known; explanatory subtitles must not return. The
 `EarthquakeNotificationsScreenshotTest` providers enumerate monitoring and page
 visual states, with narrow/large-font, dark, scrolled, expanded right-pane, and
 minimized fixtures. Review every provider-generated image as well as named

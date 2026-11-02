@@ -1,24 +1,30 @@
 package com.johnturkson.sandbox
 
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.WindowSize
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
+import com.johnturkson.sandbox.ui.EarthquakeLocationButton
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringState
 import com.johnturkson.sandbox.ui.EarthquakePreviewState
@@ -33,11 +39,78 @@ class EarthquakeViewsTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun locationStaysAtBottomRightWithoutMovingMonitoringOrCoveringSelection() {
+    fun locationFabKeepsIconSizeAndAccessibleActionsAtLargeFontScale() {
+        var requiresSettings by mutableStateOf(false)
+        var clicks = 0
+        composeRule.setContent {
+            val density = LocalDensity.current.density
+            CompositionLocalProvider(LocalDensity provides Density(density, fontScale = 2f)) {
+                EarthquakeTheme {
+                    EarthquakeLocationButton(
+                        onClick = { clicks++ },
+                        requiresSettings = requiresSettings,
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Use my location").assertDoesNotExist()
+        composeRule
+            .onNodeWithContentDescription("Use my location")
+            .assertWidthIsEqualTo(56.dp)
+            .assertHeightIsEqualTo(56.dp)
+            .performClick()
+        composeRule.runOnIdle { requiresSettings = true }
+        composeRule.onNodeWithContentDescription("Use my location").assertDoesNotExist()
+        composeRule.onNodeWithText("Location settings").assertDoesNotExist()
+        composeRule
+            .onNodeWithContentDescription("Location settings")
+            .assertWidthIsEqualTo(56.dp)
+            .assertHeightIsEqualTo(56.dp)
+            .performClick()
+        composeRule.runOnIdle { assertEquals(2, clicks) }
+    }
+
+    @Test
+    fun locationFabFollowsMapVisibilityAcrossPresentations() {
+        var selectedView by mutableStateOf(EarthquakeView.Map)
+        var expanded by mutableStateOf(false)
+        var notificationsVisible by mutableStateOf(false)
+        composeRule.setContent {
+            EarthquakeTheme {
+                EarthquakeExplorerControls(
+                    items = emptyList(),
+                    selectedItemId = null,
+                    selectedView = selectedView,
+                    expanded = expanded,
+                    onItemClick = {},
+                    onClearSelection = {},
+                    onViewSelected = {},
+                    renderListContent = false,
+                    showLocationButton = true,
+                    notificationsVisible = notificationsVisible,
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Use my location").assertIsDisplayed()
+        composeRule.runOnIdle { selectedView = EarthquakeView.List }
+        composeRule.onNodeWithContentDescription("Use my location").assertDoesNotExist()
+        composeRule.runOnIdle { expanded = true }
+        composeRule.onNodeWithContentDescription("Use my location").assertIsDisplayed()
+        composeRule.runOnIdle { notificationsVisible = true }
+        composeRule.onNodeWithContentDescription("Use my location").assertDoesNotExist()
+        composeRule.runOnIdle { expanded = false }
+        composeRule.onNodeWithContentDescription("Use my location").assertDoesNotExist()
+    }
+
+    @Test
+    fun locationFabRisesAboveSelectionWithoutMovingMonitoring() {
         val item = EarthquakeMapItem("fixture", 37.0, -122.0, "M4.5 - California")
         var showLocation by mutableStateOf(false)
         var selectedId by mutableStateOf<String?>(null)
         var locationClicks = 0
+        var detailsId: String? = null
         composeRule.setContent {
             EarthquakeTheme {
                 EarthquakeExplorerControls(
@@ -50,6 +123,7 @@ class EarthquakeViewsTest {
                     onViewSelected = {},
                     showLocationButton = showLocation,
                     onLocationClick = { locationClicks++ },
+                    onMoreDetails = { detailsId = it },
                     monitoring =
                         EarthquakeMonitoringState(
                             status = EarthquakeMonitoringState.Status.Running
@@ -66,7 +140,10 @@ class EarthquakeViewsTest {
         composeRule.runOnIdle { showLocation = true }
         val rootBounds = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
         val locationBounds =
-            composeRule.onNodeWithText("Use my location").fetchSemanticsNode().boundsInRoot
+            composeRule
+                .onNodeWithContentDescription("Use my location")
+                .fetchSemanticsNode()
+                .boundsInRoot
         assertEquals(
             monitoringBounds,
             composeRule
@@ -77,18 +154,25 @@ class EarthquakeViewsTest {
         assertTrue(locationBounds.center.x > rootBounds.center.x)
         assertTrue(locationBounds.center.y > rootBounds.center.y)
         composeRule.runOnIdle { selectedId = item.id }
-        assertEquals(
-            locationBounds,
-            composeRule.onNodeWithText("Use my location").fetchSemanticsNode().boundsInRoot,
-        )
+        val selectedLocationBounds =
+            composeRule
+                .onNodeWithContentDescription("Use my location")
+                .fetchSemanticsNode()
+                .boundsInRoot
+        assertEquals(locationBounds.size, selectedLocationBounds.size)
+        assertTrue(selectedLocationBounds.top < locationBounds.top)
         val selectionBounds =
             composeRule
                 .onNodeWithContentDescription("Clear earthquake selection")
                 .fetchSemanticsNode()
                 .boundsInRoot
-        assertTrue(selectionBounds.bottom < locationBounds.top)
-        composeRule.onNodeWithText("Use my location").performClick()
-        composeRule.runOnIdle { assertEquals(1, locationClicks) }
+        assertTrue(selectionBounds.top > selectedLocationBounds.bottom)
+        composeRule.onNodeWithContentDescription("Use my location").performClick()
+        composeRule.onNodeWithText("More details").performClick()
+        composeRule.runOnIdle {
+            assertEquals(1, locationClicks)
+            assertEquals(item.id, detailsId)
+        }
     }
 
     @Test

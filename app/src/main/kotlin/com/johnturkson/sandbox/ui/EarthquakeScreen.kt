@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -150,6 +148,7 @@ fun EarthquakeScreen(
         onRefresh = viewModel::refresh,
         onMapFocusHandled = viewModel::consumeMapFocus,
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHost, snackbar = { EarthquakeEventSnackbar(it) }) },
         isLocationGranted = isLocationGranted,
         requiresLocationSettings = !isLocationGranted && requiresSettings,
         isLocatingUser = isLocatingUser,
@@ -173,14 +172,6 @@ fun EarthquakeScreen(
             }
         },
     )
-    Box(Modifier.fillMaxSize()) {
-        SnackbarHost(
-            snackbarHost,
-            Modifier.align(Alignment.BottomCenter)
-                .padding(WindowInsets.safeDrawing.asPaddingValues()),
-            snackbar = { EarthquakeEventSnackbar(it) },
-        )
-    }
     if (showLocationRationale && !isLocationGranted) {
         EarthquakeLocationRationale(
             onContinue = {
@@ -220,6 +211,7 @@ fun EarthquakeScreen(
     notificationsVisible: Boolean = false,
     renderListContent: Boolean = true,
     notificationContent: @Composable (Modifier) -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     cameraPositionState: CameraPositionState = rememberCameraPositionState {
         val location = EarthquakeLocation.Default
         position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 10f)
@@ -340,6 +332,7 @@ fun EarthquakeScreen(
             onNotificationsClick = onNotificationsClick,
             onNotificationsClose = onNotificationsClose,
             notificationContent = notificationContent,
+            snackbarHost = snackbarHost,
             showControls = !showCluster,
             content = {
                 if (

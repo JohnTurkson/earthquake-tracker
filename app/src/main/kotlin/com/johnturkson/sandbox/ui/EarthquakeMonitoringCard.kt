@@ -28,13 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -76,26 +77,6 @@ fun EarthquakeMonitoringCard(
                 DateFormat.getTimeFormat(LocalContext.current)
                     .format(Date(it.toEpochMilliseconds()))
             }
-    val detail =
-        when {
-            state.refresh == EarthquakeMonitoringState.Refresh.Queued ->
-                stringResource(R.string.waiting_to_start)
-            state.isRefreshing -> stringResource(R.string.existing_data_visible)
-            offline || failed ->
-                lastUpdated?.let { stringResource(R.string.saved_data_updated, it) }
-                    ?: stringResource(
-                        if (state.hasStoredData) R.string.saved_data_available
-                        else R.string.no_saved_data
-                    )
-            state.status == EarthquakeMonitoringState.Status.Starting ->
-                stringResource(R.string.waiting_to_start)
-            state.isMonitoring ->
-                lastUpdated?.let { stringResource(R.string.checks_every_minute_updated, it) }
-                    ?: stringResource(R.string.checks_every_minute)
-            else ->
-                lastUpdated?.let { stringResource(R.string.data_updated, it) }
-                    ?: stringResource(R.string.manual_refresh_available)
-        }
     val shortTitle =
         stringResource(
             when {
@@ -113,22 +94,11 @@ fun EarthquakeMonitoringCard(
                 else -> R.string.monitoring_bar_off
             }
         )
-    val shortDetail =
-        when {
-            state.isRefreshing || state.status == EarthquakeMonitoringState.Status.Starting ->
-                lastUpdated?.let { stringResource(R.string.monitoring_bar_updated, it) }
-            offline || failed ->
-                lastUpdated?.let { stringResource(R.string.monitoring_bar_saved, it) }
-                    ?: stringResource(
-                        if (state.hasStoredData) R.string.monitoring_bar_saved_data
-                        else R.string.monitoring_bar_no_data
-                    )
-            lastUpdated != null -> stringResource(R.string.monitoring_bar_updated, lastUpdated)
-            state.isMonitoring -> stringResource(R.string.checks_every_minute)
-            else -> null
-        }
     val titleLabel = stringResource(title)
-    val fullLabel = stringResource(R.string.monitoring_bar_summary, titleLabel, detail)
+    val updatedLabel = lastUpdated?.let { stringResource(R.string.monitoring_bar_updated, it) }
+    val fullLabel =
+        updatedLabel?.let { stringResource(R.string.monitoring_bar_summary, titleLabel, it) }
+            ?: titleLabel
     val color =
         if (offline || failed) MaterialTheme.colorScheme.errorContainer
         else MaterialTheme.colorScheme.surfaceContainer
@@ -156,30 +126,62 @@ fun EarthquakeMonitoringCard(
                     )
                     BoxWithConstraints(Modifier.weight(1f)) {
                         val textMeasurer = rememberTextMeasurer()
-                        val style = MaterialTheme.typography.titleSmall
-                        val candidates =
-                            listOfNotNull(
-                                fullLabel,
-                                shortDetail?.let {
-                                    stringResource(R.string.monitoring_bar_summary, shortTitle, it)
-                                },
-                                shortTitle,
-                            )
-                        val label =
-                            candidates.firstOrNull {
+                        val titleStyle = MaterialTheme.typography.titleSmall
+                        val updatedStyle =
+                            MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal)
+                        val spacing = with(LocalDensity.current) { 8.dp.roundToPx() }
+                        val updatedWidth =
+                            updatedLabel?.let {
                                 textMeasurer
-                                    .measure(AnnotatedString(it), style, maxLines = 1)
+                                    .measure(AnnotatedString(it), updatedStyle, maxLines = 1)
                                     .size
-                                    .width <= constraints.maxWidth
-                            } ?: shortTitle
-                        Text(
-                            label,
-                            Modifier.clearAndSetSemantics { contentDescription = fullLabel },
-                            style = style,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                                    .width
+                            } ?: 0
+                        val titles = listOf(titleLabel, shortTitle)
+                        val titleWithUpdated =
+                            if (updatedLabel != null) {
+                                titles.firstOrNull {
+                                    textMeasurer
+                                        .measure(AnnotatedString(it), titleStyle, maxLines = 1)
+                                        .size
+                                        .width + spacing + updatedWidth <= constraints.maxWidth
+                                }
+                            } else null
+                        val visibleTitle =
+                            titleWithUpdated
+                                ?: titles.firstOrNull {
+                                    textMeasurer
+                                        .measure(AnnotatedString(it), titleStyle, maxLines = 1)
+                                        .size
+                                        .width <= constraints.maxWidth
+                                }
+                                ?: shortTitle
+                        Row(
+                            Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
+                                contentDescription = fullLabel
+                            },
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                visibleTitle,
+                                Modifier.weight(1f, fill = false),
+                                style = titleStyle,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (titleWithUpdated != null && updatedLabel != null) {
+                                Text(
+                                    updatedLabel,
+                                    style = updatedStyle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
                     }
                 }
             },

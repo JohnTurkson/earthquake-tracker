@@ -1,8 +1,6 @@
 package com.johnturkson.sandbox.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -26,10 +24,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -65,24 +69,47 @@ fun EarthquakeExplorerControls(
     onMonitoringCardSizeChanged: (Int) -> Unit = {},
     onMoreDetails: ((String) -> Unit)? = null,
     detailsVisible: Boolean = false,
+    snackbarHost: @Composable () -> Unit = {},
     showControls: Boolean = true,
     content: @Composable () -> Unit = {},
 ) {
     val selectedItem = items.find { it.id == selectedItemId }
-    val showListPanel = expanded && isListPanelVisible && !notificationsVisible && !detailsVisible
+    val showListPanel =
+        showControls && expanded && isListPanelVisible && !notificationsVisible && !detailsVisible
     val showMapCard =
-        if (expanded) !showListPanel && !detailsVisible
-        else selectedView == EarthquakeView.Map && !notificationsVisible && !detailsVisible
+        showControls &&
+            !detailsVisible &&
+            (if (expanded) !showListPanel
+            else selectedView == EarthquakeView.Map && !notificationsVisible)
     val showLocation =
-        showLocationButton &&
+        showControls &&
+            showLocationButton &&
             (expanded || selectedView == EarthquakeView.Map) &&
             !notificationsVisible
 
     val layoutDirection = LocalLayoutDirection.current
+    val density = LocalDensity.current
+    val showSelection = showMapCard && selectedItem != null
+    var selectionHeight by remember { mutableIntStateOf(0) }
+    var fabHeight by remember { mutableIntStateOf(0) }
+    var snackbarHeight by remember { mutableIntStateOf(0) }
+    LaunchedEffect(showLocation, showSelection, selectionHeight, fabHeight, snackbarHeight) {
+        val bottomHeight = if (showSelection) selectionHeight else 0
+        val locationHeight =
+            if (showLocation) fabHeight + with(density) { 16.dp.roundToPx() } else 0
+        onMapBottomControlsSizeChanged(bottomHeight + locationHeight + snackbarHeight)
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        contentWindowInsets =
+            WindowInsets(
+                left = contentPadding.calculateLeftPadding(layoutDirection),
+                top = contentPadding.calculateTopPadding(),
+                right = contentPadding.calculateRightPadding(layoutDirection),
+                bottom = contentPadding.calculateBottomPadding(),
+            ),
         topBar = {
             if (expanded && showControls) {
                 EarthquakeExplorerTopAppBar(
@@ -101,6 +128,58 @@ fun EarthquakeExplorerControls(
                             top = contentPadding.calculateTopPadding(),
                         ),
                 )
+            }
+        },
+        floatingActionButton = {
+            if (showLocation) {
+                EarthquakeLocationButton(
+                    onClick = onLocationClick,
+                    requiresSettings = requiresLocationSettings,
+                    modifier = Modifier.onSizeChanged { fabHeight = it.height },
+                )
+            }
+        },
+        bottomBar = {
+            if (showSelection) {
+                Box(
+                    Modifier.fillMaxWidth()
+                        .padding(
+                            start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                            end =
+                                contentPadding.calculateEndPadding(layoutDirection) +
+                                    if (expanded && notificationsVisible)
+                                        earthquakeListPaneWidth + 32.dp
+                                    else 16.dp,
+                            top = 0.dp,
+                            bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                        )
+                        .onSizeChanged { selectionHeight = it.height }
+                ) {
+                    EarthquakeSelectionCard(
+                        item = selectedItem,
+                        onDismiss = onClearSelection,
+                        onMoreDetails =
+                            onMoreDetails?.let { callback -> { callback(selectedItem.id) } },
+                        modifier =
+                            Modifier.align(Alignment.Center).widthIn(max = 480.dp).fillMaxWidth(),
+                    )
+                }
+            }
+        },
+        snackbarHost = {
+            Box(
+                Modifier.padding(
+                        start =
+                            if (showListPanel || expanded && detailsVisible)
+                                earthquakeListPaneWidth + 32.dp
+                            else 0.dp,
+                        end =
+                            if (expanded && notificationsVisible) earthquakeListPaneWidth + 32.dp
+                            else 0.dp,
+                    )
+                    .onSizeChanged { snackbarHeight = it.height }
+            ) {
+                snackbarHost()
             }
         },
     ) { scaffoldPadding ->
@@ -142,47 +221,6 @@ fun EarthquakeExplorerControls(
                         onRefresh = onRefresh,
                         onMoreDetails = onMoreDetails?.let { callback -> { callback(it.id) } },
                     )
-                }
-                if (showLocation || showMapCard && selectedItem != null) {
-                    Column(
-                        modifier =
-                            Modifier.align(Alignment.BottomCenter)
-                                .padding(contentPadding)
-                                .padding(
-                                    start = 16.dp,
-                                    end =
-                                        if (expanded && notificationsVisible)
-                                            earthquakeListPaneWidth + 32.dp
-                                        else 16.dp,
-                                    top = 16.dp,
-                                    bottom = 16.dp,
-                                )
-                                .fillMaxWidth()
-                                .onSizeChanged { onMapBottomControlsSizeChanged(it.height) },
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        if (showMapCard && selectedItem != null) {
-                            EarthquakeSelectionCard(
-                                item = selectedItem,
-                                onDismiss = onClearSelection,
-                                onMoreDetails =
-                                    onMoreDetails?.let { callback ->
-                                        { callback(selectedItem.id) }
-                                    },
-                                modifier =
-                                    Modifier.align(Alignment.CenterHorizontally)
-                                        .widthIn(max = 480.dp)
-                                        .fillMaxWidth(),
-                            )
-                        }
-                        if (showLocation) {
-                            EarthquakeLocationButton(
-                                onClick = onLocationClick,
-                                requiresSettings = requiresLocationSettings,
-                                modifier = Modifier.align(Alignment.End),
-                            )
-                        }
-                    }
                 }
                 if (!expanded && !notificationsVisible) {
                     EarthquakeViewSwitcher(

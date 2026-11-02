@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -24,6 +25,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
@@ -35,11 +39,55 @@ import com.johnturkson.sandbox.ui.EarthquakeNotificationPage
 import com.johnturkson.sandbox.ui.EarthquakeNotificationState
 import com.johnturkson.sandbox.ui.EarthquakeView
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 import org.junit.Rule
 import org.junit.Test
 
 class EarthquakeNotificationUiTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun monitoringStatusAndUpdateTimeUseSeparateTextAndNormalTimestampWeight() {
+        var state by
+            mutableStateOf(
+                EarthquakeMonitoringState(
+                    status = EarthquakeMonitoringState.Status.Running,
+                    lastUpdated = Instant.parse("2026-11-01T10:42:00Z"),
+                )
+            )
+        rule.setContent {
+            EarthquakeTheme {
+                EarthquakeMonitoringCard(
+                    state,
+                    {},
+                    Modifier.width(640.dp),
+                    lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
+                )
+            }
+        }
+        rule.onNodeWithText("Live monitoring", useUnmergedTree = true).assertIsDisplayed()
+        val timestamp = rule.onNodeWithText("Updated 10:42", useUnmergedTree = true)
+        timestamp.assertIsDisplayed()
+        val layouts = mutableListOf<TextLayoutResult>()
+        timestamp.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        rule.runOnIdle {
+            assertEquals(FontWeight.Normal, layouts.single().layoutInput.style.fontWeight)
+            state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Running)
+        }
+        timestamp.assertIsDisplayed()
+        rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Failed) }
+        timestamp.assertIsDisplayed()
+        rule.runOnIdle {
+            state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Idle, lastUpdated = null)
+        }
+        timestamp.assertDoesNotExist()
+        rule
+            .onNodeWithText("Checks every minute", substring = true, useUnmergedTree = true)
+            .assertDoesNotExist()
+        rule
+            .onNodeWithText("Manual refresh available", substring = true, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
 
     @Test
     fun permissionAndChannelStatesKeepPreferencesIndependent() {
@@ -142,7 +190,7 @@ class EarthquakeNotificationUiTest {
             }
         }
         rule
-            .onNodeWithContentDescription("Checks every minute · Updated 10:42", substring = true)
+            .onNodeWithContentDescription("Live monitoring · Updated 10:42", substring = true)
             .assertIsDisplayed()
         rule.onNodeWithContentDescription("Refresh earthquake data").performClick()
         rule.runOnIdle {
@@ -150,16 +198,17 @@ class EarthquakeNotificationUiTest {
             state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Running)
         }
         rule
-            .onNodeWithContentDescription("Existing data remains visible", substring = true)
+            .onNodeWithContentDescription(
+                "Refreshing earthquakes… · Updated 10:42",
+                substring = true,
+            )
             .assertIsDisplayed()
         rule.onNodeWithContentDescription("Refreshing earthquakes…").assertIsNotEnabled()
         rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Failed) }
         rule
             .onNodeWithContentDescription("Couldn’t refresh earthquakes", substring = true)
             .assertIsDisplayed()
-        rule
-            .onNodeWithContentDescription("Saved data · Updated 10:42", substring = true)
-            .assertIsDisplayed()
+        rule.onNodeWithContentDescription("Updated 10:42", substring = true).assertIsDisplayed()
         rule.runOnIdle {
             state =
                 state.copy(

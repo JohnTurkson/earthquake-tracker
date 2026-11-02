@@ -9,10 +9,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.GeneralClickAction
@@ -44,6 +48,44 @@ import org.junit.Test
 
 class EarthquakeMapTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun scaffoldKeepsNativeMapFullSizeWithLocationFabAndSelection() {
+        var state by mutableStateOf(EarthquakePreviewState())
+        var isListPanelVisible by mutableStateOf(false)
+        composeRule.setContent {
+            EarthquakeScreen(
+                state = state,
+                onMapItemClick = {},
+                onMapClick = {},
+                isListPanelVisible = isListPanelVisible,
+                modifier = Modifier.testTag("explorer"),
+            )
+        }
+        val map = awaitMap()
+        fun assertFullSize() {
+            val bounds = composeRule.onNodeWithTag("explorer").fetchSemanticsNode().boundsInWindow
+            composeRule.runOnIdle {
+                val mapView = assertNotNull(findMapView(composeRule.activity.window.decorView))
+                val origin = IntArray(2)
+                mapView.getLocationInWindow(origin)
+                assertEquals(bounds.left, origin[0].toFloat(), 1f)
+                assertEquals(bounds.top, origin[1].toFloat(), 1f)
+                assertEquals(bounds.width, mapView.width.toFloat(), 1f)
+                assertEquals(bounds.height, mapView.height.toFloat(), 1f)
+                assertTrue(map.uiSettings.isScrollGesturesEnabled)
+                assertTrue(map.uiSettings.isZoomGesturesEnabled)
+                assertFalse(map.uiSettings.isMyLocationButtonEnabled)
+            }
+        }
+        composeRule.onNodeWithContentDescription("Use my location").assertIsDisplayed()
+        assertFullSize()
+        composeRule.runOnIdle { state = state.copy(selectedMapItemId = state.mapItems.first().id) }
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
+        assertFullSize()
+        composeRule.runOnIdle { isListPanelVisible = true }
+        assertFullSize()
+    }
 
     @Test
     fun explicitLocateCentersOnceWithoutFollowingLaterFixes() {
@@ -314,7 +356,7 @@ class EarthquakeMapTest {
         }
         val map = awaitMap()
         composeRule.onNodeWithText("Map").assertDoesNotExist()
-        composeRule.onNodeWithText("Use my location").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Use my location").assertDoesNotExist()
         val sheet =
             composeRule
                 .onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.PaneTitle))

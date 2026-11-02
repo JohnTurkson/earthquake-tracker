@@ -165,9 +165,14 @@ keep a single app-owned location control.
 explains a repeat request. When Android will no longer show the request, the
 button opens app settings. Keep rendering components independent of permission
 launchers: pass granted/settings values and action callbacks from the entry.
-`EarthquakeExplorerControls` anchors the app button at the bottom end, clear of
-safe-drawing insets, in both map layouts. Place the selection card above it and
-measure their combined height for native map padding and attribution. The
+Use Material `FloatingActionButton` for the icon-only location action, retaining
+its standard 56 dp container and 24 dp icon. Put the request/settings action name
+in the icon's content description; omit the visible text label.
+`EarthquakeExplorerControls` places it in `Scaffold.floatingActionButton`, clear
+of safe-drawing insets in both map layouts. The selection card uses `bottomBar`,
+so the FAB rises above the card. Pass the screen-owned snackbar host into the
+same Scaffold so snackbars avoid the FAB. Measure these bottom obstructions for
+native map padding and attribution, keeping the map at full size. The
 monitoring banner's top spacing is independent of location permission. Denial
 leaves map and list exploration available.
 
@@ -750,12 +755,16 @@ The compact card keeps its rounded floating surface and original map position;
 in compact List it remains the first keyed scrolling item. Expanded List omits
 that item. Preserve the hoisted list state across those changes.
 
-Monitoring text stays on one line. Measure the full status/detail, then a shorter
-status/detail, then the shorter status against the available title width at the
-current font scale. Keep the refresh target available and ellipsize the final
-label if necessary; do not shrink fonts or grow the bar. Expose the complete
-status and detail together in accessibility semantics, even when secondary text
-does not fit. Keep this formatting in the UI and retain the existing priority
+Monitoring text stays on one line. Render the status and last-successful-update
+label as separate `Text` components and separate localized strings. Keep the
+status in `titleSmall` and the timestamp in `bodyMedium` with normal font weight.
+Replace explanatory subtitles such as "Checks every minute" with the update
+time in every status; omit the timestamp when no successful update is known.
+Measure the status and timestamp with their own styles, trying the full then
+short status. When both cannot fit, show the status alone and retain the complete
+status and known update time in accessibility semantics. Keep the refresh target
+available and ellipsize the final status if necessary; do not shrink fonts or
+grow the bar. Keep this formatting in the UI and retain the existing priority
 between monitoring and refresh states. A refresh keeps old data and its timestamp
 until storage succeeds.
 
