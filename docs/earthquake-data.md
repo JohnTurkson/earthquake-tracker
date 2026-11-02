@@ -3,8 +3,9 @@
 The network and Room layers support recent-earthquake lists, detail metadata,
 observable local ID lookups and queries, and explicit refreshes. Hilt provides the
 shared Ktor client, `MainDatabase`, and `EarthquakeDao`; constructor injection
-provides `EarthquakeApi` and `EarthquakeRepository`. These operations are not
-connected to the UI yet.
+provides `EarthquakeApi` and `EarthquakeRepository`. The explorer observes the
+unrestricted stored history. `EarthquakeRefreshRepository` reuses this API and
+merge path for manual and foreground-monitoring WorkManager requests.
 
 ## USGS formats and revisions
 
@@ -77,7 +78,8 @@ available. Apply display filters separately without deleting history.
 
 An empty feed does not erase previously seen information. HTTP, decoding,
 validation, and storage failures propagate, and cancellation is not caught.
-Choose refresh error presentation and retry behavior when wiring the UI.
+The WorkManager refresh path converts these failures into typed results for the
+monitoring card while retaining existing rows and the last successful timestamp.
 
 ## Refresh boundaries
 
@@ -106,8 +108,9 @@ Without `startTime`, the service defaults to the last 30 days, even when
 
 The service supports deleted-event options, but this database does not reconcile
 deletions or event disassociations. Disappearance from a rolling feed is not
-proof of deletion. Retention limits, background refresh, polling cadence, and
-full-catalog synchronization are not implemented. USGS documents
+proof of deletion. Retention limits and full-catalog synchronization are not
+implemented. Foreground monitoring requests a refresh every minute while its
+WorkManager session runs; Android can stop or delay execution. USGS documents
 [feed caching intervals](https://www.usgs.gov/faqs/how-quickly-earthquake-information-posted-usgs-website-and-sent-out-earthquake-notification);
 repeated requests do not guarantee newly generated data.
 

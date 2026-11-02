@@ -126,9 +126,10 @@ merely repeat the implementation.
 The current suite covers response decoding with a test-local fixture, activity
 startup and recreation, map behavior, and marker artwork. Keep tests focused on
 observable behavior rather than unconditional assertions or empty content.
-Passing UI tests does not establish runtime earthquake fetching, offline screen
-behavior, refresh, or Maps authorization. The separate data-layer coverage below
-checks persistent database behavior without connecting it to the fixture-based UI.
+Passing fixture-based UI tests alone does not establish runtime fetching,
+offline screen behavior, refresh, or Maps authorization. The data-layer tests
+below check persistence independently; the notification integration tests also
+exercise the real refresh worker and repository with controlled network input.
 
 ## Earthquake data tests
 
@@ -327,8 +328,8 @@ rechecks registration, compares capabilities to Android's current runtime grant,
 and inspects posted notifications, distinct event PendingIntents, foreground
 channel, and Stop action. Run this class with notification permission granted and
 revoked externally to cover both platform states without killing instrumentation
-while it is running. Restore the original grant afterward and use an isolated
-test emulator for platform notification checks.
+while it is running. Restore the original grant afterward and hold the shared
+emulator reservation throughout platform notification checks.
 
 `EarthquakeNotificationUiTest` exercises page capability changes, actions,
 threshold selection, disabled preview, refresh progress/failure, and the scrolling
