@@ -30,6 +30,7 @@ fun EarthquakeListPanel(
     modifier: Modifier = Modifier,
     monitoring: EarthquakeMonitoringState? = null,
     onRefresh: () -> Unit = {},
+    showMinimizeAction: Boolean = true,
 ) {
     Surface(
         modifier = modifier,
@@ -47,12 +48,13 @@ fun EarthquakeListPanel(
                     Modifier.weight(1f),
                     style = MaterialTheme.typography.titleLarge,
                 )
-                IconButton(onClick = { onMinimize() }) {
-                    Icon(
-                        Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                        contentDescription = stringResource(R.string.minimize_earthquake_list),
-                    )
-                }
+                if (showMinimizeAction)
+                    IconButton(onClick = { onMinimize() }) {
+                        Icon(
+                            Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                            contentDescription = stringResource(R.string.minimize_earthquake_list),
+                        )
+                    }
             }
             EarthquakeList(
                 items = items,

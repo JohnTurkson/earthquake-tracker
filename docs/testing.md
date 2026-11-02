@@ -528,8 +528,10 @@ while it is running. Restore the original grant afterward and hold the shared
 emulator reservation throughout platform notification checks.
 
 `EarthquakeNotificationUiTest` exercises page capability changes, actions,
-threshold selection, disabled preview, refresh progress/failure, and the scrolling
-card across minimize/restore and presentation changes. The
+threshold selection, disabled preview, refresh progress/failure, and the fixed
+expanded status across list scrolling and minimize/restore. It checks the compact
+and expanded bars remain 64 dp for every monitoring/refresh combination. Compact
+List retains its scrolling card and restored list position. The
 `EarthquakeNotificationsScreenshotTest` providers enumerate monitoring and page
 visual states, with narrow/large-font, dark, scrolled, expanded right-pane, and
 minimized fixtures. Review every provider-generated image as well as named
@@ -537,7 +539,10 @@ previews. Host screenshots cover our controls, not native map pixels or Android'
 permission dialog and notification drawer.
 The monitoring provider includes concurrent refresh and session statuses, with
 no data, stored data without a timestamp, and a known update time. Preserve those
-combinations when extending the state contract. The scrolled page-action provider
+combinations when extending the state contract. Render the monitoring provider
+in the compact floating bar and expanded app bar, including dark mode and large
+text. Include the expanded Minimize and Show list presentations, and visually
+verify one line at the same 64 dp height. The scrolled page-action provider
 keeps enabled preview, disabled preview, and settings-error pixels visible rather
 than relying on controls below a preview's viewport. Include checking with an
 already-selected alerts toggle and the compact notification screen's placement.

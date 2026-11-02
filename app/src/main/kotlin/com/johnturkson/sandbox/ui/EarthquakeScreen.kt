@@ -293,95 +293,100 @@ fun EarthquakeScreen(
             .isAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND, HEIGHT_DP_MEDIUM_LOWER_BOUND)
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val showListPanel = expanded && isListPanelVisible && !notificationsVisible && !showCluster
-        if (
-            showCluster || expanded || selectedView == EarthquakeView.Map && !notificationsVisible
-        ) {
-            EarthquakeMap(
-                items = state.mapItems,
-                onItemClick = onMapItemClick,
-                modifier = Modifier.fillMaxSize(),
-                selectedItemId = state.selectedMapItemId,
-                onMapClick = onMapClick,
-                onClusterClick = onClusterClick,
-                cameraPositionState = cameraPositionState,
-                properties =
-                    MapProperties(minZoomPreference = 1f, isMyLocationEnabled = isLocationGranted),
-                uiSettings =
-                    MapUiSettings(
-                        compassEnabled = false,
-                        indoorLevelPickerEnabled = false,
-                        mapToolbarEnabled = false,
-                        myLocationButtonEnabled = false,
-                        zoomControlsEnabled = false,
-                    ),
-                contentPadding =
-                    PaddingValues(
-                        start =
-                            safePadding.calculateStartPadding(layoutDirection) +
-                                if (showListPanel) earthquakeListPaneWidth + 32.dp else 0.dp,
-                        end =
-                            safePadding.calculateEndPadding(layoutDirection) +
-                                if (expanded && notificationsVisible && !showCluster)
-                                    earthquakeListPaneWidth + 32.dp
-                                else 0.dp,
-                        top =
-                            safePadding.calculateTopPadding() +
-                                when {
-                                    showCluster -> 16.dp
-                                    showListPanel -> 80.dp
-                                    else -> 100.dp + monitoringCardHeight
-                                },
-                        bottom =
-                            safePadding.calculateBottomPadding() +
-                                when {
-                                    showCluster -> clusterSheetHeight + 48.dp
-                                    selectedItem != null || !notificationsVisible ->
-                                        mapBottomControlsHeight + 32.dp
-                                    else -> 0.dp
-                                },
-                    ),
-            )
-        }
-        if (!showCluster) {
-            EarthquakeExplorerControls(
-                items = state.mapItems,
-                selectedItemId = state.selectedMapItemId,
-                selectedView = selectedView,
-                expanded = expanded,
-                isListPanelVisible = isListPanelVisible,
-                onListPanelVisibilityChanged = onListPanelVisibilityChanged,
-                onItemClick = { item ->
-                    onMapItemClick(item)
-                    hasInitializedCamera = true
-                    cameraPositionState.position =
-                        CameraPosition.fromLatLngZoom(
-                            LatLng(item.latitude, item.longitude),
-                            maxOf(5f, cameraPositionState.position.zoom),
-                        )
-                    if (!expanded) onViewSelected(EarthquakeView.Map)
-                },
-                onClearSelection = onMapClick,
-                onViewSelected = onViewSelected,
-                contentPadding = safePadding,
-                listState = listState,
-                renderListContent = renderListContent,
-                onMapBottomControlsSizeChanged = {
-                    mapBottomControlsHeight = with(density) { it.toDp() }
-                },
-                showLocationButton = true,
-                requiresLocationSettings = requiresLocationSettings,
-                onLocationClick = onLocationClick,
-                monitoring = state.monitoring,
-                onRefresh = onRefresh,
-                notificationsVisible = notificationsVisible,
-                onNotificationsClick = onNotificationsClick,
-                onNotificationsClose = onNotificationsClose,
-                notificationContent = notificationContent,
-                onMonitoringCardSizeChanged = {
-                    monitoringCardHeight = with(density) { it.toDp() }
-                },
-            )
-        }
+        EarthquakeExplorerControls(
+            items = state.mapItems,
+            selectedItemId = state.selectedMapItemId,
+            selectedView = selectedView,
+            expanded = expanded,
+            isListPanelVisible = isListPanelVisible,
+            onListPanelVisibilityChanged = onListPanelVisibilityChanged,
+            onItemClick = { item ->
+                onMapItemClick(item)
+                hasInitializedCamera = true
+                cameraPositionState.position =
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(item.latitude, item.longitude),
+                        maxOf(5f, cameraPositionState.position.zoom),
+                    )
+                if (!expanded) onViewSelected(EarthquakeView.Map)
+            },
+            onClearSelection = onMapClick,
+            onViewSelected = onViewSelected,
+            contentPadding = safePadding,
+            listState = listState,
+            renderListContent = renderListContent,
+            onMapBottomControlsSizeChanged = {
+                mapBottomControlsHeight = with(density) { it.toDp() }
+            },
+            showLocationButton = true,
+            requiresLocationSettings = requiresLocationSettings,
+            onLocationClick = onLocationClick,
+            monitoring = state.monitoring,
+            onRefresh = onRefresh,
+            notificationsVisible = notificationsVisible,
+            onNotificationsClick = onNotificationsClick,
+            onNotificationsClose = onNotificationsClose,
+            notificationContent = notificationContent,
+            showControls = !showCluster,
+            content = {
+                if (
+                    showCluster ||
+                        expanded ||
+                        selectedView == EarthquakeView.Map && !notificationsVisible
+                ) {
+                    EarthquakeMap(
+                        items = state.mapItems,
+                        onItemClick = onMapItemClick,
+                        modifier = Modifier.fillMaxSize(),
+                        selectedItemId = state.selectedMapItemId,
+                        onMapClick = onMapClick,
+                        onClusterClick = onClusterClick,
+                        cameraPositionState = cameraPositionState,
+                        properties =
+                            MapProperties(
+                                minZoomPreference = 1f,
+                                isMyLocationEnabled = isLocationGranted,
+                            ),
+                        uiSettings =
+                            MapUiSettings(
+                                compassEnabled = false,
+                                indoorLevelPickerEnabled = false,
+                                mapToolbarEnabled = false,
+                                myLocationButtonEnabled = false,
+                                zoomControlsEnabled = false,
+                            ),
+                        contentPadding =
+                            PaddingValues(
+                                start =
+                                    safePadding.calculateStartPadding(layoutDirection) +
+                                        if (showListPanel) earthquakeListPaneWidth + 32.dp
+                                        else 0.dp,
+                                end =
+                                    safePadding.calculateEndPadding(layoutDirection) +
+                                        if (expanded && notificationsVisible && !showCluster)
+                                            earthquakeListPaneWidth + 32.dp
+                                        else 0.dp,
+                                top =
+                                    safePadding.calculateTopPadding() +
+                                        when {
+                                            showCluster -> 16.dp
+                                            expanded -> 80.dp
+                                            else -> 100.dp + monitoringCardHeight
+                                        },
+                                bottom =
+                                    safePadding.calculateBottomPadding() +
+                                        when {
+                                            showCluster -> clusterSheetHeight + 48.dp
+                                            selectedItem != null || !notificationsVisible ->
+                                                mapBottomControlsHeight + 32.dp
+                                            else -> 0.dp
+                                        },
+                            ),
+                    )
+                }
+            },
+            onMonitoringCardSizeChanged = { monitoringCardHeight = with(density) { it.toDp() } },
+        )
         if (showCluster) {
             EarthquakeClusterSheet(
                 items = clusterItems,

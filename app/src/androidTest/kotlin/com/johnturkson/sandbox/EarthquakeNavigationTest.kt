@@ -41,6 +41,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import com.johnturkson.sandbox.ui.Destination
 import com.johnturkson.sandbox.ui.EarthquakeApp
+import com.johnturkson.sandbox.ui.EarthquakeExplorerTopAppBar
 import com.johnturkson.sandbox.ui.EarthquakeListScreen
 import com.johnturkson.sandbox.ui.EarthquakeListState
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
@@ -286,10 +287,19 @@ class EarthquakeNavigationTest {
                     actions.onMapSelectionConsumed,
                 )
                 Box(Modifier.fillMaxSize().testTag("Map pane")) {
+                    if (actions.expanded) {
+                        EarthquakeExplorerTopAppBar(
+                            monitoring = owner.monitoring,
+                            isListPanelVisible = actions.isListPanelVisible,
+                            onListPanelVisibilityChanged = actions.onListPanelVisibilityChanged,
+                            onRefresh = {},
+                            onNotificationsClick = actions.onNotificationsClick,
+                        )
+                    }
                     Column(
                         Modifier.align(Alignment.TopEnd)
                             .padding(
-                                top = 40.dp,
+                                top = if (actions.expanded) 80.dp else 40.dp,
                                 end = if (actions.notificationsVisible) 400.dp else 16.dp,
                             )
                     ) {

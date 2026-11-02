@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.WindowSize
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -13,6 +15,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
@@ -55,14 +59,20 @@ class EarthquakeViewsTest {
         }
 
         val monitoringBounds =
-            composeRule.onNodeWithText("Live monitoring").fetchSemanticsNode().boundsInRoot
+            composeRule
+                .onNodeWithContentDescription("Live monitoring", substring = true)
+                .fetchSemanticsNode()
+                .boundsInRoot
         composeRule.runOnIdle { showLocation = true }
         val rootBounds = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
         val locationBounds =
             composeRule.onNodeWithText("Use my location").fetchSemanticsNode().boundsInRoot
         assertEquals(
             monitoringBounds,
-            composeRule.onNodeWithText("Live monitoring").fetchSemanticsNode().boundsInRoot,
+            composeRule
+                .onNodeWithContentDescription("Live monitoring", substring = true)
+                .fetchSemanticsNode()
+                .boundsInRoot,
         )
         assertTrue(locationBounds.center.x > rootBounds.center.x)
         assertTrue(locationBounds.center.y > rootBounds.center.y)
@@ -96,6 +106,7 @@ class EarthquakeViewsTest {
                     selectedView = EarthquakeView.List,
                     expanded = true,
                     isListPanelVisible = isListPanelVisible,
+                    monitoring = EarthquakeMonitoringState(),
                     onListPanelVisibilityChanged = { isListPanelVisible = it },
                     onItemClick = { selectedId = it.id },
                     onClearSelection = { selectedId = null },
@@ -138,14 +149,18 @@ class EarthquakeViewsTest {
         var state by mutableStateOf(EarthquakePreviewState(mapItems = listOf(item)))
         var selectedView by mutableStateOf(EarthquakeView.List)
         composeRule.setContent {
-            EarthquakeTheme {
-                EarthquakeScreen(
-                    state = state,
-                    onMapItemClick = { state = state.copy(selectedMapItemId = it.id) },
-                    onMapClick = { state = state.copy(selectedMapItemId = null) },
-                    selectedView = selectedView,
-                    onViewSelected = { selectedView = it },
-                )
+            DeviceConfigurationOverride(
+                DeviceConfigurationOverride.WindowSize(DpSize(400.dp, 600.dp))
+            ) {
+                EarthquakeTheme {
+                    EarthquakeScreen(
+                        state = state,
+                        onMapItemClick = { state = state.copy(selectedMapItemId = it.id) },
+                        onMapClick = { state = state.copy(selectedMapItemId = null) },
+                        selectedView = selectedView,
+                        onViewSelected = { selectedView = it },
+                    )
+                }
             }
         }
 

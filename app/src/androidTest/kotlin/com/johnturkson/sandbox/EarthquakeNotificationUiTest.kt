@@ -1,13 +1,17 @@
 package com.johnturkson.sandbox
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -16,11 +20,14 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.unit.dp
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
+import com.johnturkson.sandbox.ui.EarthquakeExplorerTopAppBar
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringCard
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringState
@@ -90,6 +97,39 @@ class EarthquakeNotificationUiTest {
     }
 
     @Test
+    fun everyMonitoringAndRefreshCombinationKeepsTheSameAppBarHeight() {
+        var state by mutableStateOf(EarthquakeMonitoringState())
+        rule.setContent {
+            EarthquakeTheme(dynamicColor = false) {
+                Column {
+                    EarthquakeMonitoringCard(
+                        state,
+                        {},
+                        Modifier.width(320.dp).testTag("compact-monitoring"),
+                        lastUpdatedLabel = "10:42",
+                    )
+                    EarthquakeExplorerTopAppBar(
+                        state,
+                        false,
+                        {},
+                        {},
+                        {},
+                        Modifier.width(840.dp).testTag("expanded-monitoring"),
+                        lastUpdatedLabel = "10:42",
+                    )
+                }
+            }
+        }
+        for (status in EarthquakeMonitoringState.Status.entries) {
+            for (refresh in EarthquakeMonitoringState.Refresh.entries) {
+                rule.runOnIdle { state = state.copy(status = status, refresh = refresh) }
+                rule.onNodeWithTag("compact-monitoring").assertHeightIsEqualTo(64.dp)
+                rule.onNodeWithTag("expanded-monitoring").assertHeightIsEqualTo(64.dp)
+            }
+        }
+    }
+
+    @Test
     fun refreshingDisablesDuplicateActionAndFailuresKeepTheTimestamp() {
         var state by
             mutableStateOf(
@@ -101,17 +141,25 @@ class EarthquakeNotificationUiTest {
                 EarthquakeMonitoringCard(state, { requests++ }, lastUpdatedLabel = "10:42")
             }
         }
-        rule.onNodeWithText("Checks every minute · Updated 10:42").assertIsDisplayed()
+        rule
+            .onNodeWithContentDescription("Checks every minute · Updated 10:42", substring = true)
+            .assertIsDisplayed()
         rule.onNodeWithContentDescription("Refresh earthquake data").performClick()
         rule.runOnIdle {
             assertEquals(1, requests)
             state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Running)
         }
-        rule.onNodeWithText("Existing data remains visible").assertIsDisplayed()
+        rule
+            .onNodeWithContentDescription("Existing data remains visible", substring = true)
+            .assertIsDisplayed()
         rule.onNodeWithContentDescription("Refreshing earthquakes…").assertIsNotEnabled()
         rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Failed) }
-        rule.onNodeWithText("Couldn’t refresh earthquakes").assertIsDisplayed()
-        rule.onNodeWithText("Saved data · Updated 10:42").assertIsDisplayed()
+        rule
+            .onNodeWithContentDescription("Couldn’t refresh earthquakes", substring = true)
+            .assertIsDisplayed()
+        rule
+            .onNodeWithContentDescription("Saved data · Updated 10:42", substring = true)
+            .assertIsDisplayed()
         rule.runOnIdle {
             state =
                 state.copy(
@@ -119,18 +167,24 @@ class EarthquakeNotificationUiTest {
                     refresh = EarthquakeMonitoringState.Refresh.Failed,
                 )
         }
-        rule.onNodeWithText("Couldn’t refresh earthquakes").assertIsDisplayed()
+        rule
+            .onNodeWithContentDescription("Couldn’t refresh earthquakes", substring = true)
+            .assertIsDisplayed()
         rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Idle) }
-        rule.onNodeWithText("Offline · Monitoring paused").assertIsDisplayed()
+        rule
+            .onNodeWithContentDescription("Offline · Monitoring paused", substring = true)
+            .assertIsDisplayed()
         rule.onNodeWithContentDescription("Refresh earthquake data").assertIsEnabled()
         rule.runOnIdle {
             state = EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed)
         }
-        rule.onNodeWithText("Couldn’t start monitoring · Try again").assertIsDisplayed()
+        rule
+            .onNodeWithContentDescription("Couldn’t start monitoring · Try again", substring = true)
+            .assertIsDisplayed()
     }
 
     @Test
-    fun monitoringScrollsAwayAndPositionSurvivesMinimizeAndViewChanges() {
+    fun expandedMonitoringStaysInAppBarAndListPositionSurvivesLayoutChanges() {
         val items = (1..50).map { EarthquakeMapItem("$it", 1.0, 2.0, "Earthquake $it") }
         var expanded by mutableStateOf(true)
         var panel by mutableStateOf(true)
@@ -158,13 +212,17 @@ class EarthquakeNotificationUiTest {
             }
         }
         rule.onNodeWithText("Selected earthquake").assertDoesNotExist()
-        rule.onNodeWithText("Live monitoring").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Live monitoring", substring = true).assertIsDisplayed()
         rule.onNode(hasScrollAction()).performScrollToNode(hasText("Earthquake 40"))
-        rule.onNodeWithText("Live monitoring").assertDoesNotExist()
+        rule.onNodeWithContentDescription("Live monitoring", substring = true).assertIsDisplayed()
         var index = 0
-        rule.runOnIdle { index = list.firstVisibleItemIndex }
+        var firstVisibleKey: Any? = null
+        rule.runOnIdle {
+            index = list.firstVisibleItemIndex
+            firstVisibleKey = list.layoutInfo.visibleItemsInfo.first().key
+        }
         rule.onNodeWithContentDescription("Minimize earthquake list").performClick()
-        rule.onNodeWithText("Live monitoring").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Live monitoring", substring = true).assertIsDisplayed()
         rule.onNodeWithText("Earthquake 1").assertIsDisplayed()
         rule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
         rule.onNodeWithText("Selected earthquake").assertDoesNotExist()
@@ -172,9 +230,12 @@ class EarthquakeNotificationUiTest {
         rule.runOnIdle { assertEquals(index, list.firstVisibleItemIndex) }
         rule.runOnIdle { expanded = false }
         rule.onNodeWithText("Map").performClick()
-        rule.onNodeWithText("Live monitoring").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Live monitoring", substring = true).assertIsDisplayed()
         rule.onNodeWithText("List").performClick()
-        rule.runOnIdle { assertEquals(index, list.firstVisibleItemIndex) }
+        rule.runOnIdle {
+            assertEquals(firstVisibleKey, list.layoutInfo.visibleItemsInfo.first().key)
+        }
+        rule.onNodeWithContentDescription("Live monitoring", substring = true).assertDoesNotExist()
         rule.onNodeWithText("Selected earthquake").assertDoesNotExist()
     }
 }

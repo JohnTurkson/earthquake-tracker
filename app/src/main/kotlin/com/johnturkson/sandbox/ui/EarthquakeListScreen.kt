@@ -29,11 +29,11 @@ fun EarthquakeListScreen(
     listState: LazyListState = rememberLazyListState(),
 ) {
     val request = state.scrollRequest
-    LaunchedEffect(request, state.mapItems) {
+    LaunchedEffect(request, state.mapItems, expanded) {
         if (request != null) {
             val index = state.mapItems.indexOfFirst { it.id == request.earthquakeId }
             if (index >= 0) {
-                val listIndex = index + 2
+                val listIndex = index + if (expanded) 1 else 2
                 val layout = listState.layoutInfo
                 val visible = layout.visibleItemsInfo.find { it.index == listIndex }
                 val fullyVisible =
@@ -53,9 +53,12 @@ fun EarthquakeListScreen(
             onItemClick = onItemClick,
             onMinimize = onMinimize,
             listState = listState,
-            modifier = modifier.fillMaxSize().padding(safePadding).padding(16.dp),
-            monitoring = state.monitoring,
-            onRefresh = onRefresh,
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .padding(safePadding)
+                    .padding(start = 16.dp, end = 16.dp, top = 80.dp, bottom = 16.dp),
+            showMinimizeAction = false,
         )
     } else {
         Box(
@@ -64,15 +67,6 @@ fun EarthquakeListScreen(
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(safePadding)
         ) {
-            EarthquakeList(
-                items = state.mapItems,
-                selectedItemId = state.selectedMapItemId,
-                onItemClick = onItemClick,
-                modifier = Modifier.padding(top = 84.dp).fillMaxSize(),
-                listState = listState,
-                monitoring = state.monitoring,
-                onRefresh = onRefresh,
-            )
             EarthquakeExplorerControls(
                 items = state.mapItems,
                 selectedItemId = state.selectedMapItemId,
@@ -83,6 +77,17 @@ fun EarthquakeListScreen(
                 onViewSelected = onViewSelected,
                 renderListContent = false,
                 onNotificationsClick = onNotificationsClick,
+                content = {
+                    EarthquakeList(
+                        items = state.mapItems,
+                        selectedItemId = state.selectedMapItemId,
+                        onItemClick = onItemClick,
+                        modifier = Modifier.padding(top = 84.dp).fillMaxSize(),
+                        listState = listState,
+                        monitoring = state.monitoring,
+                        onRefresh = onRefresh,
+                    )
+                },
             )
         }
     }

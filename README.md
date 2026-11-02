@@ -48,8 +48,11 @@ future checks while letting an already queued or running refresh finish.
 
 The separate bell opens the Notifications destination full-screen in compact
 windows and as a floating right pane in expanded windows. Material Adaptive
-scenes arrange the destinations as the window resizes. The monitoring card is the first scrolling list item;
-when the expanded list is minimized, it appears over the map. Large-earthquake
+scenes arrange the destinations as the window resizes. Expanded windows use a
+Scaffold top app bar for monitoring, Show list/Minimize, refresh, and notifications.
+The monitoring message stays on one line at the standard 64 dp app bar height.
+Compact windows retain the floating map banner and first scrolling list item at
+the same 64 dp height. Large-earthquake
 alerts use a separate channel from quiet monitoring status. Alerts default to
 M6+ events within the past minute and are opt-in. Previously delivered event IDs
 are retained to avoid repeated alerts.

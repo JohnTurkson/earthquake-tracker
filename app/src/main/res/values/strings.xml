@@ -84,4 +84,15 @@
     <string name="alerts_manual_only">Alerts on refresh · Start monitoring for live alerts</string>
     <string name="refresh_queued">Refresh queued</string>
     <string name="saved_data_available">Saved earthquake data is available</string>
+    <string name="monitoring_bar_checking">Checking…</string>
+    <string name="monitoring_bar_refreshing">Refreshing…</string>
+    <string name="monitoring_bar_failed">Monitoring failed</string>
+    <string name="monitoring_bar_refresh_failed">Refresh failed</string>
+    <string name="monitoring_bar_offline">Offline · Paused</string>
+    <string name="monitoring_bar_starting">Starting…</string>
+    <string name="monitoring_bar_off">Monitoring off</string>
+    <string name="monitoring_bar_updated">Updated %1$s</string>
+    <string name="monitoring_bar_saved">Saved %1$s</string>
+    <string name="monitoring_bar_saved_data">Saved data</string>
+    <string name="monitoring_bar_no_data">No saved data</string>
 </resources>

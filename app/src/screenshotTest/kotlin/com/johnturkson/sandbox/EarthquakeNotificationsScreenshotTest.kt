@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.android.tools.screenshot.PreviewTest
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
+import com.johnturkson.sandbox.ui.EarthquakeExplorerTopAppBar
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringCard
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringState
@@ -28,6 +29,7 @@ import kotlin.time.Instant
 class EarthquakeNotificationsScreenshotTest {
     @PreviewTest
     @Preview(widthDp = 360, locale = "en-US")
+    @Preview(widthDp = 360, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Preview(widthDp = 320, fontScale = 1.5f, locale = "en-US")
     @Composable
     fun monitoring(
@@ -41,6 +43,46 @@ class EarthquakeNotificationsScreenshotTest {
                     lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
                 )
             }
+        }
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 840, locale = "en-US")
+    @Preview(widthDp = 840, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(widthDp = 840, fontScale = 1.5f, locale = "en-US")
+    @Composable
+    fun expandedMonitoring(
+        @PreviewParameter(EarthquakeMonitoringStateProvider::class) state: EarthquakeMonitoringState
+    ) {
+        EarthquakeTheme(dynamicColor = false) {
+            EarthquakeExplorerTopAppBar(
+                monitoring = state,
+                isListPanelVisible = false,
+                onListPanelVisibilityChanged = {},
+                onRefresh = {},
+                onNotificationsClick = {},
+                lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
+            )
+        }
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 840, locale = "en-US")
+    @Preview(widthDp = 840, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(widthDp = 840, fontScale = 1.5f, locale = "en-US")
+    @Composable
+    fun expandedMonitoringWithPanel(
+        @PreviewParameter(EarthquakeMonitoringStateProvider::class) state: EarthquakeMonitoringState
+    ) {
+        EarthquakeTheme(dynamicColor = false) {
+            EarthquakeExplorerTopAppBar(
+                monitoring = state,
+                isListPanelVisible = true,
+                onListPanelVisibilityChanged = {},
+                onRefresh = {},
+                onNotificationsClick = {},
+                lastUpdatedLabel = if (state.lastUpdated != null) "10:42" else null,
+            )
         }
     }
 

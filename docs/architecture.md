@@ -345,7 +345,10 @@ their state into the pane renderer.
 [EarthquakeListScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListScreen.kt)
 uses the same entry-owned `LazyListState` for both presentations.
 [EarthquakeListPanel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListPanel.kt)
-renders the fixed heading and Minimize control above the real list. The preferred
+renders the fixed heading above the real list. The explorer's top app bar owns
+Minimize; set `showMinimizeAction = false` in the expanded destination and
+aggregate explorer fixture. Standalone panels can retain their own Minimize
+control. The preferred
 outer pane width is 392 dp, including 16 dp outer spacing on each side, leaving
 the established 360 dp surface. Use `EarthquakeList(isSupportingPane = true,
 showTitle = false)` inside it. Rows omit the forward arrow in expanded windows.
@@ -353,14 +356,22 @@ Compact rows select the earthquake and navigate to Map; expanded rows update
 Map through results while keeping the panel open.
 
 [EarthquakeExplorerControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerControls.kt)
-places the map overlays and compact controls. Runtime Map and List destinations
+owns a Material `Scaffold`, its expanded `topBar`, map content slot, and compact
+overlays. Pass the native map through `content` so it fills the scaffold beneath
+the app bar. Consume scaffold window insets without applying its top padding to
+the map surface; reserve the bar in the map's own content padding instead.
+Keep safe-drawing insets separate from the 64 dp bar content height. Expanded
+list and notification panes start below that bar. Set `showControls = false`
+while a cluster sheet is open, preserving the map and its camera owner.
+Runtime Map and List destinations
 set `renderListContent = false` when using its controls so the List entry renders
 the list independently. Its aggregate rendering option supports deterministic
 component fixtures using the same list and panel components.
 
 A Map selection sends a result to List. List retains a pending request while
 hidden or waiting for data, resolves the current event index by ID, accounts for
-the monitoring and heading items, and animates an offscreen row into view. Consume
+the compact monitoring and heading items (only the heading in expanded windows),
+and animates an offscreen row into view. Consume
 the request after handling it; data refreshes and layout changes alone must not
 repeatedly override manual scrolling. A fresh revision can reveal the same event
 again. Clearing selection synchronizes the two destinations without scrolling.
@@ -643,13 +654,27 @@ selection. Each destination collects it independently. Notifications observes
 preferences and system capabilities in its own ViewModel and screen entry.
 `EarthquakeMonitoringState.status` uses its nested `Status` enum for the monitoring
 session; `refresh` describes the separate refresh operation.
-`EarthquakeMonitoringCard` is the first keyed item of `EarthquakeList`'s existing
-LazyColumn, so it scrolls away with the heading and rows. Keep the existing
-hoisted list state when switching layouts or minimizing. Expanded list headers
-remain fixed. Minimized maps show the same card as an overlay. A refresh keeps
-the old data and timestamp until storage succeeds.
+[`EarthquakeExplorerTopAppBar`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerTopAppBar.kt)
+places monitoring between Show list/Minimize and the refresh and notification
+actions in expanded windows, whether the list is open, minimized, or replaced
+by Notifications. It uses the same Material `TopAppBar` as
+`EarthquakeMonitoringCard`, with a row in the title slot and zero internal window
+insets. Retain Material's standard 64 dp height in every monitoring/refresh state.
+The compact card keeps its rounded floating surface and original map position;
+in compact List it remains the first keyed scrolling item. Expanded List omits
+that item. Preserve the hoisted list state across those changes.
 
-The bell has no badge and aligns to the top end edge in both layouts. Center
+Monitoring text stays on one line. Measure the full status/detail, then a shorter
+status/detail, then the shorter status against the available title width at the
+current font scale. Keep the refresh target available and ellipsize the final
+label if necessary; do not shrink fonts or grow the bar. Expose the complete
+status and detail together in accessibility semantics, even when secondary text
+does not fit. Keep this formatting in the UI and retain the existing priority
+between monitoring and refresh states. A refresh keeps old data and its timestamp
+until storage succeeds.
+
+The bell has no badge. It occupies the expanded top app bar's final action slot
+and remains a floating button at the compact top end edge. Center
 the compact switcher independently, reserving equal space on both sides so the
 bell does not shift its center or overlap it. `EarthquakeExplorerControls` owns
 both placements. The bell opens `EarthquakeNotificationsRoute`, independently of the Map/List switcher.
