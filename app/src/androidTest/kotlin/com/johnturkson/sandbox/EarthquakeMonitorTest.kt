@@ -24,16 +24,12 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.withTimeout
 import org.junit.Test
 
@@ -130,41 +126,42 @@ class EarthquakeMonitorTest {
 
     @Test
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    fun monitoringChecksEveryMinuteAfterFailureAndCancellationStopsChecks() = runTest {
+    fun monitoringChecksEveryMinuteAfterFailureAndCancellationStopsChecks() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         assertOffline(context)
         val manager = WorkManager.getInstance(context)
         val scheduler = EarthquakeMonitor(manager)
         manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
-        val monitoring =
-            backgroundScope.async(start = CoroutineStart.UNDISPATCHED) {
-                monitoringWorker(context, scheduler).doWork()
-            }
+        val dispatcher = StandardTestDispatcher()
+        val monitoring = async(dispatcher) { monitoringWorker(context, scheduler).doWork() }
+        dispatcher.scheduler.runCurrent()
         try {
             suspend fun nextFailure(previous: WorkInfo? = null) =
-                withContext(Dispatchers.IO) {
-                    withTimeout(45.seconds) {
-                        scheduler.refreshWork.filterNotNull().first {
-                            it.id != previous?.id && it.state == WorkInfo.State.FAILED
-                        }
+                withTimeout(45.seconds) {
+                    scheduler.refreshWork.filterNotNull().first {
+                        it.id != previous?.id && it.state == WorkInfo.State.FAILED
                     }
                 }
             val first = nextFailure()
-            runCurrent()
-            advanceTimeBy(59_999)
-            runCurrent()
+            dispatcher.scheduler.runCurrent()
+            dispatcher.scheduler.advanceTimeBy(59_999)
+            dispatcher.scheduler.runCurrent()
             assertEquals(first.id, scheduler.refreshWork.first()?.id)
-            advanceTimeBy(1)
-            runCurrent()
+            dispatcher.scheduler.advanceTimeBy(1)
+            dispatcher.scheduler.runCurrent()
             val second = nextFailure(first)
             assertNotEquals(first.id, second.id)
             assertFalse(monitoring.isCompleted)
-            monitoring.cancelAndJoin()
-            advanceTimeBy(180_000)
-            runCurrent()
+            monitoring.cancel()
+            dispatcher.scheduler.runCurrent()
+            monitoring.join()
+            dispatcher.scheduler.advanceTimeBy(180_000)
+            dispatcher.scheduler.runCurrent()
             assertEquals(second.id, scheduler.refreshWork.first()?.id)
         } finally {
-            monitoring.cancelAndJoin()
+            monitoring.cancel()
+            dispatcher.scheduler.runCurrent()
+            monitoring.join()
             manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
         }
     }

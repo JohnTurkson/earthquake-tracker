@@ -534,11 +534,14 @@ that a monitoring tick enqueues the shared refresh worker. Run these tests with
 device internet disabled under the shared reservation. MockEngine fixtures
 provide controlled responses without live earthquake feed requests.
 `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
-`EarthquakeMonitorTest` also builds the actual monitoring worker and advances a
-coroutine test scheduler through the minute boundary after a failed refresh, then
-verifies cancellation prevents later checks. Only coroutine delay uses virtual
-time; real WorkManager observations run on the IO dispatcher with bounded waits.
-No separate pacing helper or injected monotonic clock is required.
+`EarthquakeMonitorTest` also builds the actual monitoring worker inside
+`runBlocking`, launching it on a manually advanced `StandardTestDispatcher`.
+Advance that worker's scheduler through the minute boundary after a failed
+refresh, then verify cancellation prevents later checks. WorkManager observations
+and their bounded waits use real time. Avoid `runTest` for this mixed-clock test:
+its automatic advancement can trigger another monitoring tick while awaiting an
+external WorkManager update. Drain current worker tasks after cancellation before
+joining. No separate pacing helper or injected monotonic clock is required.
 `EarthquakeAlertPolicyTest` covers magnitude and age boundaries and revisions;
 `EarthquakeAlertDeliveryTest` covers delivery deduplication and suppressed posts.
 
