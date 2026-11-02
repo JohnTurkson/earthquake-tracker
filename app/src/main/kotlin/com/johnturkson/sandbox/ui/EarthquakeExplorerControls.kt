@@ -165,18 +165,15 @@ fun EarthquakeExplorerControls(
             )
         }
         if (!expanded && !notificationsVisible) {
-            Row(
+            EarthquakeViewSwitcher(
+                selectedView,
+                onViewSelected,
                 Modifier.align(Alignment.TopCenter)
                     .padding(contentPadding)
-                    .padding(top = 12.dp, start = 16.dp, end = 16.dp)
-                    .widthIn(max = 360.dp)
+                    .padding(top = 12.dp, start = 80.dp, end = 80.dp)
+                    .widthIn(max = 296.dp)
                     .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                EarthquakeViewSwitcher(selectedView, onViewSelected, Modifier.weight(1f))
-                Spacer(Modifier.width(12.dp))
-                EarthquakeNotificationButton(onNotificationsClick)
-            }
+            )
         } else if (expanded && !showListPanel) {
             Surface(
                 modifier =
@@ -198,10 +195,12 @@ fun EarthquakeExplorerControls(
                 }
             }
         }
-        if (expanded) {
+        if (expanded || !notificationsVisible) {
             EarthquakeNotificationButton(
                 onNotificationsClick,
-                Modifier.align(Alignment.TopEnd).padding(contentPadding).padding(16.dp),
+                Modifier.align(Alignment.TopEnd)
+                    .padding(contentPadding)
+                    .padding(top = if (expanded) 16.dp else 12.dp, end = 16.dp),
             )
         }
         if (

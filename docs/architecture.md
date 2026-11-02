@@ -234,6 +234,10 @@ minimum visual height of 48 dp so its fill covers the accessible touch target.
 Changing presentation is a screen action,
 not a new Navigation 3 back-stack entry. Keep destination navigation in
 `EarthquakeApp` when adding actual destinations.
+Measure the localized labels with the current typography and font scale. When
+both icon-and-label segments cannot fit, show only their Map/List icons and
+retain their accessible names and selected semantics. Keep the controls on one
+row; resizing restores labels when space permits.
 
 [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
 classifies its available constraints in the UI. At widths of at least 840 dp
@@ -479,8 +483,12 @@ hoisted list state when switching layouts or minimizing. Expanded list headers
 remain fixed. Minimized maps show the same card as an overlay. A refresh keeps
 the old data and timestamp until storage succeeds.
 
-The bell is independent of the Map/List switcher and has no badge. Notification
-page visibility is restorable explorer state, like the expanded list panel.
+The bell is independent of the Map/List switcher and has no badge. Align it to
+the top end edge in compact and expanded layouts. Center the compact switcher
+independently, reserving equal space on both sides so the bell does not shift
+its center or overlap it. `EarthquakeExplorerControls` owns both placements.
+Notification page visibility is restorable explorer state, like the expanded
+list panel.
 Closing it restores the existing compact view and expanded panel preference;
 opening it in expanded windows uses the right pane and temporarily hides the
 list. Keep the camera, list state, location flow, and selection owners above

@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import com.android.tools.screenshot.PreviewTest
 import com.johnturkson.sandbox.theme.EarthquakeTheme
 import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
@@ -35,6 +38,29 @@ class EarthquakeExplorerControlsScreenshotTest {
     @Composable
     fun compactMapControls() {
         Controls(expanded = false)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 320, heightDp = 640, locale = "en-US")
+    @Composable
+    fun compactNarrowMapControls() {
+        Controls(expanded = false)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 760, heightDp = 480, locale = "en-US")
+    @Composable
+    fun compactWideMapControls() {
+        Controls(expanded = false)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Composable
+    fun compactRtlMapControls() {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Controls(expanded = false)
+        }
     }
 
     @PreviewTest

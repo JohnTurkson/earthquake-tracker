@@ -100,6 +100,43 @@ class EarthquakeViewsScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US")
     @Composable
+    fun iconOnlyMapSwitcher() {
+        CompactSwitcher(EarthquakeView.Map)
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
+    fun iconOnlyListSwitcher() {
+        CompactSwitcher(EarthquakeView.List)
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
+    fun darkIconOnlySwitcher() {
+        CompactSwitcher(EarthquakeView.List, dark = true)
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US", fontScale = 1.5f)
+    @Composable
+    fun largeTextIconOnlySwitcher() {
+        CompactSwitcher(EarthquakeView.Map)
+    }
+
+    @Composable
+    private fun CompactSwitcher(selectedView: EarthquakeView, dark: Boolean = false) {
+        EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
+            Box(Modifier.padding(12.dp)) {
+                EarthquakeViewSwitcher(selectedView, {}, Modifier.width(160.dp))
+            }
+        }
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
     fun selectedEarthquake() {
         EarthquakeTheme(dynamicColor = false) {
             Box(Modifier.padding(12.dp)) {

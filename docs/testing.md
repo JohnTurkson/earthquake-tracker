@@ -271,6 +271,15 @@ control, Show list button, and reuse of the bottom card. The fixture's neutral
 background only makes overlay bounds visible; it is not a substitute map or
 coverage of map pixels. Do not render blank native map previews to claim coverage
 of these controls.
+Include narrow icon-only controls, a wider compact window, and right-to-left
+placement so the bell stays at the logical end while the switcher stays
+centered. Cover both selected icons, dark mode, and large text in the switcher's
+own previews; resizing must preserve accessible names and selection.
+[EarthquakeViewSwitcherTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewSwitcherTest.kt)
+checks label removal and restoration, icon accessibility names, and selection
+callbacks across width changes. It also checks the switcher's center and the
+bell's logical end alignment and click action in compact, expanded, minimized,
+and right-to-left layouts.
 
 [EarthquakeViewsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsTest.kt)
 checks selecting an event from List, opening it on Map, retaining its highlight
