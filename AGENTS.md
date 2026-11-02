@@ -4,12 +4,30 @@ Read [README.md](README.md) before planning or changing this project. It defines
 USGS Tracker's high-level product requirements. Keep the app Android-only and use
 these requirements to guide design, implementation, and testing.
 
-# Formatting
+# Project instructions
 
-- Do not add comments to code.
-- Never format generated files or build/cache directories.
-- Prefer explicit imports; do not introduce star imports. ktfmt does not expand
-  existing star imports, so follow this rule when adding or optimizing imports.
+Before changing this project, read and follow:
+
+- [Formatting guidelines](docs/formatting.md).
+- [Architecture and state management guidelines](docs/architecture.md).
+
+These guidelines apply to agents and human contributors. Follow the linked
+implementation examples and preserve their state ownership and responsibility
+boundaries. Existing scaffolding is identified in the guidelines; do not treat it
+as a completed feature.
+
+When new work introduces an element or pattern the guidelines do not cover, ask
+the user how they want to expand the relevant conventions before choosing that
+pattern. Continue independent work that follows established conventions. Do not
+ask again about decisions already made in the conversation.
+
+Update the relevant guide with agreed decisions and concrete implementation
+examples as part of the change. Add sections only for elements the project
+actually introduces. Expand testing guidance with the user as testing patterns
+are established; do not add placeholder sections for future work.
+
+Before finishing, compare the change against both guides and report any unmet
+requirements, including missing screenshot coverage for UI changes.
 
 # Source control
 

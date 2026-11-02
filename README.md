@@ -74,3 +74,9 @@ focused on one coherent change.
 Shared agent rules live in `AGENTS.md`. See the
 [agent instruction guide](docs/agent-instructions.md) for Codex discovery and
 sharing the rules with Claude Code.
+
+Follow the [formatting guidelines](docs/formatting.md) and
+[architecture and state management guidelines](docs/architecture.md). These apply
+to human contributors and agents, with examples from the current implementation.
+Discuss additions as new project patterns are introduced and update the guides
+with the agreed conventions and working examples.
