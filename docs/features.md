@@ -58,9 +58,6 @@ intensity, coordinates, and source information. Open the event's USGS page for
 more information. Details reads the saved event without making another API
 request.
 
-The ShakeMap and DYFI image examples in the README collage use a fixed-event
-prototype. Normal event selection does not yet discover those report images.
-
 Implementation:
 
 - Detail card, event fields, and report sections: [EarthquakeDetailsScreen.kt](../app/src/main/kotlin/com/johnturkson/sandbox/ui/details/EarthquakeDetailsScreen.kt).
