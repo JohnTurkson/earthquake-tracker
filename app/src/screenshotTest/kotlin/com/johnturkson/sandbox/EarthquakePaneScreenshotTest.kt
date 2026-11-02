@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveComponentOverrideApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.AdaptStrategy
 import androidx.compose.material3.adaptive.layout.AnimatedPane
-import androidx.compose.material3.adaptive.layout.LocalAnimatedPaneOverride
 import androidx.compose.material3.adaptive.layout.SupportingPaneScaffold
 import androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldRole
@@ -20,8 +18,6 @@ import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationIt
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.calculateThreePaneScaffoldValue
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,7 +30,7 @@ import com.johnturkson.sandbox.ui.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.EarthquakeMonitoringState
 import com.johnturkson.sandbox.ui.EarthquakeNotificationState
 import com.johnturkson.sandbox.ui.EarthquakeNotificationsScreen
-import com.johnturkson.sandbox.ui.EarthquakePaneOverride
+import com.johnturkson.sandbox.ui.EarthquakePaneOverrides
 
 class EarthquakePaneScreenshotTest {
     @PreviewTest
@@ -72,15 +68,10 @@ class EarthquakePaneScreenshotTest {
         Pane(notifications = true, expanded = false)
     }
 
-    @OptIn(
-        ExperimentalMaterial3AdaptiveApi::class,
-        ExperimentalMaterial3AdaptiveComponentOverrideApi::class,
-    )
+    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     @Composable
     private fun Pane(notifications: Boolean, expanded: Boolean = true) {
         EarthquakeTheme(darkTheme = isSystemInDarkTheme(), dynamicColor = false) {
-            val original = LocalAnimatedPaneOverride.current
-            val override = remember(original) { EarthquakePaneOverride(original) }
             val strategies =
                 SupportingPaneScaffoldDefaults.adaptStrategies(
                     supportingPaneAdaptStrategy =
@@ -100,7 +91,7 @@ class EarthquakePaneScreenshotTest {
                             else SupportingPaneScaffoldRole.Supporting
                         ),
                 )
-            CompositionLocalProvider(LocalAnimatedPaneOverride provides override) {
+            EarthquakePaneOverrides {
                 SupportingPaneScaffold(
                     directive =
                         calculatePaneScaffoldDirective(currentWindowAdaptiveInfoV2())

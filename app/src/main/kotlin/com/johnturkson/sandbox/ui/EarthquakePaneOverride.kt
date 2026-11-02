@@ -12,12 +12,14 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveComponen
 import androidx.compose.material3.adaptive.layout.AnimatedPaneOverride
 import androidx.compose.material3.adaptive.layout.AnimatedPaneOverrideScope
 import androidx.compose.material3.adaptive.layout.AnimatedPaneScope
+import androidx.compose.material3.adaptive.layout.LocalAnimatedPaneOverride
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.PaneMotion
 import androidx.compose.material3.adaptive.layout.PaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneScaffoldValue
 import androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldRole
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
@@ -32,13 +34,27 @@ import androidx.compose.ui.unit.roundToIntRect
 import androidx.compose.ui.unit.toRect
 import com.johnturkson.sandbox.R
 
+@OptIn(ExperimentalMaterial3AdaptiveComponentOverrideApi::class)
+@Composable
+fun EarthquakePaneOverrides(
+    supportingPaneTitle: String? = null,
+    content: @Composable () -> Unit,
+) {
+    val original = LocalAnimatedPaneOverride.current
+    val override =
+        remember(original, supportingPaneTitle) {
+            EarthquakePaneOverride(original, supportingPaneTitle)
+        }
+    CompositionLocalProvider(LocalAnimatedPaneOverride provides override, content = content)
+}
+
 @OptIn(
     ExperimentalMaterial3AdaptiveApi::class,
     ExperimentalMaterial3AdaptiveComponentOverrideApi::class,
 )
-class EarthquakePaneOverride(
+private class EarthquakePaneOverride(
     private val defaultOverride: AnimatedPaneOverride,
-    private val supportingPaneTitle: String? = null,
+    private val supportingPaneTitle: String?,
 ) : AnimatedPaneOverride {
     @Composable
     override fun <

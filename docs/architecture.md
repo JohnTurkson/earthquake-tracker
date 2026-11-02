@@ -341,22 +341,29 @@ Map/List and expanded-list controls restore the library's default pane motion
 when Notifications is closed. Keep this transient animation choice in the host;
 it is not destination state and does not need saved-state restoration.
 
-Provide [EarthquakePaneOverride](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakePaneOverride.kt)
-through `LocalAnimatedPaneOverride` around the navigation display. The library's
-levitated pane adds a rectangular shadow to the whole container, including its
-transparent spacing. Our floating panes omit that outer shadow; their opaque,
+Wrap the navigation display in
+[EarthquakePaneOverrides](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakePaneOverride.kt).
+Keep the composition-local provider, remembered override, experimental component
+opt-in, and private renderer together in that file. Hosts and screenshot fixtures
+use the wrapper without accessing `LocalAnimatedPaneOverride` or constructing
+the renderer. The same wrapper covers the expanded List or Details pane at the start and
+Notifications pane at the end. `EarthquakeApp` wraps its existing `NavDisplay`
+with a single `EarthquakePaneOverrides` call.
+
+The library's levitated pane adds a rectangular shadow to the whole container,
+including its transparent spacing. Our floating panes omit that outer shadow; their opaque,
 rounded `Surface` components own the visible 6 dp shadow. Keep the container
 transparent so the map remains unchanged outside those surfaces. Pass the active
-supporting destination title to the override so its accessibility pane announces
+supporting destination title through the wrapper so its accessibility pane announces
 Details or List correctly.
 
 Limit this override to the app's nonmodal, nonresizable levitated panes. Preserve
 preferred sizes, scaffold visibility transitions, entry saveable state, focus,
 and pane traversal semantics. Forward the supplied bounds animation, including
 the `snap()` spec used for notification navigation. Delegate expanded and hidden
-pane targets to the original library renderer. Keep Navigation 3's scene strategy and entry
-decorators as the owners of navigation and destination lifetimes; do not copy
-their state into the pane renderer.
+pane targets to the original library renderer. Keep Navigation 3's scene strategy
+and entry decorators as the owners of navigation and destination lifetimes;
+do not copy their state into the pane renderer.
 
 [EarthquakeListScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListScreen.kt)
 uses the same entry-owned `LazyListState` for both presentations.

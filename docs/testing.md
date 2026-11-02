@@ -402,8 +402,9 @@ settled destination appearances; timing assertions cover their transitions.
 
 
 [EarthquakePaneScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakePaneScreenshotTest.kt)
-renders the real adaptive scaffold and pane override with the notification and
-list surfaces in light, dark, and large-text configurations, plus the compact
+renders the real adaptive scaffold through the same `EarthquakePaneOverrides`
+wrapper used by the navigation host, with the notification and list surfaces in
+light, dark, and large-text configurations, plus the compact
 notification fallback. Its solid background exposes unwanted shading in the
 transparent pane margins; it is not a map fixture.
 [EarthquakePaneTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakePaneTest.kt)

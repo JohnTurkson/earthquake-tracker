@@ -12,16 +12,13 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveComponentOverrideApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.AdaptStrategy
-import androidx.compose.material3.adaptive.layout.LocalAnimatedPaneOverride
 import androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.SupportingPaneSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberSupportingPaneSceneStrategy
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,10 +46,7 @@ import com.johnturkson.sandbox.ui.Destination.EarthquakeListRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeMapRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeNotificationsRoute
 
-@OptIn(
-    ExperimentalMaterial3AdaptiveApi::class,
-    ExperimentalMaterial3AdaptiveComponentOverrideApi::class,
-)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun EarthquakeApp(
     modifier: Modifier = Modifier,
@@ -218,16 +212,11 @@ fun EarthquakeApp(
                         if (pendingListRevision == it.revision) pendingListRevision = null
                     },
                 )
-            val defaultPaneOverride = LocalAnimatedPaneOverride.current
             val supportingPaneTitle =
                 stringResource(
                     if (detailsVisible) R.string.earthquake_details else R.string.recent_earthquakes
                 )
-            val paneOverride =
-                remember(defaultPaneOverride, supportingPaneTitle) {
-                    EarthquakePaneOverride(defaultPaneOverride, supportingPaneTitle)
-                }
-            CompositionLocalProvider(LocalAnimatedPaneOverride provides paneOverride) {
+            EarthquakePaneOverrides(supportingPaneTitle = supportingPaneTitle) {
                 NavDisplay(
                     backStack = backStack,
                     modifier = Modifier.fillMaxSize(),
