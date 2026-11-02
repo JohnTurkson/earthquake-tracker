@@ -31,11 +31,20 @@ internal fun EarthquakeDatabaseModel.toMapItem(): EarthquakeMapItem =
     )
 
 @Composable
-internal fun earthquakeTitle(item: EarthquakeMapItem): String =
-    item.title
-        ?: stringResource(
-            R.string.earthquake_fallback_title,
-            item.magnitude?.let { stringResource(R.string.earthquake_magnitude, it) }
-                ?: stringResource(R.string.unknown_magnitude),
-            item.place ?: stringResource(R.string.unknown_location),
-        )
+internal fun earthquakeTitle(item: EarthquakeMapItem): String {
+    val title = item.title
+    if (title != null) {
+        return title
+    }
+
+    val magnitude = item.magnitude
+    val magnitudeText =
+        if (magnitude != null) {
+            stringResource(R.string.earthquake_magnitude, magnitude)
+        } else {
+            stringResource(R.string.unknown_magnitude)
+        }
+    val placeText = item.place ?: stringResource(R.string.unknown_location)
+
+    return stringResource(R.string.earthquake_fallback_title, magnitudeText, placeText)
+}

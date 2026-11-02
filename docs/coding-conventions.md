@@ -77,3 +77,17 @@ as the coordinate and cluster labels do. List rows, selection cards, and map
 marker titles resolve that text in composition, following the existing
 `earthquakeEventTime` helper pattern. SDK cluster wrappers receive the resolved
 title from the map composable.
+
+Keep fallback formatting readable with a block body and explicit returns, as in
+`earthquakeTitle`: return an available source title first, then resolve named
+`magnitudeText` and `placeText` values before passing them to the fallback template.
+Keep the numeric `magnitude` separate from its formatted text instead of nesting
+resource calls and scope functions inside the template arguments.
+
+Escape a literal leading question mark in string resources with `\?`, following
+[Android's special-character rules](https://developer.android.com/guide/topics/resources/string-resource#escaping_quotes).
+The unknown-magnitude placeholder in `strings.xml` uses:
+
+```xml
+<string name="unknown_magnitude">\?</string>
+```
