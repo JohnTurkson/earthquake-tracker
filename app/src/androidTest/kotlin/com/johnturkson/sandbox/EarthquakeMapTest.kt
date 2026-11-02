@@ -9,6 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -292,9 +294,9 @@ class EarthquakeMapTest {
         val map = awaitMap()
         composeRule.onNodeWithText("Map").assertDoesNotExist()
         composeRule.onNodeWithText("Use my location").assertDoesNotExist()
-        val heading =
+        val sheet =
             composeRule
-                .onNodeWithText("2 earthquakes in this area")
+                .onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.PaneTitle))
                 .fetchSemanticsNode()
                 .boundsInWindow
         composeRule.runOnIdle {
@@ -302,9 +304,7 @@ class EarthquakeMapTest {
             assertEquals(first.longitude, map.cameraPosition.target.longitude, 0.0001)
             val point = map.projection.toScreenLocation(LatLng(first.latitude, first.longitude))
             assertTrue(point.y > 0)
-            assertTrue(
-                point.y < heading.top - 48 * composeRule.activity.resources.displayMetrics.density
-            )
+            assertTrue(point.y < sheet.top)
         }
     }
 
