@@ -335,18 +335,13 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Queued),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Running),
-            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Offline),
+            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Failed),
             EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.Offline,
+                refresh = EarthquakeMonitoringState.Refresh.Failed,
                 hasStoredData = true,
             ),
             EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.DataError),
-            EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.StorageError,
+                refresh = EarthquakeMonitoringState.Refresh.Failed,
                 lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Offline),
@@ -372,30 +367,16 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
+                refresh = EarthquakeMonitoringState.Refresh.Failed,
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Offline,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
+                refresh = EarthquakeMonitoringState.Refresh.Failed,
                 hasStoredData = true,
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Offline,
-                hasStoredData = true,
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
-                status = EarthquakeMonitoringState.Status.Checking,
-                refresh = EarthquakeMonitoringState.Refresh.Offline,
+                refresh = EarthquakeMonitoringState.Refresh.Failed,
                 lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
             EarthquakeMonitoringState(
@@ -419,20 +400,17 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
                 refresh = EarthquakeMonitoringState.Refresh.Queued,
             ),
             EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
-                hasStoredData = true,
-            ),
-            EarthquakeMonitoringState(
-                refresh = EarthquakeMonitoringState.Refresh.Offline,
-                lastUpdated = Instant.fromEpochMilliseconds(1),
-            ),
-            EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Failed,
                 refresh = EarthquakeMonitoringState.Refresh.Running,
             ),
             EarthquakeMonitoringState(
                 status = EarthquakeMonitoringState.Status.Offline,
                 refresh = EarthquakeMonitoringState.Refresh.Running,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Offline,
+                refresh = EarthquakeMonitoringState.Refresh.Failed,
+                lastUpdated = Instant.fromEpochMilliseconds(1),
             ),
         )
 }

@@ -447,16 +447,16 @@ changes before staging. Follow the [source control guide](source-control.md).
 
 ## Notification and refresh coverage
 
-`EarthquakeRefreshRepositoryTest` uses real Room and Ktor MockEngine for offline,
-fetch/decode/storage errors, commit-before-alert order, cancellation, and alert
-failure isolation. Its transaction-failure fixture verifies that both event rows
-and refresh metadata roll back. `EarthquakeWorkSchedulerTest` uses real
+`EarthquakeRefreshRepositoryTest` uses real Room and Ktor MockEngine for exception
+propagation, retained data after failed requests, atomic rollback, cancellation,
+and separate post-commit alert delivery. Its transaction-failure fixture verifies
+that both event rows and refresh metadata roll back. `EarthquakeWorkSchedulerTest` uses real
 WorkManager with delayed refresh work to verify duplicate requests keep the
 existing request and stopping monitoring leaves it queued. It checks fresh
-offline outcomes through the same `WorkInfo` Flow used by the screen and verifies
+failed outcomes through the same `WorkInfo` Flow used by the screen and verifies
 that a monitoring tick enqueues the shared refresh worker. Run these tests with
-device internet disabled under the shared reservation; controlled repository
-connectivity and MockEngine responses do not require live USGS requests.
+device internet disabled under the shared reservation. MockEngine fixtures
+provide controlled responses without live USGS requests.
 `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
 `EarthquakePollingLoopTest` advances a coroutine test scheduler through minute
 boundaries, slow requests, offline pauses, reconnection, and cancellation;
@@ -466,8 +466,13 @@ no real-minute sleeps are needed. Supply its monotonic clock from that scheduler
 
 On the Resizable API 37 emulator, `EarthquakeMonitoringStorageTest` checks durable data and
 alert history after reopening, transaction rollback, alias-aware alert deduplication, retained history after empty feeds, and the additive version-2-to-3 migration.
-`EarthquakeRefreshWorkerTest` builds real CoroutineWorkers with WorkManager's
-TestListenableWorkerBuilder and a controlled refresher to assert typed output.
+`EarthquakeRefreshWorkerTest` uses TestListenableWorkerBuilder with a controlled
+refresher to check save-before-alert order, propagation of refresh exceptions and
+cancellation, and best-effort notification failure isolation. Calling `doWork()`
+directly does not run WorkManager's exception-to-failed-state handling; assert
+those exceptions in builder tests and assert `WorkInfo.State.FAILED` through the
+real WorkManager integration tests. The UI has one generic refresh failure,
+without separate network, decoding, or storage outcomes.
 `EarthquakeNotificationsTest` queries the actual NotificationManager channels,
 rechecks registration, compares capabilities to Android's current runtime grant,
 and inspects posted notifications, distinct event PendingIntents, foreground
@@ -517,15 +522,15 @@ ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
 ```
 
 The offline WorkManager integration test asserts its network precondition and
-leaves connectivity changes to the parent reservation owner. It verifies the offline foreground title when notifications are permitted, and
-that Stop removes foreground status while an ordinary alert remains. Restore recorded
+leaves connectivity changes to the parent reservation owner. It verifies the
+offline foreground title when notifications are permitted, and that Stop removes
+foreground status while an ordinary alert remains. Restore recorded
 network settings after manual Maps-tile and real monitoring checks, then complete
 the shared idle-home cleanup.
 
 `EarthquakeRefreshIntegrationTest` builds the actual refresh CoroutineWorker with
 WorkManager's test builder, the real refresh repository and Room database,
-Preferences DataStore, a MockEngine USGS feed, and a controlled
-`EarthquakeConnection`. It checks offline failure without a request, history
+Preferences DataStore, and a MockEngine USGS feed. It checks history
 retention, preferred-ID changes, alert deduplication/permission gating, and a
 network failure that preserves rows and refresh metadata. Run it with ordinary
 notification permission granted and denied. Platform notification assertions

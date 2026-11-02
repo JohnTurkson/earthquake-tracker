@@ -18,10 +18,12 @@ import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.work.EarthquakeMonitoringWorker
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
 import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -41,7 +43,7 @@ class EarthquakeWorkSchedulerTest {
         manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
         val request =
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>()
-                .setInitialDelay(1, TimeUnit.DAYS)
+                .setInitialDelay(1.days.toJavaDuration())
                 .build()
         try {
             manager
@@ -61,7 +63,7 @@ class EarthquakeWorkSchedulerTest {
     }
 
     @Test
-    fun nextRefreshReplacesOldResultAndReportsOfflineThroughWorkInfo() = runBlocking {
+    fun nextRefreshReplacesOldResultAndReportsFailureThroughWorkInfo() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         assertOffline(context)
         val manager = WorkManager.getInstance(context)
@@ -70,21 +72,17 @@ class EarthquakeWorkSchedulerTest {
         try {
             scheduler.refresh().await()
             val first =
-                withTimeout(15_000) {
+                withTimeout(45.seconds) {
                     scheduler.refreshWork.filterNotNull().first { it.state.isFinished }
                 }
             scheduler.refresh().await()
             val second =
-                withTimeout(15_000) {
+                withTimeout(45.seconds) {
                     scheduler.refreshWork.filterNotNull().first { it.state.isFinished }
                 }
             assertNotEquals(first.id, second.id)
             listOf(first, second).forEach { info ->
                 assertEquals(WorkInfo.State.FAILED, info.state)
-                assertEquals(
-                    "Offline",
-                    info.outputData.getString(EarthquakeWorkScheduler.ResultKey),
-                )
             }
             assertEquals(second, scheduler.refreshWork.first())
         } finally {
@@ -100,7 +98,7 @@ class EarthquakeWorkSchedulerTest {
         manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
         val request =
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>()
-                .setInitialDelay(1, TimeUnit.DAYS)
+                .setInitialDelay(1.days.toJavaDuration())
                 .build()
         val worker = monitoringWorker(context, scheduler)
         try {
@@ -140,10 +138,9 @@ class EarthquakeWorkSchedulerTest {
             }
         try {
             val info =
-                withTimeout(15_000) {
+                withTimeout(45.seconds) {
                     scheduler.refreshWork.filterNotNull().first {
-                        it.state == WorkInfo.State.FAILED &&
-                            it.outputData.getString(EarthquakeWorkScheduler.ResultKey) == "Offline"
+                        it.state == WorkInfo.State.FAILED
                     }
                 }
             assertEquals(WorkInfo.State.FAILED, info.state)

@@ -10,7 +10,6 @@ import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import com.johnturkson.sandbox.data.EarthquakeApi
 import com.johnturkson.sandbox.data.EarthquakeCollectionNetworkModel
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeGeometryNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeMetadataNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeNetworkModel
@@ -21,7 +20,6 @@ import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -36,17 +34,18 @@ import java.io.File
 import java.io.IOException
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -63,12 +62,6 @@ class EarthquakeRefreshIntegrationTest {
         val now = Clock.System.now()
         val json = Json { ignoreUnknownKeys = true }
         var requests = 0
-        val connection =
-            object : EarthquakeConnection {
-                override val online = MutableStateFlow(false)
-
-                override fun isOnline() = online.value
-            }
         fun event(preferred: Boolean) =
             EarthquakeNetworkModel(
                 if (preferred) preferredId else id,
@@ -143,7 +136,6 @@ class EarthquakeRefreshIntegrationTest {
                     database,
                     database.earthquakeDao(),
                     database.monitoringDao(),
-                    connection,
                     settings,
                     notifications,
                     Dispatchers.IO,
@@ -166,22 +158,8 @@ class EarthquakeRefreshIntegrationTest {
                     .setWorkerFactory(factory)
                     .build()
                     .doWork()
-            assertEquals(
-                ListenableWorker.Result.failure(
-                    androidx.work.workDataOf(EarthquakeWorkScheduler.ResultKey to "Offline")
-                ),
-                runWorker(),
-            )
             assertEquals(0, requests)
-            connection.online.value = true
-            repeat(2) {
-                assertEquals(
-                    ListenableWorker.Result.success(
-                        androidx.work.workDataOf(EarthquakeWorkScheduler.ResultKey to "Success")
-                    ),
-                    runWorker(),
-                )
-            }
+            repeat(2) { assertEquals(ListenableWorker.Result.success(), runWorker()) }
             val stored = repository.getEarthquakesFlow().first()
             assertEquals(setOf(old.id, preferredId), stored.map { it.id }.toSet())
             val metadata = assertNotNull(database.monitoringDao().getRefreshFlow().first())
@@ -189,19 +167,14 @@ class EarthquakeRefreshIntegrationTest {
                 if (allowed) 1 else 0,
                 database.monitoringDao().getDeliveredAlertsFlow(preferredId).first().size,
             )
-            withTimeout(5_000) {
+            withTimeout(5.seconds) {
                 while (
                     systemNotifications.activeNotifications.count {
                         it.tag == id || it.tag == preferredId
                     } != if (allowed) 1 else 0
-                ) delay(50)
+                ) delay(50.milliseconds)
             }
-            assertEquals(
-                ListenableWorker.Result.failure(
-                    androidx.work.workDataOf(EarthquakeWorkScheduler.ResultKey to "NetworkError")
-                ),
-                runWorker(),
-            )
+            assertFailsWith<IOException> { runWorker() }
             assertEquals(stored, repository.getEarthquakesFlow().first())
             assertEquals(metadata, database.monitoringDao().getRefreshFlow().first())
         } finally {

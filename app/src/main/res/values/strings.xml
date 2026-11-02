@@ -34,7 +34,6 @@
     <string name="refreshing_earthquakes">Refreshing earthquakes…</string>
     <string name="existing_data_visible">Existing data remains visible</string>
     <string name="monitoring_offline">Offline · Monitoring paused</string>
-    <string name="refresh_offline">You are offline</string>
     <string name="refresh_failed">Couldn’t refresh earthquakes</string>
     <string name="monitoring_starting">Starting live monitoring…</string>
     <string name="live_monitoring">Live monitoring</string>

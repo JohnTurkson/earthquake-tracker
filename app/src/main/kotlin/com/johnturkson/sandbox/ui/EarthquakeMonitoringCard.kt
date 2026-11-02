@@ -39,27 +39,19 @@ fun EarthquakeMonitoringCard(
     modifier: Modifier = Modifier,
     lastUpdatedLabel: String? = null,
 ) {
-    val offline =
-        state.status == EarthquakeMonitoringState.Status.Offline ||
-            state.refresh == EarthquakeMonitoringState.Refresh.Offline
+    val offline = state.status == EarthquakeMonitoringState.Status.Offline
     val failed =
         state.status == EarthquakeMonitoringState.Status.Failed ||
-            state.refresh in
-                setOf(
-                    EarthquakeMonitoringState.Refresh.NetworkError,
-                    EarthquakeMonitoringState.Refresh.DataError,
-                    EarthquakeMonitoringState.Refresh.StorageError,
-                )
+            state.refresh == EarthquakeMonitoringState.Refresh.Failed
     val title =
         when {
             state.status == EarthquakeMonitoringState.Status.Checking ->
                 R.string.checking_monitoring
             state.refresh == EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
             state.isRefreshing -> R.string.refreshing_earthquakes
-            offline ->
-                if (state.isMonitoring) R.string.monitoring_offline else R.string.refresh_offline
             state.status == EarthquakeMonitoringState.Status.Failed -> R.string.monitoring_failed
             failed -> R.string.refresh_failed
+            offline -> R.string.monitoring_offline
             state.status == EarthquakeMonitoringState.Status.Starting ->
                 R.string.monitoring_starting
             state.isMonitoring -> R.string.live_monitoring
@@ -106,8 +98,8 @@ fun EarthquakeMonitoringCard(
         ) {
             Icon(
                 when {
-                    offline -> Icons.Outlined.WifiOff
                     failed -> Icons.Outlined.ErrorOutline
+                    offline -> Icons.Outlined.WifiOff
                     state.isMonitoring -> Icons.Outlined.Sensors
                     else -> Icons.Outlined.PauseCircleOutline
                 },

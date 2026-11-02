@@ -65,9 +65,8 @@ Stopping monitoring cancels future polling, leaving an already queued or running
 refresh to finish. Android can delay or stop work; the minute interval is a
 requested cadence.
 
-Observe WorkManager for queued/running state and typed success/offline/failure
-results. Observe Room independently for earthquake records and successful-refresh
-metadata. Reading a Flow does not initiate network access. No in-memory
+Observe WorkManager for queued/running state and success or generic failure.
+Observe Room independently for earthquake records and successful-refresh metadata. Reading a Flow does not initiate network access. No in-memory
 freshness flag or separate detail revision is exposed.
 
 `EarthquakeApi` retains typed summary, single-event, and catalog GET endpoints.
@@ -88,7 +87,7 @@ or a failed refresh leaves the existing database observation and stored rows
 available. Apply display filters separately without deleting history.
 
 An empty feed does not erase previously seen information. The refresh worker
-reports HTTP, decoding, validation, and storage failures through typed results
+reports HTTP, decoding, validation, and storage exceptions as failed work
 while retaining existing rows and the last successful timestamp. Cancellation
 propagates.
 

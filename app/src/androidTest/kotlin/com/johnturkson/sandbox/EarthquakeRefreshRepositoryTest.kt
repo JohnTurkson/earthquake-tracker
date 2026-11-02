@@ -6,11 +6,9 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import com.johnturkson.sandbox.data.EarthquakeApi
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakeRefreshDatabaseModel
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
-import com.johnturkson.sandbox.data.EarthquakeRefreshResult
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.data.MainDatabase
 import io.ktor.client.HttpClient
@@ -25,13 +23,14 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import java.io.IOException
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
@@ -41,40 +40,36 @@ import org.junit.Test
 
 class EarthquakeRefreshRepositoryTest {
     @Test
-    fun offlineDoesNotFetchOrChangeStoredData() = runBlocking {
+    fun failedRequestPropagatesWithoutChangingStoredData() = runBlocking {
         withFixture { fixture ->
-            assertEquals(EarthquakeRefreshResult.Offline, fixture.refresher.refresh())
-            assertEquals(0, fixture.requests)
+            fixture.response = { throw IOException("Offline") }
+            assertFailsWith<IOException> { fixture.refresher.refresh() }
+            assertEquals(1, fixture.requests)
             fixture.assertUnchanged()
         }
     }
 
     @Test
-    fun networkDecodeAndConnectionLossPreserveStoredData() = runBlocking {
+    fun networkAndDecodeExceptionsPreserveStoredData() = runBlocking {
         withFixture { fixture ->
-            fixture.connection.online.value = true
             fixture.response = { throw IOException("Network failure") }
-            assertEquals(EarthquakeRefreshResult.NetworkError, fixture.refresher.refresh())
+            assertFailsWith<Exception> { fixture.refresher.refresh() }
             fixture.assertUnchanged()
             fixture.response = { "invalid JSON" }
-            assertEquals(EarthquakeRefreshResult.DataError, fixture.refresher.refresh())
+            assertFailsWith<Exception> { fixture.refresher.refresh() }
             fixture.assertUnchanged()
             fixture.response = { fixture.feed.replace("FeatureCollection", "Invalid") }
-            assertEquals(EarthquakeRefreshResult.DataError, fixture.refresher.refresh())
+            assertFailsWith<Exception> { fixture.refresher.refresh() }
             fixture.assertUnchanged()
-            fixture.response = {
-                fixture.connection.online.value = false
-                throw IOException("Connection lost")
-            }
-            assertEquals(EarthquakeRefreshResult.Offline, fixture.refresher.refresh())
+            fixture.response = { throw IOException("Connection lost") }
+            assertFailsWith<IOException> { fixture.refresher.refresh() }
             fixture.assertUnchanged()
         }
     }
 
     @Test
-    fun storageFailureRollsBackRowsAndMetadataWithoutAlerting() = runBlocking {
+    fun storageFailureRollsBackRowsAndMetadata() = runBlocking {
         withFixture { fixture ->
-            fixture.connection.online.value = true
             fixture.database.openHelper.writableDatabase.execSQL(
                 """
                 CREATE TRIGGER reject_refresh BEFORE UPDATE ON earthquake_refresh
@@ -82,16 +77,14 @@ class EarthquakeRefreshRepositoryTest {
                 """
                     .trimIndent()
             )
-            assertEquals(EarthquakeRefreshResult.StorageError, fixture.refresher.refresh())
+            assertFailsWith<Exception> { fixture.refresher.refresh() }
             fixture.assertUnchanged()
-            assertEquals(0, fixture.settingsReads)
         }
     }
 
     @Test
     fun alertFailureHappensAfterCommitAndKeepsSuccessfulRefresh() = runBlocking {
         withFixture { fixture ->
-            fixture.connection.online.value = true
             fixture.readSettings = {
                 assertEquals(2, fixture.database.earthquakeDao().getEarthquakesFlow().first().size)
                 assertTrue(
@@ -100,7 +93,8 @@ class EarthquakeRefreshRepositoryTest {
                 )
                 throw SecurityException("Notifications unavailable")
             }
-            assertEquals(EarthquakeRefreshResult.Success, fixture.refresher.refresh())
+            fixture.refresher.refresh()
+            assertFailsWith<SecurityException> { fixture.refresher.publishAlerts() }
             assertEquals(1, fixture.settingsReads)
             assertEquals(2, fixture.database.earthquakeDao().getEarthquakesFlow().first().size)
         }
@@ -109,7 +103,6 @@ class EarthquakeRefreshRepositoryTest {
     @Test
     fun cancellationPropagatesAndNextRefreshCanSucceed() = runBlocking {
         withFixture { fixture ->
-            fixture.connection.online.value = true
             val started = CompletableDeferred<Unit>()
             val response = CompletableDeferred<String>()
             fixture.response = {
@@ -117,12 +110,12 @@ class EarthquakeRefreshRepositoryTest {
                 response.await()
             }
             val pending = async { fixture.refresher.refresh() }
-            withTimeout(5_000) { started.await() }
+            withTimeout(5.seconds) { started.await() }
             pending.cancelAndJoin()
             assertTrue(pending.isCancelled)
             fixture.assertUnchanged()
             fixture.response = { fixture.feed }
-            assertEquals(EarthquakeRefreshResult.Success, fixture.refresher.refresh())
+            fixture.refresher.refresh()
         }
     }
 
@@ -154,7 +147,6 @@ class EarthquakeRefreshRepositoryTest {
         var requests = 0
         var settingsReads = 0
         var readSettings: suspend () -> Unit = {}
-        val connection = Connection()
         val client =
             HttpClient(
                 MockEngine {
@@ -193,7 +185,6 @@ class EarthquakeRefreshRepositoryTest {
                 database,
                 database.earthquakeDao(),
                 database.monitoringDao(),
-                connection,
                 settings,
                 EarthquakeNotifications(context),
                 Dispatchers.IO,
@@ -203,11 +194,5 @@ class EarthquakeRefreshRepositoryTest {
             assertEquals(listOf(old), database.earthquakeDao().getEarthquakesFlow().first())
             assertEquals(metadata, database.monitoringDao().getRefreshFlow().first())
         }
-    }
-
-    private class Connection : EarthquakeConnection {
-        override val online = MutableStateFlow(false)
-
-        override fun isOnline() = online.value
     }
 }

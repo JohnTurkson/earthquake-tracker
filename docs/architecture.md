@@ -452,14 +452,22 @@ limits. WorkManager scheduling and screen integration should reuse this layer.
 ## Refresh, monitoring, and notifications
 
 [`EarthquakeRefreshRepository`](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeRefreshRepository.kt)
-checks validated connectivity, fetches before merging stored earthquakes, and
-publishes alerts after commit. It returns `EarthquakeRefreshResult` outcomes for
-success, offline, network, decode, and storage failures. Cancellation propagates;
-notification failures must not roll back saved earthquake data. The repository
-does not own work status or deduplicate refresh requests.
-Read typed instants directly with `Clock.System.now()` for refresh
-metadata and alert freshness; do not add a dedicated class that only forwards
-that system call.
+fetches and validates the response, then merges records and refresh metadata in
+one Room transaction. It returns normally on success and lets network, decoding,
+validation, and storage exceptions propagate. It does not catch transport error
+types, classify failures, check connectivity, or own work status.
+
+`EarthquakeRefreshWorker` calls the repository and returns `Result.success()`.
+An exception escaping `doWork()` is handled by WorkManager as failed work. The
+ViewModel maps `WorkInfo.State.FAILED` to the generic refresh-failed presentation;
+it does not inspect exception types or parse custom result codes. Cancellation
+propagates through suspending work.
+
+After a successful data commit, the worker calls `publishAlerts()`. Only this
+best-effort step has an exception guard: notification failures must not turn
+successfully saved data into a failed refresh, and cancellation still propagates.
+Read typed instants directly with `Clock.System.now()` for refresh metadata and
+alert freshness; do not add a dedicated class that only forwards that system call.
 
 [`EarthquakeWorkScheduler`](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeWorkScheduler.kt)
 routes manual refresh and every monitoring tick through the same unique one-time
@@ -468,7 +476,8 @@ of checking for running work first; WorkManager keeps the existing pending work.
 Do not add another mutex, running flag, or completion coordinator around it.
 
 The screen observes `getWorkInfosForUniqueWorkFlow` through `refreshWork` for
-queued/running state and reads terminal `WorkInfo.outputData` for the typed result.
+queued/running/failed state and successful completion. No separate result enum or
+error-code payload is needed for generic refresh feedback.
 Each unique name contains a single one-time request, so use its current `WorkInfo`
 without timestamp tags or a separate ordering scheme. Room independently supplies
 stored earthquakes and the last-successful-refresh timestamp.
@@ -487,8 +496,11 @@ state. Keep the monitoring session as separate unique one-time work with `KEEP`.
 Stopping it cancels future ticks while any shared refresh already queued or
 running finishes independently.
 
-Neither request has a network constraint: manual offline work must fail instead
-of waiting, and monitoring retains foreground status while paused offline.
+Neither request has a network constraint. Refresh attempts use the normal network
+operation and its 30-second timeout; an offline attempt can fail without waiting
+for connectivity. Do not add a refresh connectivity precheck or exception-type
+catalog. The monitoring session separately observes connectivity so it retains
+foreground status while paused offline.
 Workers receive dependencies through `@HiltWorker` and the application's injected
 `HiltWorkerFactory`. `EarthquakeApplication` supplies WorkManager's on-demand
 configuration; remove only WorkManager's initializer from AndroidX Startup.
@@ -560,10 +572,9 @@ alias-aware single-event query. Notification history has no cascading foreign ke
 to preferred earthquake rows.
 
 `EarthquakeConnection` describes current connectivity and its observable changes;
-`EarthquakeConnectivity` is the Android implementation. Hilt supplies the same
-validated-network source to workers and the ViewModel. Controlled implementations
-allow worker/API/database integration tests to use MockEngine while the device
-is offline. The refresh repository bounds its own summary request with a
+`EarthquakeConnectivity` is the Android implementation. Hilt supplies the validated-network source to monitoring and the ViewModel.
+Refresh execution does not depend on this connectivity snapshot. Tests use
+MockEngine to control network outcomes while the device is offline. The refresh repository bounds its own summary request with a
 30-second coroutine timeout, preserving the shared client's other endpoint
 behavior.
 

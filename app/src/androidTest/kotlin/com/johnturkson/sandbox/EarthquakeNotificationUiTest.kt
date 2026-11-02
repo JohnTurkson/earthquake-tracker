@@ -109,18 +109,18 @@ class EarthquakeNotificationUiTest {
         }
         rule.onNodeWithText("Existing data remains visible").assertIsDisplayed()
         rule.onNodeWithContentDescription("Refreshing earthquakes…").assertIsNotEnabled()
-        rule.runOnIdle {
-            state = state.copy(refresh = EarthquakeMonitoringState.Refresh.NetworkError)
-        }
+        rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Failed) }
         rule.onNodeWithText("Couldn’t refresh earthquakes").assertIsDisplayed()
         rule.onNodeWithText("Saved data · Updated 10:42").assertIsDisplayed()
         rule.runOnIdle {
             state =
                 state.copy(
                     status = EarthquakeMonitoringState.Status.Offline,
-                    refresh = EarthquakeMonitoringState.Refresh.Offline,
+                    refresh = EarthquakeMonitoringState.Refresh.Failed,
                 )
         }
+        rule.onNodeWithText("Couldn’t refresh earthquakes").assertIsDisplayed()
+        rule.runOnIdle { state = state.copy(refresh = EarthquakeMonitoringState.Refresh.Idle) }
         rule.onNodeWithText("Offline · Monitoring paused").assertIsDisplayed()
         rule.onNodeWithContentDescription("Refresh earthquake data").assertIsEnabled()
         rule.runOnIdle {

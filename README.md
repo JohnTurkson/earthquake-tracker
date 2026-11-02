@@ -35,8 +35,9 @@ coordinates remain accessible through the cluster list.
 
 The screen observes a Room database populated from the USGS all-day GeoJSON feed.
 Manual refresh and live-monitoring checks share one unique one-time WorkManager
-refresh request and preserve stored data on failure. Manual refresh reports an
-offline result instead of waiting for connectivity. Live monitoring uses a
+refresh request and preserve stored data on failure. Refresh attempts run without a
+network constraint and report a generic failure when they cannot complete,
+retaining saved data. Live monitoring uses a
 foreground WorkManager worker that checks every minute while active, pauses
 offline, and resumes on reconnection. Android can stop or delay work; the screen
 observes the actual worker state and refresh result. Stopping a session cancels

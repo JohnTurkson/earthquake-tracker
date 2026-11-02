@@ -32,6 +32,5 @@ class EarthquakeWorkScheduler @Inject constructor(private val manager: WorkManag
     companion object {
         const val RefreshWork = "earthquake_refresh"
         const val MonitoringWork = "earthquake_monitoring"
-        const val ResultKey = "earthquake_result"
     }
 }

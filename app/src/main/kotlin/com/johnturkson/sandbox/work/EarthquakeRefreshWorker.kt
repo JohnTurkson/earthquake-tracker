@@ -4,11 +4,10 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import androidx.work.workDataOf
-import com.johnturkson.sandbox.data.EarthquakeRefreshResult
 import com.johnturkson.sandbox.data.EarthquakeRefresher
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 
 @HiltWorker
 class EarthquakeRefreshWorker
@@ -19,9 +18,12 @@ constructor(
     private val repository: EarthquakeRefresher,
 ) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
-        val result = repository.refresh()
-        val output = workDataOf(EarthquakeWorkScheduler.ResultKey to result.name)
-        return if (result == EarthquakeRefreshResult.Success) Result.success(output)
-        else Result.failure(output)
+        repository.refresh()
+        try {
+            repository.publishAlerts()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {}
+        return Result.success()
     }
 }

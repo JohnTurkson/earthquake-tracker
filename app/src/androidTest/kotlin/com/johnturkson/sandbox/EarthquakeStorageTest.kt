@@ -11,25 +11,21 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
-import androidx.work.workDataOf
 import app.cash.turbine.test
 import com.johnturkson.sandbox.data.EarthquakeApi
 import com.johnturkson.sandbox.data.EarthquakeCollectionNetworkModel
-import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeDatabaseModel
 import com.johnturkson.sandbox.data.EarthquakeGeometryNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakePropertiesNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
-import com.johnturkson.sandbox.data.EarthquakeRefreshResult
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.data.EarthquakeTimestampMigration
 import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.data.toDatabaseModel
 import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
-import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -55,7 +51,6 @@ import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -361,7 +356,7 @@ class EarthquakeStorageTest {
                 refresh(client)
                 assertEquals(stored, repository.getEarthquakesFlow().first())
                 unavailable = true
-                refresh(client, EarthquakeRefreshResult.NetworkError)
+                refresh(client, expectedFailure = true)
                 assertEquals(stored, repository.getEarthquakesFlow().first())
             }
     }
@@ -382,7 +377,7 @@ class EarthquakeStorageTest {
                     assertTrue(saved.updatedAt > Instant.fromEpochMilliseconds(0))
                     assertEquals(2, repository.getEarthquakesFlow().first().size)
                     unavailable = true
-                    refresh(client, EarthquakeRefreshResult.NetworkError)
+                    refresh(client, expectedFailure = true)
                     assertEquals(saved, repository.getRefreshFlow().first())
                     expectNoEvents()
                     cancelAndIgnoreRemainingEvents()
@@ -413,7 +408,7 @@ class EarthquakeStorageTest {
         }
             .use { client ->
                 database.earthquakeDao().mergeEarthquakes(listOf(earthquake()))
-                refresh(client, EarthquakeRefreshResult.DataError)
+                refresh(client, expectedFailure = true)
                 assertEquals(
                     listOf("test"),
                     database.earthquakeDao().getEarthquakesFlow().first().map { it.id },
@@ -484,7 +479,7 @@ class EarthquakeStorageTest {
                         )
                     }
                     offline = true
-                    refresh(client, EarthquakeRefreshResult.NetworkError)
+                    refresh(client, expectedFailure = true)
                     assertEquals(history, repository.getEarthquakesFlow().first())
                     val newest =
                         priorEvent.copy(
@@ -589,7 +584,7 @@ class EarthquakeStorageTest {
                         repository.getEarthquakeFlow("alias-test").first()!!.magnitude,
                     )
                     assertEquals(3, networkRequests)
-                    refresh(client, EarthquakeRefreshResult.NetworkError)
+                    refresh(client, expectedFailure = true)
                     assertEquals(retained, repository.getEarthquakesFlow().first())
                 }
         } finally {
@@ -626,7 +621,7 @@ class EarthquakeStorageTest {
 
     private suspend fun refresh(
         client: HttpClient,
-        expected: EarthquakeRefreshResult = EarthquakeRefreshResult.Success,
+        expectedFailure: Boolean = false,
     ) {
         val settings =
             EarthquakeSettingsRepository(
@@ -644,11 +639,6 @@ class EarthquakeStorageTest {
                 database,
                 database.earthquakeDao(),
                 database.monitoringDao(),
-                object : EarthquakeConnection {
-                    override val online = MutableStateFlow(true)
-
-                    override fun isOnline() = online.value
-                },
                 settings,
                 EarthquakeNotifications(context),
                 Dispatchers.IO,
@@ -662,17 +652,14 @@ class EarthquakeStorageTest {
                 ): ListenableWorker =
                     EarthquakeRefreshWorker(appContext, workerParameters, refresher)
             }
-        val result =
+        val result = runCatching {
             TestListenableWorkerBuilder<EarthquakeRefreshWorker>(context)
                 .setWorkerFactory(factory)
                 .build()
                 .doWork()
-        val output = workDataOf(EarthquakeWorkScheduler.ResultKey to expected.name)
-        assertEquals(
-            if (expected == EarthquakeRefreshResult.Success) ListenableWorker.Result.success(output)
-            else ListenableWorker.Result.failure(output),
-            result,
-        )
+        }
+        assertEquals(expectedFailure, result.isFailure)
+        if (!expectedFailure) assertEquals(ListenableWorker.Result.success(), result.getOrThrow())
     }
 
     private fun client(

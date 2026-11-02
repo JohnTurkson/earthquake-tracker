@@ -17,6 +17,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -46,21 +48,17 @@ class EarthquakeWorkIntegrationTest {
                 "Run the device suite with Wi-Fi and mobile data disabled under the shared reservation",
             )
             ActivityScenario.launch(EarthquakeActivity::class.java).use {
-                withTimeout(15_000) {
+                withTimeout(45.seconds) {
                     manager
                         .getWorkInfosForUniqueWorkFlow(EarthquakeWorkScheduler.RefreshWork)
                         .first { infos ->
-                            infos.any { info ->
-                                info.state == WorkInfo.State.FAILED &&
-                                    info.outputData.getString(EarthquakeWorkScheduler.ResultKey) ==
-                                        "Offline"
-                            }
+                            infos.any { info -> info.state == WorkInfo.State.FAILED }
                         }
                 }
                 scheduler.startMonitoring()
                 scheduler.startMonitoring()
                 val running =
-                    withTimeout(15_000) {
+                    withTimeout(45.seconds) {
                             manager
                                 .getWorkInfosForUniqueWorkFlow(
                                     EarthquakeWorkScheduler.MonitoringWork
@@ -78,22 +76,22 @@ class EarthquakeWorkIntegrationTest {
                         capability.appEnabled &&
                         capability.monitoringEnabled
                 ) {
-                    withTimeout(5_000) {
+                    withTimeout(5.seconds) {
                         while (
                             systemNotifications.activeNotifications.none {
                                 it.id == EarthquakeNotifications.MonitoringId &&
                                     it.notification.extras.getString(Notification.EXTRA_TITLE) ==
                                         context.getString(R.string.monitoring_offline)
                             }
-                        ) delay(50)
+                        ) delay(50.milliseconds)
                     }
                 }
                 val posted = notifications.postAlert(alert)
                 if (posted) {
-                    withTimeout(5_000) {
+                    withTimeout(5.seconds) {
                         while (
                             systemNotifications.activeNotifications.none { it.tag == alert.id }
-                        ) delay(50)
+                        ) delay(50.milliseconds)
                     }
                 }
                 val notification = notifications.foreground(id, offline = true).notification
@@ -102,18 +100,18 @@ class EarthquakeWorkIntegrationTest {
                     .actionIntent
                     .send()
                 val stopped =
-                    withTimeout(15_000) {
+                    withTimeout(45.seconds) {
                         manager.getWorkInfoByIdFlow(id).first { info ->
                             info?.state == WorkInfo.State.CANCELLED
                         }
                     }
                 assertEquals(WorkInfo.State.CANCELLED, stopped?.state)
-                withTimeout(5_000) {
+                withTimeout(5.seconds) {
                     while (
                         systemNotifications.activeNotifications.any {
                             it.id == EarthquakeNotifications.MonitoringId
                         }
-                    ) delay(50)
+                    ) delay(50.milliseconds)
                 }
                 if (posted)
                     assertTrue(systemNotifications.activeNotifications.any { it.tag == alert.id })

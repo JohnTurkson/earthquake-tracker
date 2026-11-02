@@ -165,23 +165,13 @@ constructor(
                             WorkInfo.State.FAILED -> EarthquakeMonitoringState.Status.Failed
                             else -> EarthquakeMonitoringState.Status.Stopped
                         }
-                    val latestResult =
-                        refresh?.outputData?.getString(EarthquakeWorkScheduler.ResultKey)
                     val refreshing =
-                        when {
-                            refresh?.state == WorkInfo.State.RUNNING ->
-                                EarthquakeMonitoringState.Refresh.Running
-                            refresh?.state == WorkInfo.State.ENQUEUED ||
-                                refresh?.state == WorkInfo.State.BLOCKED ->
-                                EarthquakeMonitoringState.Refresh.Queued
-                            else ->
-                                when (latestResult) {
-                                    "Offline" -> EarthquakeMonitoringState.Refresh.Offline
-                                    "NetworkError" -> EarthquakeMonitoringState.Refresh.NetworkError
-                                    "DataError" -> EarthquakeMonitoringState.Refresh.DataError
-                                    "StorageError" -> EarthquakeMonitoringState.Refresh.StorageError
-                                    else -> EarthquakeMonitoringState.Refresh.Idle
-                                }
+                        when (refresh?.state) {
+                            WorkInfo.State.RUNNING -> EarthquakeMonitoringState.Refresh.Running
+                            WorkInfo.State.ENQUEUED,
+                            WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Refresh.Queued
+                            WorkInfo.State.FAILED -> EarthquakeMonitoringState.Refresh.Failed
+                            else -> EarthquakeMonitoringState.Refresh.Idle
                         }
                     status to refreshing
                 }

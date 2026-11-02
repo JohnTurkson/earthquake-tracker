@@ -23,10 +23,7 @@ data class EarthquakeMonitoringState(
         Idle,
         Queued,
         Running,
-        Offline,
-        NetworkError,
-        DataError,
-        StorageError,
+        Failed,
     }
 
     val isRefreshing: Boolean
