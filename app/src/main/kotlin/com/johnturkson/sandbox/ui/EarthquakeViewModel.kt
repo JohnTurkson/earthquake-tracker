@@ -56,7 +56,9 @@ constructor(
         private set
 
     override var monitoring by
-        mutableStateOf(EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Checking))
+        mutableStateOf(
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking)
+        )
         private set
 
     override var notifications by mutableStateOf(EarthquakeNotificationState())
@@ -156,25 +158,26 @@ constructor(
                     workScheduler.refreshWork,
                     refreshRepository.refreshStatus,
                     connectivity.online,
-                ) { monitor, refresh, status, online ->
-                    val phase =
+                ) { monitor, refresh, refreshStatus, online ->
+                    val status =
                         when (monitor?.state) {
                             WorkInfo.State.ENQUEUED,
-                            WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Phase.Starting
+                            WorkInfo.State.BLOCKED -> EarthquakeMonitoringState.Status.Starting
                             WorkInfo.State.RUNNING ->
-                                if (online) EarthquakeMonitoringState.Phase.Running
-                                else EarthquakeMonitoringState.Phase.Offline
-                            WorkInfo.State.FAILED -> EarthquakeMonitoringState.Phase.Failed
-                            else -> EarthquakeMonitoringState.Phase.Stopped
+                                if (online) EarthquakeMonitoringState.Status.Running
+                                else EarthquakeMonitoringState.Status.Offline
+                            WorkInfo.State.FAILED -> EarthquakeMonitoringState.Status.Failed
+                            else -> EarthquakeMonitoringState.Status.Stopped
                         }
                     val latestResult =
-                        if (status != EarthquakeRefreshCoordinator.Result.Idle) status.name
+                        if (refreshStatus != EarthquakeRefreshCoordinator.Result.Idle)
+                            refreshStatus.name
                         else
                             refresh?.outputData?.getString(EarthquakeWorkScheduler.ResultKey)
                                 ?: monitor?.progress?.getString(EarthquakeWorkScheduler.ResultKey)
                     val refreshing =
                         when {
-                            status == EarthquakeRefreshCoordinator.Result.Running ||
+                            refreshStatus == EarthquakeRefreshCoordinator.Result.Running ||
                                 refresh?.state == WorkInfo.State.RUNNING ->
                                 EarthquakeMonitoringState.Refresh.Running
                             refresh?.state == WorkInfo.State.ENQUEUED ||
@@ -189,10 +192,10 @@ constructor(
                                     else -> EarthquakeMonitoringState.Refresh.Idle
                                 }
                         }
-                    phase to refreshing
+                    status to refreshing
                 }
-                .collect { (phase, refresh) ->
-                    monitoring = monitoring.copy(phase = phase, refresh = refresh)
+                .collect { (status, refresh) ->
+                    monitoring = monitoring.copy(status = status, refresh = refresh)
                 }
         }
         workScheduler.refresh()

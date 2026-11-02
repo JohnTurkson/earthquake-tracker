@@ -477,6 +477,8 @@ shared selection; an event no longer in the database shows an availability messa
 `EarthquakeMonitoringState` and `EarthquakeNotificationState` are immutable
 rendering values exposed by `EarthquakeState`. The ViewModel maps worker,
 repository, connectivity, and preference observations into those values.
+`EarthquakeMonitoringState.status` uses its nested `Status` enum for the monitoring
+session; `refresh` describes the separate refresh operation.
 `EarthquakeMonitoringCard` is the first keyed item of `EarthquakeList`'s existing
 LazyColumn, so it scrolls away with the heading and rows. Keep the existing
 hoisted list state when switching layouts or minimizing. Expanded list headers

@@ -4,12 +4,12 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class EarthquakeMonitoringState(
-    val phase: Phase = Phase.Stopped,
+    val status: Status = Status.Stopped,
     val refresh: Refresh = Refresh.Idle,
     val lastUpdatedMillis: Long? = null,
     val hasStoredData: Boolean = false,
 ) {
-    enum class Phase {
+    enum class Status {
         Checking,
         Stopped,
         Starting,
@@ -32,5 +32,5 @@ data class EarthquakeMonitoringState(
         get() = refresh == Refresh.Queued || refresh == Refresh.Running
 
     val isMonitoring: Boolean
-        get() = phase == Phase.Starting || phase == Phase.Running || phase == Phase.Offline
+        get() = status == Status.Starting || status == Status.Running || status == Status.Offline
 }

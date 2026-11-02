@@ -189,24 +189,26 @@ fun EarthquakeNotificationPage(
                         Switch(
                             checked = monitoring.isMonitoring,
                             onCheckedChange = onMonitoringEnabled,
-                            enabled = monitoring.phase != EarthquakeMonitoringState.Phase.Checking,
+                            enabled =
+                                monitoring.status != EarthquakeMonitoringState.Status.Checking,
                             modifier =
                                 Modifier.notificationToggleSemantics(R.string.live_monitoring),
                         )
                     }
                     Text(
                         stringResource(
-                            when (monitoring.phase) {
-                                EarthquakeMonitoringState.Phase.Checking ->
+                            when (monitoring.status) {
+                                EarthquakeMonitoringState.Status.Checking ->
                                     R.string.checking_monitoring
-                                EarthquakeMonitoringState.Phase.Starting ->
+                                EarthquakeMonitoringState.Status.Starting ->
                                     R.string.monitoring_starting
-                                EarthquakeMonitoringState.Phase.Offline ->
+                                EarthquakeMonitoringState.Status.Offline ->
                                     R.string.monitoring_offline
-                                EarthquakeMonitoringState.Phase.Failed -> R.string.monitoring_failed
-                                EarthquakeMonitoringState.Phase.Running ->
+                                EarthquakeMonitoringState.Status.Failed ->
+                                    R.string.monitoring_failed
+                                EarthquakeMonitoringState.Status.Running ->
                                     R.string.monitoring_active
-                                EarthquakeMonitoringState.Phase.Stopped ->
+                                EarthquakeMonitoringState.Status.Stopped ->
                                     R.string.monitoring_stopped
                             }
                         ),

@@ -40,10 +40,10 @@ fun EarthquakeMonitoringCard(
     lastUpdatedLabel: String? = null,
 ) {
     val offline =
-        state.phase == EarthquakeMonitoringState.Phase.Offline ||
+        state.status == EarthquakeMonitoringState.Status.Offline ||
             state.refresh == EarthquakeMonitoringState.Refresh.Offline
     val failed =
-        state.phase == EarthquakeMonitoringState.Phase.Failed ||
+        state.status == EarthquakeMonitoringState.Status.Failed ||
             state.refresh in
                 setOf(
                     EarthquakeMonitoringState.Refresh.NetworkError,
@@ -52,14 +52,16 @@ fun EarthquakeMonitoringCard(
                 )
     val title =
         when {
-            state.phase == EarthquakeMonitoringState.Phase.Checking -> R.string.checking_monitoring
+            state.status == EarthquakeMonitoringState.Status.Checking ->
+                R.string.checking_monitoring
             state.refresh == EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
             state.isRefreshing -> R.string.refreshing_earthquakes
             offline ->
                 if (state.isMonitoring) R.string.monitoring_offline else R.string.refresh_offline
-            state.phase == EarthquakeMonitoringState.Phase.Failed -> R.string.monitoring_failed
+            state.status == EarthquakeMonitoringState.Status.Failed -> R.string.monitoring_failed
             failed -> R.string.refresh_failed
-            state.phase == EarthquakeMonitoringState.Phase.Starting -> R.string.monitoring_starting
+            state.status == EarthquakeMonitoringState.Status.Starting ->
+                R.string.monitoring_starting
             state.isMonitoring -> R.string.live_monitoring
             else -> R.string.monitoring_off
         }
@@ -79,7 +81,7 @@ fun EarthquakeMonitoringCard(
                         if (state.hasStoredData) R.string.saved_data_available
                         else R.string.no_saved_data
                     )
-            state.phase == EarthquakeMonitoringState.Phase.Starting ->
+            state.status == EarthquakeMonitoringState.Status.Starting ->
                 stringResource(R.string.waiting_to_start)
             state.isMonitoring ->
                 lastUpdated?.let { stringResource(R.string.checks_every_minute_updated, it) }

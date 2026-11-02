@@ -71,7 +71,7 @@ class EarthquakeNotificationsScreenshotTest {
                     alertsEnabled = true,
                     settingsError = true,
                 ),
-                EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Running),
+                EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
                 {},
                 {},
                 {},
@@ -146,8 +146,8 @@ class EarthquakeNotificationsScreenshotTest {
     @Preview(widthDp = 360, heightDp = 800, locale = "en-US")
     @Composable
     fun monitoringPage(
-        @PreviewParameter(EarthquakeMonitoringPhaseProvider::class)
-        phase: EarthquakeMonitoringState.Phase
+        @PreviewParameter(EarthquakeMonitoringStatusProvider::class)
+        status: EarthquakeMonitoringState.Status
     ) {
         EarthquakeTheme(dynamicColor = false) {
             EarthquakeNotificationPage(
@@ -157,7 +157,7 @@ class EarthquakeNotificationsScreenshotTest {
                     appEnabled = true,
                     alertsEnabled = true,
                 ),
-                EarthquakeMonitoringState(phase = phase),
+                EarthquakeMonitoringState(status = status),
                 {},
                 {},
                 {},
@@ -176,7 +176,7 @@ class EarthquakeNotificationsScreenshotTest {
     fun darkMonitoring() {
         EarthquakeTheme(darkTheme = true, dynamicColor = false) {
             EarthquakeMonitoringCard(
-                EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Offline),
+                EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Offline),
                 {},
             )
         }
@@ -231,7 +231,7 @@ class EarthquakeNotificationsScreenshotTest {
                 isListPanelVisible = !minimized,
                 monitoring =
                     EarthquakeMonitoringState(
-                        phase = EarthquakeMonitoringState.Phase.Running,
+                        status = EarthquakeMonitoringState.Status.Running,
                         refresh =
                             if (refreshing) EarthquakeMonitoringState.Refresh.Running
                             else EarthquakeMonitoringState.Refresh.Idle,
@@ -259,20 +259,20 @@ class EarthquakeNotificationsScreenshotTest {
 class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMonitoringState> {
     override val values =
         sequenceOf(
-            EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Checking),
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Checking),
             EarthquakeMonitoringState(),
             EarthquakeMonitoringState(lastUpdatedMillis = 1),
-            EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Starting),
-            EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Running),
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Starting),
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
             EarthquakeMonitoringState(
-                phase = EarthquakeMonitoringState.Phase.Running,
+                status = EarthquakeMonitoringState.Status.Running,
                 lastUpdatedMillis = 1,
             ),
             EarthquakeMonitoringState(
-                phase = EarthquakeMonitoringState.Phase.Offline,
+                status = EarthquakeMonitoringState.Status.Offline,
                 lastUpdatedMillis = 1,
             ),
-            EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Failed),
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Queued),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Running),
             EarthquakeMonitoringState(refresh = EarthquakeMonitoringState.Refresh.Offline),
@@ -319,7 +319,7 @@ class EarthquakeNotificationStateProvider : PreviewParameterProvider<EarthquakeN
         )
 }
 
-class EarthquakeMonitoringPhaseProvider :
-    PreviewParameterProvider<EarthquakeMonitoringState.Phase> {
-    override val values = EarthquakeMonitoringState.Phase.entries.asSequence()
+class EarthquakeMonitoringStatusProvider :
+    PreviewParameterProvider<EarthquakeMonitoringState.Status> {
+    override val values = EarthquakeMonitoringState.Status.entries.asSequence()
 }

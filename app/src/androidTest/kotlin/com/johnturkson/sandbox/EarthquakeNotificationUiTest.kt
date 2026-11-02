@@ -93,7 +93,7 @@ class EarthquakeNotificationUiTest {
     fun refreshingDisablesDuplicateActionAndFailuresKeepTheTimestamp() {
         var state by
             mutableStateOf(
-                EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Running)
+                EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running)
             )
         var requests = 0
         rule.setContent {
@@ -117,14 +117,14 @@ class EarthquakeNotificationUiTest {
         rule.runOnIdle {
             state =
                 state.copy(
-                    phase = EarthquakeMonitoringState.Phase.Offline,
+                    status = EarthquakeMonitoringState.Status.Offline,
                     refresh = EarthquakeMonitoringState.Refresh.Offline,
                 )
         }
         rule.onNodeWithText("Offline · Monitoring paused").assertIsDisplayed()
         rule.onNodeWithContentDescription("Refresh earthquake data").assertIsEnabled()
         rule.runOnIdle {
-            state = EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Failed)
+            state = EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Failed)
         }
         rule.onNodeWithText("Couldn’t start monitoring · Try again").assertIsDisplayed()
     }
@@ -151,7 +151,9 @@ class EarthquakeNotificationUiTest {
                     isListPanelVisible = panel,
                     onListPanelVisibilityChanged = { panel = it },
                     monitoring =
-                        EarthquakeMonitoringState(phase = EarthquakeMonitoringState.Phase.Running),
+                        EarthquakeMonitoringState(
+                            status = EarthquakeMonitoringState.Status.Running
+                        ),
                 )
             }
         }
