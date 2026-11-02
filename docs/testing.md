@@ -139,6 +139,9 @@ The same fixtures are available as Android test assets.
 uses real Room with active Turbine collectors. Preserve coverage for new IDs,
 duplicate IDs, newer/older revisions, retained history across rolling refreshes,
 alias changes, detail freshness, filters, atomic rollback, and concurrent merges.
+Keep a list collector active through a preferred-ID change, an offline refresh
+failure, and the next successful refresh. Verify that unrelated prior events
+remain in every populated result and known aliases resolve to one updated row.
 Close the disk-backed database and recreate the repository with a failing network
 client to verify retained summaries and details are readable offline. Database reads
 must not initiate network requests. A database reopen tests persistent storage;

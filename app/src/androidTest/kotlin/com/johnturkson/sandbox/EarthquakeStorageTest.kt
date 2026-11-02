@@ -39,6 +39,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -329,6 +330,88 @@ class EarthquakeStorageTest {
             .use { client ->
                 repository(client).refreshQuery(EarthquakeCatalogResources.Query())
                 assertEquals(1, database.earthquakeDao().getEarthquakesFlow().first().size)
+            }
+    }
+
+    @Test
+    fun historicalAliasesRetainAllObservedEventsThroughOfflineRefreshWhileCollecting() = runTest {
+        val collection =
+            json.decodeFromString<EarthquakeCollectionNetworkModel>(
+                fixture("earthquakes-summary.json")
+            )
+        val original =
+            collection.features.first().let {
+                it.copy(
+                    id = "usc0001xgp",
+                    properties =
+                        it.properties.copy(
+                            ids = ",usc0001xgp,",
+                            time = 1299822384120,
+                            updated = 100,
+                        ),
+                )
+            }
+        val priorEvent =
+            original.copy(
+                id = "ci38457511",
+                properties = original.properties.copy(ids = ",ci38457511,", time = 1562383193040),
+            )
+        val revised =
+            original.copy(
+                id = "official20110311054624120_30",
+                properties =
+                    original.properties.copy(
+                        ids = ",usc0001xgp,official20110311054624120_30,usp000hvnu,",
+                        updated = 200,
+                        magnitude = 9.1,
+                    ),
+            )
+        var response = collection.copy(features = listOf(original, priorEvent))
+        var offline = false
+        client {
+            if (offline) throw IOException("offline while observing the database")
+            respond(
+                json.encodeToString(response),
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+            .use { client ->
+                val repository = repository(client)
+                repository.getEarthquakesFlow().distinctUntilChanged().test {
+                    assertEquals(emptyList(), awaitItem())
+                    repository.refreshEarthquakes()
+                    assertEquals(listOf(priorEvent.id, original.id), awaitItem().map { it.id })
+                    response = collection.copy(features = listOf(revised, original, revised))
+                    repository.refreshEarthquakes()
+                    val history = awaitItem()
+                    assertEquals(listOf(priorEvent.id, revised.id), history.map { it.id })
+                    for (id in listOf(original.id, revised.id, "usp000hvnu")) {
+                        assertEquals(
+                            revised.toDatabaseModel(),
+                            repository.getEarthquakeFlow(id).first(),
+                        )
+                    }
+                    offline = true
+                    assertFailsWith<IOException> { repository.refreshEarthquakes() }
+                    assertEquals(history, repository.getEarthquakesFlow().first())
+                    val newest =
+                        priorEvent.copy(
+                            id = "new-event",
+                            properties =
+                                priorEvent.properties.copy(
+                                    ids = ",new-event,",
+                                    time = priorEvent.properties.time + 1,
+                                ),
+                        )
+                    offline = false
+                    response = collection.copy(features = listOf(newest))
+                    repository.refreshEarthquakes()
+                    assertEquals(
+                        listOf(newest.id, priorEvent.id, revised.id),
+                        awaitItem().map { it.id },
+                    )
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
     }
 

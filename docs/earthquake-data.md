@@ -32,6 +32,8 @@ states that the event ID comes from the preferred origin product. The
 distinguishes the preferred ID from known associated event IDs. The database uses
 the GeoJSON feature ID and comma-delimited `properties.ids` associations for
 lookup after a preferred-ID change and to avoid duplicate associated rows.
+Use those explicit associations for deduplication; similar coordinates, event
+times, or magnitudes alone do not establish that two earthquakes are the same.
 
 ## Calling the data layer
 
@@ -66,6 +68,12 @@ are inserted, newer revisions update associated events, and events absent from
 the response remain available. Reading without time filters returns all retained
 history, including after process termination or a device restart. No automatic
 history expiration is configured.
+
+While the app is running, keep the screen observing the database's unfiltered
+`getEarthquakesFlow()`. Refresh operations only write to that database; do not
+replace the displayed history with the latest network response. Network loss
+or a failed refresh leaves the existing database observation and stored rows
+available. Apply display filters separately without deleting history.
 
 An empty feed does not erase previously seen information. HTTP, decoding,
 validation, and storage failures propagate, and cancellation is not caught.
