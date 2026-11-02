@@ -1,0 +1,134 @@
+package com.johnturkson.sandbox.ui.navigation
+
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.lifecycle.SavedStateHandle
+import androidx.room.Room
+import androidx.work.WorkManager
+import androidx.work.await
+import com.google.android.gms.location.LocationServices
+import com.johnturkson.sandbox.data.database.EarthquakeDatabase
+import com.johnturkson.sandbox.data.location.EarthquakeLocationProvider
+import com.johnturkson.sandbox.data.location.EarthquakeLocationRepository
+import com.johnturkson.sandbox.data.repository.EarthquakeMonitoringFixtures
+import com.johnturkson.sandbox.data.repository.EarthquakeRepository
+import com.johnturkson.sandbox.ui.list.EarthquakeListViewModel
+import com.johnturkson.sandbox.ui.map.EarthquakeViewModel
+import com.johnturkson.sandbox.ui.monitoring.EarthquakeMonitoringObserver
+import com.johnturkson.sandbox.work.EarthquakeMonitor
+import kotlin.test.assertEquals
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
+import org.junit.Rule
+import org.junit.Test
+
+class EarthquakeDestinationStateTest {
+    @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun independentSelectionResultsRestoreAndIgnoreOlderUpdates() = runBlocking {
+        val store =
+            object : DataStore<Preferences> {
+                override val data = flowOf(emptyPreferences())
+
+                override suspend fun updateData(
+                    transform: suspend (Preferences) -> Preferences
+                ): Preferences = transform(emptyPreferences())
+            }
+        val context = composeRule.activity.applicationContext
+        val locationRepository = EarthquakeLocationRepository(store)
+        val provider =
+            EarthquakeLocationProvider(
+                LocationServices.getFusedLocationProviderClient(context),
+                context,
+            )
+        val database = Room.inMemoryDatabaseBuilder(context, EarthquakeDatabase::class.java).build()
+        val repository = EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
+        val scheduler = EarthquakeMonitor(WorkManager.getInstance(context))
+        scheduler.stop().await()
+        WorkManager.getInstance(context).cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
+        val originalRefresh = scheduler.refreshWork.first()
+        fun create(handle: SavedStateHandle) =
+            EarthquakeViewModel(
+                Destination.EarthquakeMapRoute,
+                handle,
+                locationRepository,
+                provider,
+                repository,
+                EarthquakeMonitoringObserver(repository, scheduler),
+                scheduler,
+            )
+        val item = EarthquakeMonitoringFixtures.item(magnitude = 3.7)
+        database.earthquakeDao().mergeEarthquakes(listOf(item))
+        try {
+            composeRule.runOnUiThread {
+                val map = create(SavedStateHandle())
+                val listHandle = SavedStateHandle()
+                val observer = EarthquakeMonitoringObserver(repository, scheduler)
+                val list =
+                    EarthquakeListViewModel(
+                        Destination.EarthquakeListRoute,
+                        listHandle,
+                        repository,
+                        observer,
+                        scheduler,
+                    )
+                composeRule.activity.viewModelStore.put("map", map)
+                composeRule.activity.viewModelStore.put("list", list)
+                val first = EarthquakeSelectionResult(item.id, 1L)
+                map.applySelection(first, focus = false)
+                assertEquals(null, list.selectedMapItemId)
+                list.applySelection(first)
+                assertEquals(item.id, list.selectedMapItemId)
+                assertEquals(first, list.scrollRequest)
+                val restoredHandle =
+                    SavedStateHandle.createHandle(listHandle.savedStateProvider().saveState(), null)
+                val restored =
+                    EarthquakeListViewModel(
+                        Destination.EarthquakeListRoute,
+                        restoredHandle,
+                        repository,
+                        observer,
+                        scheduler,
+                    )
+                composeRule.activity.viewModelStore.put("restored-list", restored)
+                assertEquals(item.id, restored.selectedMapItemId)
+                assertEquals(first, restored.scrollRequest)
+                restored.consumeScrollRequest(first)
+                assertEquals(null, restored.scrollRequest)
+                val second = EarthquakeSelectionResult("second", 2L)
+                restored.applySelection(second, scroll = false)
+                assertEquals(item.id, map.selectedMapItemId)
+                map.applySelection(second)
+                assertEquals("second", map.selectedMapItemId)
+                assertEquals("second", map.requestedMapFocusId)
+                restored.applySelection(first)
+                map.applySelection(first)
+                assertEquals("second", restored.selectedMapItemId)
+                assertEquals("second", map.selectedMapItemId)
+                val clear = EarthquakeSelectionResult(null, 3L)
+                restored.applySelection(clear)
+                map.applySelection(clear)
+                assertEquals(null, restored.selectedMapItemId)
+                assertEquals(null, restored.scrollRequest)
+                assertEquals(null, map.selectedMapItemId)
+                assertEquals(null, map.requestedMapFocusId)
+                val repeated = EarthquakeSelectionResult(item.id, 4L)
+                restored.applySelection(repeated)
+                restored.consumeScrollRequest(repeated)
+                val latest = repeated.copy(revision = 5L)
+                restored.applySelection(latest)
+                restored.consumeScrollRequest(repeated)
+                assertEquals(latest, restored.scrollRequest)
+            }
+            assertEquals(originalRefresh, scheduler.refreshWork.first())
+        } finally {
+            composeRule.runOnUiThread { composeRule.activity.viewModelStore.clear() }
+            database.close()
+        }
+    }
+}

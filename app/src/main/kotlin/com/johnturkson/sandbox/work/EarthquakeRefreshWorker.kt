@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.johnturkson.sandbox.data.EarthquakeConnection
-import com.johnturkson.sandbox.data.EarthquakeRefresher
+import com.johnturkson.sandbox.data.network.EarthquakeConnection
+import com.johnturkson.sandbox.data.repository.EarthquakeRefresher
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException

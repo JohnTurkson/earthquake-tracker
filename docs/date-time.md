@@ -10,7 +10,7 @@ introduce the deprecated `kotlinx.datetime.Instant` alias.
 
 ## Typed values and arithmetic
 
-[EarthquakeAlertPolicy](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeAlertPolicy.kt)
+[EarthquakeAlertPolicy](../app/src/main/kotlin/com/johnturkson/sandbox/data/notifications/EarthquakeAlertPolicy.kt)
 accepts `now: Instant` and checks `now - item.time in Duration.ZERO..1.minutes`.
 Name fields for their meaning, as with `eventTime`, `updatedAt`, `deliveredAt`,
 and `timestamp`; avoid millisecond suffixes on typed values. Optional instants
@@ -18,7 +18,7 @@ remain nullable. The database query uses nullable `Instant` bounds for an
 unrestricted range, rather than numeric sentinel timestamps.
 
 Read wall-clock moments directly with `Clock.System.now()`, as in
-[EarthquakeRefreshRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeRefreshRepository.kt). Use a monotonic `TimeSource`
+[EarthquakeRefreshRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/repository/EarthquakeRefreshRepository.kt). Use a monotonic `TimeSource`
 and `TimeMark` to measure elapsed time. The polling loop accepts a `TimeSource`
 and a `Duration`; its tests use the coroutine scheduler's `timeSource`. A wall
 clock can change during an interval and must not determine polling delays.
@@ -26,7 +26,7 @@ clock can change during an interval and must not determine polling delays.
 ## Storage and serialization boundaries
 
 Room persists instants as ISO-8601 `TEXT`, using the automatically applied
-[EarthquakeInstantConverters](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeInstantConverters.kt).
+[EarthquakeInstantConverters](../app/src/main/kotlin/com/johnturkson/sandbox/data/database/EarthquakeInstantConverters.kt).
 Entities and DAO parameters still use `Instant`. Every indexed/comparable stored
 value uses UTC, a four-digit year, and exactly nine fractional-second digits:
 `2026-11-01T00:00:00.123456789Z`. This preserves nanoseconds and makes SQLite's
@@ -36,14 +36,14 @@ precision must not be written to these columns. Supported stored years are
 silently misordering expanded or negative years. No numeric timestamp arithmetic
 belongs in these text queries.
 
-[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabase.kt)
+[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/database/EarthquakeDatabase.kt)
 stores this ISO representation from its initial version-1 schema. No legacy
 numeric database conversion is required. Preserve saved data if a later schema
 change introduces another stored representation. Room's generated schema exports
 record the baseline and future versions.
 
 The feed's numeric wire timestamps use
-[EarthquakeEpochMillisecondsSerializer](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeEpochMillisecondsSerializer.kt).
+[EarthquakeEpochMillisecondsSerializer](../app/src/main/kotlin/com/johnturkson/sandbox/data/network/EarthquakeEpochMillisecondsSerializer.kt).
 Convert at decoding/encoding boundaries; the API's wire format does not determine
 the database's storage format.
 

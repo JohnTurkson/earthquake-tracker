@@ -8,8 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.johnturkson.sandbox.data.EarthquakeNotifications
-import com.johnturkson.sandbox.ui.EarthquakeApp
+import com.johnturkson.sandbox.data.notifications.EarthquakeNotifications
+import com.johnturkson.sandbox.ui.navigation.EarthquakeApp
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

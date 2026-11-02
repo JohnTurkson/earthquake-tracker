@@ -149,7 +149,11 @@ exercise the real refresh worker and repository with controlled network input.
 
 Keep unit tests and their helpers in `app/src/test/kotlin`, instrumented tests
 in `app/src/androidTest/kotlin`, and Compose screenshot tests in
-`app/src/screenshotTest/kotlin`.
+`app/src/screenshotTest/kotlin`. Within each source set, mirror the owning
+production packages described in the [architecture guide](architecture.md#package-organization).
+For example, map artwork tests live in `ui.map` and report image tests live in
+`ui.details.reports`. Keep integration fixtures with the responsibility they
+exercise, such as `data.repository.EarthquakeMonitoringFixtures`.
 
 Use the default source directories without custom `sourceSets` configuration.
 Keep Kotlin helpers used by multiple suites once in `app/src/testFixtures/kotlin`.
@@ -159,10 +163,10 @@ fixtures to the app module's unit, instrumented, and screenshot tests; they are
 excluded from the app APK. Helpers used by only one suite stay in that suite's
 own source directory.
 
-[EarthquakeMapFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
-and [EarthquakePreviewState](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
+[EarthquakeMapFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMapFixtures.kt)
+and [EarthquakePreviewState](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/map/EarthquakePreviewState.kt)
 serve instrumented and screenshot tests.
-[EarthquakeMonitoringFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/EarthquakeMonitoringFixtures.kt)
+[EarthquakeMonitoringFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/data/repository/EarthquakeMonitoringFixtures.kt)
 supplies the same event values to unit and instrumented tests.
 Fixtures compile separately from production code, so
 declare their required dependencies with `testFixturesImplementation`.
@@ -179,18 +183,18 @@ that appears duplicated.
 
 ## Earthquake data tests
 
-[EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeApiTest.kt)
+[EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/data/network/EarthquakeApiTest.kt)
 uses Ktor `MockEngine` and deterministic JSON fixtures to verify typed earthquake
 routes, query arguments, decoding, and failures without live requests.
 Keep JSON inputs shared by unit and instrumented tests once in
 [`app/src/testFixtures/resources`](../app/src/testFixtures/resources).
 Both suites load them through
-[EarthquakeJsonFixtures.read](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/EarthquakeJsonFixtures.kt),
+[EarthquakeJsonFixtures.read](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/data/network/EarthquakeJsonFixtures.kt),
 which reads classpath resources supplied by the built-in fixture dependency.
 Suite-specific inputs, such as the API detail response, stay in that suite's
 default resources directory. No asset copies or `sourceSets` overrides are needed.
 
-[EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
+[EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/data/database/EarthquakeStorageTest.kt)
 uses real Room with active Turbine collectors. Preserve coverage for new IDs,
 duplicate IDs, newer/older revisions, retained history across rolling refreshes,
 alias changes, filters, atomic rollback, and concurrent merges.
@@ -204,7 +208,7 @@ successes and failures. Database reads
 must not initiate network requests. A database reopen tests persistent storage;
 it does not alone establish offline screen behavior or an actual device reboot.
 
-[EarthquakeDatabaseTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDatabaseTest.kt)
+[EarthquakeDatabaseTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/data/database/EarthquakeDatabaseTest.kt)
 creates a fresh disk-backed version-1 database without migrations. It verifies
 empty initial reads, the earthquake-only table set, ISO text timestamps with
 pre-epoch and nanosecond values, and retained events, aliases, refresh metadata,
@@ -219,14 +223,14 @@ baselines.
 
 ## Map behavior and screenshot coverage
 
-[EarthquakeLocationRepositoryTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeLocationRepositoryTest.kt)
+[EarthquakeLocationRepositoryTest](../app/src/test/kotlin/com/johnturkson/sandbox/data/location/EarthquakeLocationRepositoryTest.kt)
 uses temporary Preferences DataStore files and coroutine test scopes to check
 missing/incomplete data, persistence after reopening, stale fixes, and invalid
 coordinates. Cancel and join the first store's scope before reopening its file;
 never run two active DataStore instances for the same file. Use a controlled
 failing `DataStore` to exercise read errors without changing device storage.
 
-[EarthquakeMapTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMapTest.kt)
+[EarthquakeMapTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMapTest.kt)
 uses a plain `ComponentActivity`, immutable item fixtures, and a hoisted
 `CameraPositionState`.
 It checks empty-map configuration, retained gestures, current marker callbacks
@@ -257,7 +261,7 @@ configurations. Inputs with no visual effect can share a fixture. Arbitrary
 coordinates, event counts, strings, and scroll offsets need representative
 boundaries rather than every possible value.
 
-[EarthquakeComponentScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeComponentScreenshotTest.kt)
+[EarthquakeComponentScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/event/EarthquakeComponentScreenshotTest.kt)
 isolates the list, rows, and unavailable-event snackbar. Its list provider covers
 empty, single-event, and multiple-event data with both title and supporting-pane
 flags. Its row provider covers selection, available/missing time, and the map
@@ -288,11 +292,11 @@ The component state inventory is:
 | Notification bell | Its ordinary appearance and placement through the explorer fixtures. |
 | Event snackbar | Visible unavailable-event message with normal and wrapped text. |
 
-[EarthquakeClusterScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterScreenshotTest.kt)
+[EarthquakeClusterScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/map/cluster/EarthquakeClusterScreenshotTest.kt)
 covers cluster badges with and without magnitude, small and large counts, dark
 mode, and large text. It renders real sheet content for populated, selected,
 empty, unknown-magnitude, dark, narrow large-text, and short large-text states.
-[EarthquakeClusterSheetTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterSheetTest.kt)
+[EarthquakeClusterSheetTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/map/cluster/EarthquakeClusterSheetTest.kt)
 checks the real modal container, scrolling to the last member, retained selection
 after dismissal, back dismissal through the real screen, and disappearing members.
 Back-dismissal fixtures explicitly cover compact and expanded windows: restore
@@ -301,7 +305,7 @@ It measures the content cap and checks last-member access across compact and
 medium height boundaries, including the former 600 dp threshold. The compact
 and medium height content previews cover the corresponding bounded viewports;
 the device test verifies the window-dependent sizing policy.
-[EarthquakeClusterStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterStateTest.kt)
+[EarthquakeClusterStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/map/cluster/EarthquakeClusterStateTest.kt)
 checks serialization and restoration of the ViewModel's cluster member IDs,
 independent event selection, numeric magnitude mapping from Room, and cluster
 dismissal when a notification opens another event. Use test-local in-memory
@@ -319,7 +323,7 @@ large-text configurations and an expanded window. Host sheet-content references
 do not cover the SDK surface, the modal scrim, or its drag handle; inspect those
 in actual device captures and report the native pixel-regression gap.
 
-[EarthquakeLocationScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeLocationScreenshotTest.kt)
+[EarthquakeLocationScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/map/location/EarthquakeLocationScreenshotTest.kt)
 covers the request FAB, app-settings FAB, and permission rationale using
 the real stateless components, including dark and large-text fixtures. It also
 renders the actual controls layer with Locate in compact, open expanded, and
@@ -346,12 +350,12 @@ integration requires a separate build-version change.
 
 Mark test previews with `@PreviewTest` and `@Preview` in
 `app/src/screenshotTest/kotlin/`. The working example is
-[EarthquakeMapMarkerScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeMapMarkerScreenshotTest.kt).
+[EarthquakeMapMarkerScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMapMarkerScreenshotTest.kt).
 It covers every marker artwork state: the small red unselected dot and larger
 blue selected dot, both with a white border. The preview background and 48 dp
 bounds are fixed; no network, database, dynamic color, or clock is involved.
 
-[EarthquakeViewsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsScreenshotTest.kt)
+[EarthquakeViewsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeViewsScreenshotTest.kt)
 covers the ordinary Compose explorer visuals: compact List,
 selected and empty List, dark mode, large text at narrow width, the Map-selected
 switcher, rows with no time, and selected-event cards with and without time.
@@ -361,7 +365,7 @@ List previews render the real `EarthquakeListScreen` destination content. Use de
 snippet strings for time labels in pixel fixtures so host time zones do not
 change their pixels. These images do not cover the native map surface.
 
-[EarthquakeExplorerControlsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeExplorerControlsScreenshotTest.kt)
+[EarthquakeControlsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeControlsScreenshotTest.kt)
 renders the actual controls layer independently of the native map. Cover the
 compact map switcher with no selection, selected events with and without time,
 dark mode, and large text. Cover the expanded floating panel with empty and
@@ -376,16 +380,16 @@ Include narrow icon-only controls, a wider compact window, and right-to-left
 placement so the bell stays at the logical end while the switcher stays
 centered. Cover both selected icons, dark mode, and large text in the switcher's
 own previews; resizing must preserve accessible names and selection.
-[EarthquakeViewSwitcherTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewSwitcherTest.kt)
+[EarthquakeViewSwitcherTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeViewSwitcherTest.kt)
 checks label removal and restoration, icon accessibility names, and selection
 callbacks across width changes. It also checks the switcher's center and the
 bell's logical end alignment and click action in compact, expanded, minimized,
 and right-to-left layouts.
 
-[EarthquakeViewsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsTest.kt)
+[EarthquakeViewsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeViewsTest.kt)
 checks deterministic explorer component selection, compact switching, and
 expanded panel minimize/restore behavior.
-[EarthquakeNavigationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeNavigationTest.kt)
+[EarthquakeNavigationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeNavigationTest.kt)
 renders the real Nav3 host and Material adaptive scene with deterministic
 entry content. Use separate entry-scoped test ViewModels to verify result
 delivery, hidden-recipient restoration, row reveal, Notifications return, and
@@ -409,26 +413,26 @@ after returning from Notifications. Existing screenshot fixtures cover the
 settled destination appearances; timing assertions cover their transitions.
 
 
-[EarthquakePaneScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakePaneScreenshotTest.kt)
+[EarthquakePaneScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakePaneScreenshotTest.kt)
 renders the real adaptive scaffold through the same `EarthquakePaneOverrides`
 wrapper used by the navigation host, with the notification and list surfaces in
 light, dark, and large-text configurations, plus the compact
 notification fallback. Its solid background exposes unwanted shading in the
 transparent pane margins; it is not a map fixture.
-[EarthquakePaneTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakePaneTest.kt)
+[EarthquakePaneTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakePaneTest.kt)
 checks actual device pixels above the floating notification card, interaction
 with the underlying destination, Close and Back, and saved notification state
 across compact/expanded changes. Use `DeviceConfigurationOverride.WindowSize`
 for those fixtures and run it with the same minimum 900 dp by 600 dp device
 window required by the navigation tests.
 
-[EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDestinationStateTest.kt)
+[EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeDestinationStateTest.kt)
 uses the real Map and List ViewModels with test-local Room data to check
 independent selection, saved result revisions, pending scroll restoration,
 stale-result rejection, clearing, and repeated selection of the same event.
 Receiving a result must not publish another one or erase a newer request.
 
-[EarthquakeDetailsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDetailsTest.kt)
+[EarthquakeDetailsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/details/EarthquakeDetailsTest.kt)
 uses the real Details ViewModel and test-local Room to verify alias lookup,
 observable source revisions, unavailable records, late arrivals, and zero felt
 reports. No runtime API request is needed to read details. Extend
@@ -437,7 +441,7 @@ retained List, replacement of List by Details in the expanded left pane, list
 minimize/restore, selection changes while open, Notifications return, saved-state
 restoration, and resizing. Ordinary row/marker selection must not open details.
 
-[EarthquakeDetailsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeDetailsScreenshotTest.kt)
+[EarthquakeDetailsScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/details/EarthquakeDetailsScreenshotTest.kt)
 renders the real card, header, row action, and expanded panel components. Supply a
 deterministic update label to `EarthquakeDetailsCard`, and include its lower
 source rows with a hoisted initial list position. Capture loading/unavailable
@@ -465,6 +469,13 @@ Open and visually review every generated PNG under
 `app/src/screenshotTestDebug/reference/` before staging it. Commit reviewed
 references alongside the component and tests. Inspect the diff when replacing
 existing references; do not regenerate merely to hide an unexpected failure.
+When moving or renaming a preview test, move its existing reference directory
+to the new fully qualified preview class path. Preserve the reviewed image bytes
+and validate against newly rendered output. Compare the complete reference file
+set with the rendered file set so old package paths and obsolete preview names
+do not leave orphaned baselines. Package moves alone do not justify accepting
+pixel changes.
+
 Validate without changing references:
 
 ```sh
@@ -608,14 +619,14 @@ complete device suite:
 
 ```sh
 ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.notClass=com.johnturkson.sandbox.EarthquakeMapTest
+  -Pandroid.testInstrumentationRunnerArguments.notClass=com.johnturkson.sandbox.ui.map.EarthquakeMapTest
 ```
 
 Restore online access, then run:
 
 ```sh
 ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.class=com.johnturkson.sandbox.EarthquakeMapTest
+  -Pandroid.testInstrumentationRunnerArguments.class=com.johnturkson.sandbox.ui.map.EarthquakeMapTest
 ```
 
 The offline WorkManager integration test asserts its network precondition and

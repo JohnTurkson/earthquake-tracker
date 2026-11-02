@@ -10,11 +10,11 @@ these guides and the current conversation do not cover.
 ## Routes and requests
 
 Use nested Ktor `@Resource` classes as in
-[EarthquakeResources](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeResources.kt).
+[EarthquakeResources](../app/src/main/kotlin/com/johnturkson/sandbox/data/network/EarthquakeResources.kt).
 Give nested resources a parent property with a default instance. Keep route
 templates relative to the earthquake feed host configured on the shared Hilt
 client in
-[EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeModule.kt).
+[EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/di/EarthquakeModule.kt).
 Use typed resource arguments for path and query parameters. Use `@SerialName`
 when Kotlin argument names differ from wire names, as with `updatedAfter` and
 `updatedafter`. Use serializable enums for the established summary feed names.
@@ -37,7 +37,7 @@ for its limit and one-based offset.
 ## Responses and API operations
 
 Keep wire models `@Serializable`, separate from Room entities. Follow
-[EarthquakeNetworkModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNetworkModel.kt)
+[EarthquakeNetworkModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/network/EarthquakeNetworkModel.kt)
 for GeoJSON collections, features, metadata, Point geometry, and earthquake
 properties. Reuse models when response shapes match.
 Preserve nullable measurements and required identity and update fields. Ignore
@@ -49,7 +49,7 @@ decode directly to `Instant` through
 in degrees, followed by depth in kilometers. Negative depth is valid.
 
 Use the injected `HttpClient` in an API wrapper, following
-[EarthquakeApi](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeApi.kt).
+[EarthquakeApi](../app/src/main/kotlin/com/johnturkson/sandbox/data/network/EarthquakeApi.kt).
 Pass a resource instance to Ktor's typed `get`, enable `expectSuccess`, and decode
 with `body<ResponseModel>()`. API calls remain suspend network operations;
 the `Flow` naming rule applies to database reads. Only the catalog list query
@@ -60,14 +60,14 @@ Keep runtime persistence coordination in `EarthquakeRefreshRepository`, called
 only by `EarthquakeRefreshWorker`. Manual refresh, startup, and foreground
 monitoring enqueue the same unique one-time work. `EarthquakeRepository` exposes
 Room reads and has no network dependency. Follow
-[EarthquakeMapping](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeMapping.kt)
+[EarthquakeMapping](../app/src/main/kotlin/com/johnturkson/sandbox/data/repository/EarthquakeMapping.kt)
 to validate and map the entire collection before writing it. Read the separate
 [database instructions](database.md) when adding persistence. Do not introduce
 network calls in database reads or UI components.
 
 ## Verification and documentation
 
-Extend [EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeApiTest.kt)
+Extend [EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/data/network/EarthquakeApiTest.kt)
 with deterministic Ktor `MockEngine` fixtures. Check the HTTP method, path, query
 encoding, relevant headers or body, decoding, nulls, unknown fields, empty
 responses, status handling, malformed data, and meaningful argument boundaries.

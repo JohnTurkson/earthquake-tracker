@@ -29,7 +29,7 @@ if (!connectivity.isOnline()) {
 }
 ```
 
-[`EarthquakeViewModel.applySelection`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewModel.kt)
+[`EarthquakeViewModel.applySelection`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeViewModel.kt)
 uses the same layout for a value expression:
 
 ```kotlin

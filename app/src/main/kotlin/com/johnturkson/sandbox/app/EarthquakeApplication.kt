@@ -6,8 +6,8 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
-import com.johnturkson.sandbox.data.EarthquakeNotifications
-import com.johnturkson.sandbox.ui.earthquakeReportImageLoader
+import com.johnturkson.sandbox.data.notifications.EarthquakeNotifications
+import com.johnturkson.sandbox.ui.details.reports.earthquakeReportImageLoader
 import dagger.hilt.android.HiltAndroidApp
 import io.ktor.client.HttpClient
 import javax.inject.Inject

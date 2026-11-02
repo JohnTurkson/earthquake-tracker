@@ -16,7 +16,7 @@ Use `when (value)` when the branches match the same value. Use a subjectless
 when converting a chain: the first matching branch wins. Keep any fallback in
 the final `else` branch.
 
-[EarthquakeMonitoringCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMonitoringCard.kt)
+[EarthquakeMonitoringCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/monitoring/EarthquakeMonitoringCard.kt)
 selects the refresh action's accessibility description in priority order:
 
 ```kotlin
@@ -27,7 +27,7 @@ when {
 }
 ```
 
-[EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
+[EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeScreen.kt)
 uses the same pattern for map padding.
 
 ## Date and time values
@@ -55,7 +55,7 @@ with `stringResource` in composable functions and Context resource APIs such as
 the UI or the owning Android component rather than adding a Context to ViewModels
 for display formatting.
 
-[EarthquakeNotifications](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNotifications.kt)
+[EarthquakeNotifications](../app/src/main/kotlin/com/johnturkson/sandbox/data/notifications/EarthquakeNotifications.kt)
 uses a nonblank source title with the established magnitude-label formatting and
 otherwise formats `earthquake_fallback_title` with named `magnitudeText` and
 `placeText` values. Known magnitudes include the `M` prefix through
@@ -70,7 +70,7 @@ context.getString(
 )
 ```
 
-[EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapItem.kt)
+[EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/event/EarthquakeMapItem.kt)
 retains nullable source title and place values. Its composable `earthquakeTitle`
 helper uses `stringResource` for the same fallback template, the one-decimal
 `earthquake_magnitude` format (including its `M` prefix), `unknown_location`, and

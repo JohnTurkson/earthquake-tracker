@@ -5,7 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.await
-import com.johnturkson.sandbox.data.EarthquakeNotifications
+import com.johnturkson.sandbox.data.notifications.EarthquakeNotifications
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlin.time.Duration.Companion.minutes

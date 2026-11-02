@@ -14,6 +14,42 @@ WorkManager updates the same Room database through `EarthquakeRefreshRepository`
 Fixed fixtures remain for previews and tests. Location and notification preferences
 use the shared Preferences DataStore.
 
+## Package organization
+
+Keep the Android application in the `:app` Gradle module. Match Kotlin package
+declarations to their directories under `com.johnturkson.sandbox`, and group
+sources by their existing responsibility:
+
+| Package | Responsibility and source examples |
+| --- | --- |
+| `app` | Android entry points: `EarthquakeApplication` and `EarthquakeActivity`. |
+| `di`, `di.qualifiers` | [EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/di/EarthquakeModule.kt) and injected dispatcher qualifiers. |
+| `ui.navigation` | `EarthquakeApp`, destinations, navigation actions, and selection result delivery. |
+| `ui.layout` | [EarthquakeControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeControls.kt), `EarthquakeTopAppBar`, view switching, and adaptive pane rendering. |
+| `ui.map`, `ui.map.cluster`, `ui.map.location` | Map destination state/rendering, clustering, and location controls. |
+| `ui.list` | List destination, state, ViewModel, list container, and floating panel. |
+| `ui.details`, `ui.details.reports` | Details destination and its report sections/images. |
+| `ui.notifications` | Notification destination, page, state, and ViewModel. |
+| `ui.monitoring` | Shared monitoring presentation and observation. |
+| `ui.event` | [EarthquakeMapItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/event/EarthquakeMapItem.kt), shared event rows, and localized title/time formatting. |
+| `data.network` | API, routes, response models, wire serializers, and connectivity. |
+| `data.database` | Room database, DAOs, entities, and timestamp converters. |
+| `data.repository` | Stored-event reads, refresh coordination, and network-to-storage mapping. |
+| `data.location`, `data.settings`, `data.notifications` | Location access, preferences, and notification delivery/policy. |
+| `theme`, `work` | Theme values and WorkManager scheduling/workers. |
+
+Keep each screen's read-only state interface and ViewModel beside that screen.
+Put presentation shared by destinations in `ui.event` or `ui.monitoring`; those
+packages do not own destination selection. Keep the shared read-only
+[Earthquake](../app/src/main/kotlin/com/johnturkson/sandbox/data/Earthquake.kt)
+contract in `data`. It is an ordinary interface so network and database models
+can implement it from their respective packages.
+
+Mirror the owning packages in unit, instrumented, screenshot, and fixture source
+sets. Shared test resources retain their standard classpath resource paths.
+Package moves do not change the application ID, Android entry-point names,
+WorkManager worker names, database filename, table names, or schema version.
+
 ## UI and state ownership
 
 Keep screen state and state transitions in the ViewModel. Keep rendering,
@@ -22,28 +58,28 @@ actions call ViewModel methods or callbacks; rendered components do not access
 repositories, storage, or network clients.
 
 Use read-only interfaces to describe the state consumers can observe.
-[EarthquakeState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeState.kt)
+[EarthquakeState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeState.kt)
 is annotated `@Stable`, and
-[EarthquakeViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewModel.kt)
+[EarthquakeViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeViewModel.kt)
 implements it.
-[EarthquakePreviewState](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
+[EarthquakePreviewState](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/map/EarthquakePreviewState.kt)
 provides a test implementation without a ViewModel. Follow that interface and
 implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
 
 `EarthquakeState` describes the Map destination: read-only items, selected event and
 cluster IDs, location values, monitoring, and pending camera focus.
-[EarthquakeListState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListState.kt)
+[EarthquakeListState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/list/EarthquakeListState.kt)
 is implemented by its own
-[EarthquakeListViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListViewModel.kt)
+[EarthquakeListViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/list/EarthquakeListViewModel.kt)
 and deterministic
-[EarthquakeListPreviewState](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/EarthquakeListPreviewState.kt).
-[EarthquakeNotificationsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsState.kt)
+[EarthquakeListPreviewState](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/list/EarthquakeListPreviewState.kt).
+[EarthquakeNotificationsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/notifications/EarthquakeNotificationsState.kt)
 is implemented by
-[EarthquakeNotificationsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsViewModel.kt).
-[EarthquakeDetailsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeDetailsState.kt)
+[EarthquakeNotificationsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/notifications/EarthquakeNotificationsViewModel.kt).
+[EarthquakeDetailsState](../app/src/main/kotlin/com/johnturkson/sandbox/ui/details/EarthquakeDetailsState.kt)
 is implemented by its own assisted
-[EarthquakeDetailsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeDetailsViewModel.kt).
+[EarthquakeDetailsViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/details/EarthquakeDetailsViewModel.kt).
 It observes `EarthquakeRepository.getEarthquakeFlow(navKey.earthquakeId)` and maps
 the retained record to an immutable `EarthquakeDetailsItem`. Keep the route ID
 as the lookup input so retained aliases continue resolving after source ID changes.
@@ -59,9 +95,9 @@ not publish another result. Local actions publish through the navigation host,
 then apply that revision locally without requesting their own scroll or camera
 movement. Rendered components continue to receive values and action callbacks.
 
-[EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
+[EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeScreen.kt)
 keeps lifecycle integration at the screen entry and passes values and actions into
-[EarthquakeMap](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMap.kt).
+[EarthquakeMap](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMap.kt).
 Keep lifecycle integration at that entry when a feature needs it. Pass values
 or read-only models, callbacks, and a `Modifier` into rendered components:
 
@@ -88,7 +124,7 @@ in the presentation value. Resolve fallback titles through the composable
 event-time formatting. Map supplies resolved text to SDK marker and cluster
 wrappers; ViewModels remain independent of Context and localized strings.
 Maps Utils owns unselected marker lifetimes through immutable
-[EarthquakeClusterItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterItem.kt)
+[EarthquakeClusterItem](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/cluster/EarthquakeClusterItem.kt)
 wrappers. The separately rendered selected marker is keyed by its event ID;
 `rememberUpdatedMarkerState` applies coordinate changes without turning the SDK
 marker into feature state.
@@ -96,7 +132,7 @@ Marker clicks emit the current item and map-background clicks emit a callback.
 The ViewModel owns selection; the component derives marker color and stacking
 from `selectedItemId` and suppresses the SDK's independent info-window selection.
 `MarkerComposable` renders the real
-[EarthquakeMapMarker](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapMarker.kt)
+[EarthquakeMapMarker](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMapMarker.kt)
 content into the SDK icon. Include selection in its render keys so the bitmap
 updates. Marker artwork consumes only `isSelected` and a `Modifier`; the SDK
 marker owns hit testing, while the ViewModel owns the selected ID.
@@ -106,7 +142,7 @@ distance-based algorithm. It handles item changes and reclustering after camera
 movement; do not replace the map's native listeners manually. Set the renderer's
 minimum cluster size to two so coincident pairs remain accessible even at maximum
 zoom. Render exact counts and available maximum magnitude with
-[EarthquakeClusterMarker](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterMarker.kt).
+[EarthquakeClusterMarker](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/cluster/EarthquakeClusterMarker.kt).
 Compute magnitude from numeric values, ignoring missing or non-finite values;
 do not parse localized titles. Individual unselected items use the existing red
 marker. Exclude the selected item from clustering and draw it separately in blue
@@ -157,18 +193,18 @@ refresh it with `LifecycleResumeEffect`, rather than persisting a granted flag i
 DataStore, the ViewModel, or saved state. Save only transient UI decisions such as
 whether a request was attempted or a rationale dialog is open.
 
-[EarthquakeLocationButton](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeLocationButton.kt)
+[EarthquakeLocationButton](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/location/EarthquakeLocationButton.kt)
 requests access from a user action and remains available to center the map after
 permission is granted. The explorer disables the SDK's My Location button to
 keep a single app-owned location control.
-[EarthquakeLocationRationale](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeLocationRationale.kt)
+[EarthquakeLocationRationale](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/location/EarthquakeLocationRationale.kt)
 explains a repeat request. When Android will no longer show the request, the
 button opens app settings. Keep rendering components independent of permission
 launchers: pass granted/settings values and action callbacks from the entry.
 Use Material `FloatingActionButton` for the icon-only location action, retaining
 its standard 56 dp container and 24 dp icon. Put the request/settings action name
 in the icon's content description; omit the visible text label.
-`EarthquakeExplorerControls` places it in `Scaffold.floatingActionButton`, clear
+`EarthquakeControls` places it in `Scaffold.floatingActionButton`, clear
 of safe-drawing insets in both map layouts. The selection card uses `bottomBar`,
 so the FAB rises above the card. Pass the screen-owned snackbar host into the
 same Scaffold so snackbars avoid the FAB. Measure these bottom obstructions for
@@ -178,7 +214,7 @@ leaves map and list exploration available.
 
 Use `LifecycleStartEffect` at the screen entry to start updates only while the
 screen is started and permission is granted, and cancel on stop or disposal.
-[EarthquakeLocationProvider](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeLocationProvider.kt)
+[EarthquakeLocationProvider](../app/src/main/kotlin/com/johnturkson/sandbox/data/location/EarthquakeLocationProvider.kt)
 wraps the injected Fused Location Provider in a cold `callbackFlow` and removes
 its callback in `awaitClose`. It uses balanced power, a requested 60-second
 interval, and a 1,000-meter minimum displacement. Actual delivery depends on
@@ -188,7 +224,7 @@ with the camera. An explicit app Locate request centers once when a measured
 location is available; subsequent fixes leave the camera alone.
 
 Use fixed development inputs such as
-[EarthquakeMapFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
+[EarthquakeMapFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMapFixtures.kt)
 to render deterministic map states without live API or storage access. Pass only
 the presentation values needed by markers: ID, coordinates, title, numeric magnitude, and an
 optional event time or snippet. Keep these values independent of network and
@@ -205,7 +241,7 @@ numeric magnitude for cluster summaries, and owns the restorable selection.
 Opening an event from a notification closes any cluster sheet before focusing
 that event.
 
-[EarthquakeEventSnackbar](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeEventSnackbar.kt)
+[EarthquakeEventSnackbar](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeEventSnackbar.kt)
 renders the same Material `SnackbarData` supplied by the screen's `SnackbarHost`.
 Keep snackbar queueing, duration, dismissal, and the host state in the UI. The
 ViewModel owns the unavailable-event flag; rendering a snackbar does not create
@@ -222,7 +258,7 @@ assertions alone do not satisfy screenshot coverage.
 
 Use Google's Compose Preview Screenshot Testing for ordinary Compose visuals.
 The selected/unselected marker previews in
-[EarthquakeMapMarkerScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeMapMarkerScreenshotTest.kt)
+[EarthquakeMapMarkerScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeMapMarkerScreenshotTest.kt)
 render the same composable used by `MarkerComposable`. Follow the
 [testing guide](testing.md#compose-screenshot-tests) for reference generation,
 visual review, validation, and the checked-in baselines.
@@ -285,7 +321,7 @@ with numeric dimension comparisons or infer the class from device type,
 orientation, or fold state. Use at-least checks so large and extra-large widths
 also receive the expanded presentation.
 
-[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
+[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeApp.kt)
 uses the current adaptive information for both its presentation decision and pane
 directive:
 
@@ -309,12 +345,12 @@ class to select a fraction and its measured window height to calculate the cap.
 Map and List are separate Navigation 3 destinations. Compact windows show one at
 a time, selected with `EarthquakeViewSwitcher`; expanded windows keep the map
 full-screen with a floating list at the start edge.
-[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
-and [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
+[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeApp.kt)
+and [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeScreen.kt)
 enable this expanded presentation for expanded-or-larger width and
 medium-or-larger height using the window size class check above.
 
-[EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewSwitcher.kt)
+[EarthquakeViewSwitcher](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeViewSwitcher.kt)
 uses an opaque floating surface with flush Material single-choice segments and
 minimum 48 dp height. Measure localized labels with current typography and font
 scale; use accessible icon-only segments when both labels cannot fit, and restore
@@ -347,7 +383,7 @@ when Notifications is closed. Keep this transient animation choice in the host;
 it is not destination state and does not need saved-state restoration.
 
 Wrap the navigation display in
-[EarthquakePaneOverrides](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakePaneOverride.kt).
+[EarthquakePaneOverrides](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakePaneOverride.kt).
 Keep the composition-local provider, remembered override, experimental component
 opt-in, and private renderer together in that file. Hosts and screenshot fixtures
 use the wrapper without accessing `LocalAnimatedPaneOverride` or constructing
@@ -370,9 +406,9 @@ pane targets to the original library renderer. Keep Navigation 3's scene strateg
 and entry decorators as the owners of navigation and destination lifetimes;
 do not copy their state into the pane renderer.
 
-[EarthquakeListScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListScreen.kt)
+[EarthquakeListScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/list/EarthquakeListScreen.kt)
 uses the same entry-owned `LazyListState` for both presentations.
-[EarthquakeListPanel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListPanel.kt)
+[EarthquakeListPanel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/list/EarthquakeListPanel.kt)
 renders the fixed heading above the real list. The explorer's top app bar owns
 Minimize; set `showMinimizeAction = false` in the expanded destination and
 aggregate explorer fixture. Standalone panels can retain their own Minimize
@@ -383,7 +419,7 @@ showTitle = false)` inside it. The independently clickable detail arrow appears
 in both layouts. Compact rows select the earthquake and navigate to Map;
 expanded rows update Map through results while keeping the panel open.
 
-[EarthquakeExplorerControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerControls.kt)
+[EarthquakeControls](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeControls.kt)
 owns a Material `Scaffold`, its expanded `topBar`, map content slot, and compact
 overlays. Pass the native map through `content` so it fills the scaffold beneath
 the app bar. Consume scaffold window insets without applying its top padding to
@@ -418,7 +454,7 @@ map selection card while the list is open. Reserve the panel width and outer
 spacing in map content padding to keep camera focus and attribution visible.
 Minimizing removes that reservation. List rows wrap locations and times.
 
-[EarthquakeSelectionCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionCard.kt)
+[EarthquakeSelectionCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/EarthquakeSelectionCard.kt)
 shows the selected event's title, available time, and coordinates. Use the same
 bottom-centered component in compact Map and expanded Map with the panel
 minimized, with a maximum width of 480 dp. Measure the bottom controls' combined
@@ -433,7 +469,7 @@ The list entry applies and publishes selection before opening details. Opening
 details makes List the return destination in both layouts, including entry from a
 minimized map card. Keep that distinction when adding entry points. Suppress the map selection card while the full detail card is visible.
 
-[EarthquakeDetailsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeDetailsScreen.kt)
+[EarthquakeDetailsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/details/EarthquakeDetailsScreen.kt)
 renders one card with a magnitude/location/time header, depth/status/felt metrics,
 and the event-information rows. Close returns to List without clearing selection.
 Its content scrolls inside one Material surface, leaving Close accessible; camera
@@ -461,7 +497,7 @@ source-opening callback. The debug-only `EarthquakeReportPrototypeActivity`
 provides a fixed real event and versioned USGS images for manual verification;
 it has no launcher entry and does not populate stored history.
 
-[EarthquakeClusterSheet](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterSheet.kt)
+[EarthquakeClusterSheet](../app/src/main/kotlin/com/johnturkson/sandbox/ui/map/cluster/EarthquakeClusterSheet.kt)
 uses Material `ModalBottomSheet` with a fixed count heading and Close control, and a bounded `LazyColumn`
 of the existing `EarthquakeListRow` components. Limit content to 60% of the window
 height, or 45% in the compact height size class, and allow every member to scroll;
@@ -473,7 +509,7 @@ the explanation and magnitude summary inside the scrolling content so large
 text in a short window cannot consume the entire list viewport. Sheet
 expansion and list scroll position remain UI-owned.
 
-Hide `EarthquakeExplorerControls` while the modal sheet is open and remove its
+Hide `EarthquakeControls` while the modal sheet is open and remove its
 reserved map padding. These inactive controls must not cover cluster counts or
 the selected marker at large font sizes. Restore them when the sheet closes;
 their screen state and hoisted list scroll state remain independent of the sheet.
@@ -507,7 +543,7 @@ uses `@AndroidEntryPoint`.
 `hiltViewModel<EarthquakeViewModel, EarthquakeViewModel.Factory>` creation callback.
 Follow this pattern when a destination ViewModel needs its route at creation time.
 
-[EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeModule.kt)
+[EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/di/EarthquakeModule.kt)
 is installed in `SingletonComponent`. It provides the shared `Json`, Ktor
 `HttpClient`, and qualified coroutine dispatchers. Extend this graph when adding
 shared dependencies. Do not construct databases, clients, or repositories in
@@ -519,7 +555,7 @@ context and a scope using the injected IO dispatcher. Its
 `provideEarthquakesDataStore` provider uses `preferencesDataStoreFile("earthquakes")`
 for shared app preferences, including the last known user location. Add future
 small settings to this store through their owning repositories.
-[EarthquakeLocationRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeLocationRepository.kt)
+[EarthquakeLocationRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/location/EarthquakeLocationRepository.kt)
 owns private preference keys and atomic reads/writes of latitude, longitude, and
 the location fix's ISO-8601 timestamp, exposed as `Instant`.
 Missing, incomplete, invalid, or unreadable coordinates produce a null last known location; the ViewModel maps
@@ -541,10 +577,10 @@ dispatchers into feature logic.
 ## Navigation
 
 Use Navigation 3 and serializable keys in
-[Destination](../app/src/main/kotlin/com/johnturkson/sandbox/ui/Destination.kt).
+[Destination](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/Destination.kt).
 The explorer has `EarthquakeMapRoute`, `EarthquakeListRoute`,
 `EarthquakeNotificationsRoute`, and `EarthquakeDetailsRoute(earthquakeId)`.
-[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeApp.kt)
+[EarthquakeApp](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeApp.kt)
 owns the back stack, entry provider, Material scene strategy, and navigation
 callbacks. Preserve the saveable state holder, ViewModel store, and result event
 bus decorators. Hilt creates a separate assisted ViewModel in each entry scope.
@@ -579,14 +615,14 @@ Keep these transitions in `EarthquakeApp` and pass them through
 `EarthquakeNavigationActions`; components do not mutate the back stack.
 
 Selection results use `map_selection` and `list_selection` keys with
-[EarthquakeSelectionResult](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionResult.kt)
+[EarthquakeSelectionResult](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeSelectionResult.kt)
 payloads containing an optional earthquake ID and increasing revision. Publish
 once from the source action. The host keeps only the latest unacknowledged
 payload for each recipient in saveable state and clears obsolete delivery to
 the source. This preserves updates for hidden destinations and through process
 recreation; Navigation 3's in-memory bus alone does not provide that persistence.
 
-[EarthquakeSelectionEffect](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionEffect.kt)
+[EarthquakeSelectionEffect](../app/src/main/kotlin/com/johnturkson/sandbox/ui/navigation/EarthquakeSelectionEffect.kt)
 sends a pending payload through the result bus when the receiver is composed,
 handles it with `ResultEffect`, and acknowledges the matching revision. Keep one
 receiver per addressed result key. ViewModel revision checks make redelivery
@@ -608,7 +644,7 @@ and database annotations on their respective models. Use a shared read-only
 contract and distinct representations where network and database models describe
 the same earthquake. UI components should consume only the values they need.
 
-[EarthquakeSerializationTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeSerializationTest.kt)
+[EarthquakeSerializationTest](../app/src/test/kotlin/com/johnturkson/sandbox/data/network/EarthquakeSerializationTest.kt)
 is the working example for decoding a test-local serializable response with Ktor
 `MockEngine` and `runTest`. It verifies the request path, JSON decoding, and ignored
 unknown fields without a live service. Its response and URL are test fixtures,
@@ -654,7 +690,7 @@ limits. WorkManager scheduling and screen integration should reuse this layer.
 
 ## Refresh, monitoring, and notifications
 
-[`EarthquakeRefreshRepository`](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeRefreshRepository.kt)
+[`EarthquakeRefreshRepository`](../app/src/main/kotlin/com/johnturkson/sandbox/data/repository/EarthquakeRefreshRepository.kt)
 fetches and validates the response, then merges records and refresh metadata in
 one Room transaction. It returns normally on success and lets network, decoding,
 validation, and storage exceptions propagate. It does not catch transport error
@@ -747,7 +783,7 @@ message.
 
 `EarthquakeMonitoringState` and `EarthquakeNotificationState` are immutable
 rendering values exposed by the relevant destination's read-only contract.
-[EarthquakeMonitoringObserver](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMonitoringObserver.kt)
+[EarthquakeMonitoringObserver](../app/src/main/kotlin/com/johnturkson/sandbox/ui/monitoring/EarthquakeMonitoringObserver.kt)
 combines worker and repository observations without owning event
 selection. Each destination collects it independently. Notifications observes
 preferences and system capabilities in its own ViewModel and screen entry.
@@ -756,7 +792,7 @@ session; `refresh` describes the separate refresh operation, preserving
 WorkManager's `SUCCEEDED` as `Refresh.Succeeded` and `FAILED` as `Refresh.Failed`.
 Monitoring displays the latest success or failure alongside Room's last
 successful update time.
-[`EarthquakeExplorerTopAppBar`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeExplorerTopAppBar.kt)
+[`EarthquakeTopAppBar`](../app/src/main/kotlin/com/johnturkson/sandbox/ui/layout/EarthquakeTopAppBar.kt)
 places monitoring between Show list/Minimize and the refresh and notification
 actions in expanded windows, whether the list is open, minimized, or replaced
 by Notifications. It uses the same Material `TopAppBar` as
@@ -782,11 +818,11 @@ until storage succeeds.
 The bell has no badge. It occupies the expanded top app bar's final action slot
 and remains a floating button at the compact top end edge. Center
 the compact switcher independently, reserving equal space on both sides so the
-bell does not shift its center or overlap it. `EarthquakeExplorerControls` owns
+bell does not shift its center or overlap it. `EarthquakeControls` owns
 both placements. The bell opens `EarthquakeNotificationsRoute`, independently of the Map/List switcher.
 Closing it restores the compact view and expanded panel preference. Opening it
 in expanded windows uses a floating right pane and temporarily hides List.
-[EarthquakeNotificationsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeNotificationsScreen.kt)
+[EarthquakeNotificationsScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/notifications/EarthquakeNotificationsScreen.kt)
 owns notification permission launchers, rationale, settings actions, and resume
 capability checks. Map retains location lifecycle integration in its own entry.
 Camera, list scroll, and selection remain in their decorated entry scopes.

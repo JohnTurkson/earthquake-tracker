@@ -31,8 +31,8 @@ fun getEarthquakesFlow(
 fun getEarthquakeFlow(id: String): Flow<EarthquakeDatabaseModel?>
 ```
 
-[EarthquakeDao](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDao.kt)
-is the query example; [EarthquakeRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeRepository.kt)
+[EarthquakeDao](../app/src/main/kotlin/com/johnturkson/sandbox/data/database/EarthquakeDao.kt)
+is the query example; [EarthquakeRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/repository/EarthquakeRepository.kt)
 preserves observable results through mapping. A missing single row emits null;
 a missing collection emits an empty list. Values must update when relevant
 tables change. Do not wrap a one-shot query in `flowOf`, maintain a manual copy
@@ -46,7 +46,7 @@ one emission for every write or suppress meaningful state changes in tests.
 
 Keep `@Entity` and `@PrimaryKey` on database representations, separate from
 network serialization annotations. Follow
-[EarthquakeDatabaseModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabaseModel.kt)
+[EarthquakeDatabaseModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/database/EarthquakeDatabaseModel.kt)
 for primary keys, indexes, and alias foreign keys. Keep earthquake fields in
 columns. Product metadata and separate detail snapshots are not stored.
 
@@ -56,9 +56,9 @@ or refresh methods. UI callers enqueue `EarthquakeMonitor.refresh()`;
 `EarthquakeRefreshWorker` alone invokes the refresh repository to fetch and save.
 
 Register entities and DAO accessors in
-[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabase.kt)
+[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/database/EarthquakeDatabase.kt)
 and provide DAOs from
-[EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeModule.kt).
+[EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/di/EarthquakeModule.kt).
 Use constructor injection for repositories; do not construct databases in
 ViewModels or composables. Room schedules its query Flows; move expensive
 repository transformations to the injected dispatcher when needed.
@@ -101,7 +101,7 @@ Empty feeds and refresh failures preserve existing data. See the
 
 ## Schema history and verification
 
-[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabase.kt)
+[EarthquakeDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/database/EarthquakeDatabase.kt)
 starts at version 1 and uses the disk filename `EarthquakeDatabase`, provided by
 `EarthquakeModule.provideEarthquakeDatabase`. Its initial schema contains only
 `earthquakes`, `earthquake_aliases`, `earthquake_refresh`, and `earthquake_alerts`,
@@ -109,19 +109,19 @@ with typed instants stored as sortable ISO-8601 text. This is the new app's
 baseline; no upgrade path from earlier development databases is maintained.
 
 Keep Room-generated schema exports under
-`app/schemas/com.johnturkson.sandbox.data.EarthquakeDatabase` in Git. Never format
+`app/schemas/com.johnturkson.sandbox.data.database.EarthquakeDatabase` in Git. Never format
 or hand-edit them. Future schema changes must increment the version and preserve
 saved earthquake data. Use auto-migrations where the actual change supports
 them, and agree on new migration patterns when introduced. Read-method renames
 do not change the schema.
 
-Extend [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
+Extend [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/data/database/EarthquakeStorageTest.kt)
 for behavior using real Room and Turbine on Android. Keep collectors active
 across inserts and revisions, including filter membership, null-to-value reads,
 refresh metadata and preferred-ID changes. Assertions on `.first()`
 alone do not establish observability. Retain offline-reopen, transaction,
 concurrency, and refresh-failure coverage when touching those paths. Use
-[EarthquakeDatabaseTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDatabaseTest.kt)
+[EarthquakeDatabaseTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/data/database/EarthquakeDatabaseTest.kt)
 for fresh version-1 creation, empty initial reads, ISO text storage, and reopening
 without migrations while retaining events, aliases, refresh metadata, and alerts.
 

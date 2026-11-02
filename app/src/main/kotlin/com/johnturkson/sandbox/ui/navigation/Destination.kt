@@ -1,0 +1,14 @@
+package com.johnturkson.sandbox.ui.navigation
+
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
+
+sealed interface Destination : NavKey {
+    @Serializable data object EarthquakeMapRoute : Destination
+
+    @Serializable data object EarthquakeListRoute : Destination
+
+    @Serializable data object EarthquakeNotificationsRoute : Destination
+
+    @Serializable data class EarthquakeDetailsRoute(val earthquakeId: String) : Destination
+}

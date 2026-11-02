@@ -22,9 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
 import com.johnturkson.sandbox.theme.EarthquakeTheme
-import com.johnturkson.sandbox.ui.EarthquakeDetailsCard
-import com.johnturkson.sandbox.ui.EarthquakeDetailsItem
-import com.johnturkson.sandbox.ui.EarthquakeMapItem
+import com.johnturkson.sandbox.ui.details.EarthquakeDetailsCard
+import com.johnturkson.sandbox.ui.details.EarthquakeDetailsItem
+import com.johnturkson.sandbox.ui.event.EarthquakeMapItem
 import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)

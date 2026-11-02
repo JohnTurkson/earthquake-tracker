@@ -1,5 +1,5 @@
 package com.johnturkson.sandbox.data
 
-sealed interface Earthquake {
+interface Earthquake {
     val id: String
 }
