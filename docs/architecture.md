@@ -134,13 +134,18 @@ DataStore, the ViewModel, or saved state. Save only transient UI decisions such 
 whether a request was attempted or a rationale dialog is open.
 
 [EarthquakeLocationButton](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeLocationButton.kt)
-requests access from a user action before the SDK button is available.
+requests access from a user action and remains available to center the map after
+permission is granted. The explorer disables the SDK's My Location button to
+keep a single app-owned location control.
 [EarthquakeLocationRationale](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeLocationRationale.kt)
 explains a repeat request. When Android will no longer show the request, the
 button opens app settings. Keep rendering components independent of permission
 launchers: pass granted/settings values and action callbacks from the entry.
-`EarthquakeExplorerControls` owns placement of the app button in both window
-layouts. Denial leaves map and list exploration available.
+`EarthquakeExplorerControls` anchors the app button at the bottom end, clear of
+safe-drawing insets, in both map layouts. Place the selection card above it and
+measure their combined height for native map padding and attribution. The
+monitoring banner's top spacing is independent of location permission. Denial
+leaves map and list exploration available.
 
 Use `LifecycleStartEffect` at the screen entry to start updates only while the
 screen is started and permission is granted, and cancel on stop or disposal.
@@ -288,9 +293,10 @@ the explorer explicitly controls their visibility and placement.
 [EarthquakeSelectionCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionCard.kt)
 shows the selected event's title, available time, and coordinates. Use the same
 bottom-centered component in compact Map and expanded Map with the panel
-minimized, with a maximum width of 480 dp. Measure its rendered height in the UI
-and include that height in map content padding so native attribution remains
-visible at larger font sizes. Never show it alongside the open expanded list.
+minimized, with a maximum width of 480 dp. Measure the bottom controls' combined
+rendered height in the UI and include it in map content padding so native
+attribution remains visible at larger font sizes. Never show the selection card
+alongside the open expanded list.
 
 [EarthquakeClusterSheet](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeClusterSheet.kt)
 uses Material `ModalBottomSheet` with a fixed count heading and Close control, and a bounded `LazyColumn`

@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,7 +48,7 @@ fun EarthquakeExplorerControls(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     listState: LazyListState = rememberLazyListState(),
-    onSelectionCardSizeChanged: (Int) -> Unit = {},
+    onMapBottomControlsSizeChanged: (Int) -> Unit = {},
     showLocationButton: Boolean = false,
     requiresLocationSettings: Boolean = false,
     onLocationClick: () -> Unit = {},
@@ -66,25 +67,12 @@ fun EarthquakeExplorerControls(
     val showMapCard =
         if (expanded) !showListPanel
         else selectedView == EarthquakeView.Map && !notificationsVisible
+    val showLocation =
+        showLocationButton &&
+            (expanded || selectedView == EarthquakeView.Map) &&
+            !notificationsVisible
 
     Box(modifier.fillMaxSize()) {
-        if (
-            showLocationButton &&
-                (expanded || selectedView == EarthquakeView.Map) &&
-                !notificationsVisible
-        ) {
-            EarthquakeLocationButton(
-                onClick = onLocationClick,
-                requiresSettings = requiresLocationSettings,
-                modifier =
-                    Modifier.align(Alignment.TopEnd)
-                        .padding(contentPadding)
-                        .padding(
-                            top = if (expanded) 16.dp else 84.dp,
-                            end = if (expanded) 80.dp else 16.dp,
-                        ),
-            )
-        }
         if (showListPanel) {
             Surface(
                 modifier =
@@ -143,10 +131,8 @@ fun EarthquakeExplorerControls(
                 onRefresh = onRefresh,
             )
         }
-        if (showMapCard && selectedItem != null) {
-            EarthquakeSelectionCard(
-                item = selectedItem,
-                onDismiss = onClearSelection,
+        if (showLocation || showMapCard && selectedItem != null) {
+            Column(
                 modifier =
                     Modifier.align(Alignment.BottomCenter)
                         .padding(contentPadding)
@@ -159,10 +145,28 @@ fun EarthquakeExplorerControls(
                             top = 16.dp,
                             bottom = 16.dp,
                         )
-                        .widthIn(max = 480.dp)
                         .fillMaxWidth()
-                        .onSizeChanged { onSelectionCardSizeChanged(it.height) },
-            )
+                        .onSizeChanged { onMapBottomControlsSizeChanged(it.height) },
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (showMapCard && selectedItem != null) {
+                    EarthquakeSelectionCard(
+                        item = selectedItem,
+                        onDismiss = onClearSelection,
+                        modifier =
+                            Modifier.align(Alignment.CenterHorizontally)
+                                .widthIn(max = 480.dp)
+                                .fillMaxWidth(),
+                    )
+                }
+                if (showLocation) {
+                    EarthquakeLocationButton(
+                        onClick = onLocationClick,
+                        requiresSettings = requiresLocationSettings,
+                        modifier = Modifier.align(Alignment.End),
+                    )
+                }
+            }
         }
         if (!expanded && !notificationsVisible) {
             EarthquakeViewSwitcher(
@@ -218,12 +222,7 @@ fun EarthquakeExplorerControls(
                         end =
                             if (expanded && notificationsVisible) earthquakeListPaneWidth + 32.dp
                             else 16.dp,
-                        top =
-                            when {
-                                expanded -> 84.dp
-                                showLocationButton -> 144.dp
-                                else -> 84.dp
-                            },
+                        top = 84.dp,
                     )
                     .widthIn(max = 560.dp)
                     .fillMaxWidth()

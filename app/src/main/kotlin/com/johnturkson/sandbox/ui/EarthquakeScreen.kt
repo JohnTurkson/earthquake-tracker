@@ -51,6 +51,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.johnturkson.sandbox.R
 import com.johnturkson.sandbox.data.EarthquakeLocation
@@ -204,7 +205,7 @@ fun EarthquakeScreen(
         },
         modifier = modifier,
         isLocationGranted = isLocationGranted,
-        requiresLocationSettings = requiresSettings,
+        requiresLocationSettings = !isLocationGranted && requiresSettings,
         isLocatingUser = isLocatingUser,
         onUserLocated = { isLocatingUser = false },
         onLocationClick = {
@@ -339,7 +340,7 @@ fun EarthquakeScreen(
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
     var monitoringCardHeight by remember { mutableStateOf(0.dp) }
-    var selectedCardHeight by remember { mutableStateOf(0.dp) }
+    var mapBottomControlsHeight by remember { mutableStateOf(0.dp) }
     var clusterSheetHeight by remember { mutableStateOf(0.dp) }
     val selectedItem = state.mapItems.find { it.id == state.selectedMapItemId }
     val showCluster = state.selectedClusterItemIds.isNotEmpty()
@@ -381,6 +382,14 @@ fun EarthquakeScreen(
                 cameraPositionState = cameraPositionState,
                 properties =
                     MapProperties(minZoomPreference = 1f, isMyLocationEnabled = isLocationGranted),
+                uiSettings =
+                    MapUiSettings(
+                        compassEnabled = false,
+                        indoorLevelPickerEnabled = false,
+                        mapToolbarEnabled = false,
+                        myLocationButtonEnabled = false,
+                        zoomControlsEnabled = false,
+                    ),
                 contentPadding =
                     PaddingValues(
                         start =
@@ -396,16 +405,14 @@ fun EarthquakeScreen(
                                 when {
                                     showCluster -> 16.dp
                                     showListPanel -> 80.dp
-                                    else ->
-                                        (if (!expanded && !isLocationGranted) 160.dp else 100.dp) +
-                                            monitoringCardHeight
+                                    else -> 100.dp + monitoringCardHeight
                                 },
                         bottom =
                             safePadding.calculateBottomPadding() +
                                 when {
                                     showCluster -> clusterSheetHeight + 48.dp
-                                    showListPanel -> 16.dp
-                                    selectedItem != null -> selectedCardHeight + 32.dp
+                                    selectedItem != null || !state.notificationsVisible ->
+                                        mapBottomControlsHeight + 32.dp
                                     else -> 0.dp
                                 },
                     ),
@@ -433,8 +440,10 @@ fun EarthquakeScreen(
                 onViewSelected = onViewSelected,
                 contentPadding = safePadding,
                 listState = listState,
-                onSelectionCardSizeChanged = { selectedCardHeight = with(density) { it.toDp() } },
-                showLocationButton = !isLocationGranted,
+                onMapBottomControlsSizeChanged = {
+                    mapBottomControlsHeight = with(density) { it.toDp() }
+                },
+                showLocationButton = true,
                 requiresLocationSettings = requiresLocationSettings,
                 onLocationClick = onLocationClick,
                 monitoring = state.monitoring,

@@ -301,10 +301,14 @@ in actual device captures and report the native pixel-regression gap.
 covers the request button, app-settings button, and permission rationale using
 the real stateless components, including dark and large-text fixtures. It also
 renders the actual controls layer with Locate in compact, open expanded, and
-minimized expanded windows to check placement without substituting for native-map
-pixels. Keep Android permission dialogs out of host previews. On the Resizable API 37 device,
+minimized expanded windows, plus compact selected, dark, and narrow large-text
+layouts with live monitoring. `EarthquakeViewsTest` verifies that the bottom-right
+location action does not move the monitoring banner or cover the selection card.
+These fixtures do not substitute for native-map pixels. Keep Android permission
+dialogs out of host previews. On the Resizable API 37 device,
 exercise first request, denial, rationale, grant, settings return/revocation,
-foreground-only updates, and the native SDK layer/button. Device captures
+foreground-only updates, the native SDK location layer, and the bottom-right
+Locate action before and after permission is granted. Device captures
 supplement the native-map regression coverage limitation described below.
 
 Use Google's Compose Preview Screenshot Testing. The current AGP

@@ -13,6 +13,7 @@ import com.johnturkson.sandbox.ui.EarthquakeExplorerControls
 import com.johnturkson.sandbox.ui.EarthquakeLocationButton
 import com.johnturkson.sandbox.ui.EarthquakeLocationRationale
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
+import com.johnturkson.sandbox.ui.EarthquakeMonitoringState
 import com.johnturkson.sandbox.ui.EarthquakeView
 
 class EarthquakeLocationScreenshotTest {
@@ -30,6 +31,8 @@ class EarthquakeLocationScreenshotTest {
                 onClearSelection = {},
                 onViewSelected = {},
                 showLocationButton = true,
+                monitoring =
+                    EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
             )
         }
     }
@@ -48,6 +51,8 @@ class EarthquakeLocationScreenshotTest {
                 onClearSelection = {},
                 onViewSelected = {},
                 showLocationButton = true,
+                monitoring =
+                    EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
             )
         }
     }
@@ -67,6 +72,35 @@ class EarthquakeLocationScreenshotTest {
                 onClearSelection = {},
                 onViewSelected = {},
                 showLocationButton = true,
+                monitoring =
+                    EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
+            )
+        }
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Preview(widthDp = 320, heightDp = 720, locale = "en-US", fontScale = 1.5f)
+    @Preview(
+        widthDp = 384,
+        heightDp = 640,
+        locale = "en-US",
+        uiMode = Configuration.UI_MODE_NIGHT_YES,
+    )
+    @Composable
+    fun compactSelectedLocationControls() {
+        EarthquakeTheme(dynamicColor = false) {
+            EarthquakeExplorerControls(
+                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M 4.5 - California")),
+                selectedItemId = "fixture",
+                selectedView = EarthquakeView.Map,
+                expanded = false,
+                onItemClick = {},
+                onClearSelection = {},
+                onViewSelected = {},
+                showLocationButton = true,
+                monitoring =
+                    EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Running),
             )
         }
     }
