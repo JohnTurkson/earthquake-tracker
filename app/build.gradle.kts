@@ -1,11 +1,10 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.maps.secrets)
     alias(libs.plugins.room)
 }
 
@@ -13,13 +12,13 @@ kotlin { jvmToolchain(libs.versions.jdk.get().toInt()) }
 
 room { schemaDirectory("$projectDir/schemas") }
 
-val localMapsApiKey =
-    providers
-        .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
-        .asText
-        .map { contents ->
-            Properties().apply { load(contents.reader()) }.getProperty("MAPS_API_KEY", "")
-        }
+secrets {
+    propertiesFileName = gradle.gradleUserHomeDir.resolve("gradle.properties").absolutePath
+    defaultPropertiesFileName =
+        if (rootProject.file("local.properties").isFile) "local.properties"
+        else "local.defaults.properties"
+    ignoreList.add("^(?!MAPS_API_KEY$).*")
+}
 
 android {
     namespace = "com.johnturkson.sandbox"
@@ -32,11 +31,13 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-        manifestPlaceholders["MAPS_API_KEY"] =
-            providers.gradleProperty("MAPS_API_KEY").orElse(localMapsApiKey).orElse("").get()
+        manifestPlaceholders["MAPS_API_KEY"] = "DEFAULT_API_KEY"
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 }
 
 dependencies {

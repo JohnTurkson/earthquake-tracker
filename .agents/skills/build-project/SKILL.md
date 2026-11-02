@@ -12,10 +12,11 @@ longer match the checkout.
 Guide the contributor through enabling Cloud billing and Maps SDK for Android,
 creating their own key, and storing `MAPS_API_KEY` in their user-level Gradle
 properties file or the repository root's ignored `local.properties`. Preserve any
-existing local SDK settings. Gradle project properties take precedence over the
-local file. The local development setup leaves application restrictions unset and
-uses automatic debug signing; do not require fingerprint registration or a shared
-keystore.
+existing local SDK settings. Google's Secrets Gradle Plugin reads the user-level
+Gradle properties file first and uses the local file as fallback, exporting only
+`MAPS_API_KEY`. Do not put real keys in the checked-in defaults. The local
+development setup leaves application restrictions unset and uses automatic debug
+signing; do not require fingerprint registration or a shared keystore.
 
 Never ask the contributor to paste their key into chat, print its value, or put
 it in tracked files. If checking configuration, report only whether the key is
