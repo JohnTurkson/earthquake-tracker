@@ -803,7 +803,11 @@ WorkManager's `SUCCEEDED` as `Refresh.Succeeded` and `FAILED` as `Refresh.Failed
 The in-app banner uses only `refresh`, taken from the current unique
 `earthquake_refresh` request. It displays idle, queued, running, succeeded,
 failed, or cancelled alongside Room's last-successful-update time. Monitoring
-session state never changes its title, icon, or error color. WorkManager persists
+session state never changes its title, icon, or error color. Use the leading
+`Icons.Outlined.Sensors` symbol for nonfailed refresh states, including when live
+monitoring is off. It identifies earthquake updates rather than an active
+monitoring session. A failed refresh uses `ErrorOutline`; the separate refresh
+action keeps its `Refresh` arrow. WorkManager persists
 the refresh request across app reopening; do not add timestamp tags, a second
 status store, or cross-worker ordering metadata. A cancelled monitoring session
 maps to `Status.Stopped`; a failed session remains separately observable for the

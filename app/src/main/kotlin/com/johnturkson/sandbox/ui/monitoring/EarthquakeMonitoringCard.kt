@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -119,7 +120,7 @@ fun EarthquakeMonitoringCard(
                         if (failed) {
                             Icons.Outlined.ErrorOutline
                         } else {
-                            Icons.Outlined.Refresh
+                            Icons.Outlined.Sensors
                         },
                         contentDescription = null,
                     )
