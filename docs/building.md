@@ -1,4 +1,4 @@
-# Building the Android project
+# Building the project
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ See Google's [Android key setup](https://developers.google.com/maps/documentatio
 and [current pricing](https://developers.google.com/maps/billing-and-pricing/pricing)
 for the service requirements and costs.
 
-## Store the key on your machine
+## Configuration
 
 Create or edit `~/.gradle/gradle.properties` and add this line, replacing the
 placeholder with your own key without quotes:
@@ -96,26 +96,6 @@ The SDK setup uses
 [Maps Compose 9.0.1](https://github.com/googlemaps/android-maps-compose/releases/tag/v9.0.1).
 The dependency includes the underlying Maps SDK, so no separate Maps dependency
 is declared.
-
-## Distributing the app
-
-The built APK or AAB includes its Maps key. People installing the app use that
-key automatically; contributors building from source configure their own key.
-Storing the key in a private properties file keeps it out of Git, but does not
-encrypt it or prevent extraction from the compiled app.
-
-Before distributing a build, use a separate production key restricted to Maps
-SDK for Android and your application ID plus its release signing certificate's
-SHA-1 fingerprint. For Google Play App Signing, use the app signing certificate,
-not the upload certificate. Keep an unrestricted key for local development only.
-See Google's [key restrictions](https://developers.google.com/maps/documentation/android-sdk/get-api-key#restrict_key)
-and [security guidance](https://developers.google.com/maps/api-security-best-practices).
-
-Even a map that only displays coordinate markers uses Google's Maps service for
-its basemap and requires an API key, an enabled Maps SDK for Android, and billing.
-It does not require enabling Places, Routes, or Geocoding when you already have
-coordinates. There is no key-free local Google basemap mode; see the
-[SDK setup requirements](https://developers.google.com/maps/documentation/android-sdk/get-api-key).
 
 ## Build and run
 
