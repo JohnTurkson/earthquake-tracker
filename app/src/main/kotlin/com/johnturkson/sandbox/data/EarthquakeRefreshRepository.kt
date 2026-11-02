@@ -23,7 +23,6 @@ constructor(
     private val dao: EarthquakeDao,
     private val monitoringDao: EarthquakeMonitoringDao,
     private val connectivity: EarthquakeConnection,
-    private val clock: EarthquakeClock,
     private val settings: EarthquakeSettingsRepository,
     notifications: EarthquakeNotifications,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -58,7 +57,7 @@ constructor(
                 } catch (_: Exception) {
                     return@withContext fetchFailure(EarthquakeRefreshResult.NetworkError)
                 }
-            val savedAt = clock.nowMillis()
+            val savedAt = System.currentTimeMillis()
             try {
                 database.withTransaction {
                     dao.mergeEarthquakes(items)
@@ -85,7 +84,7 @@ constructor(
     private suspend fun publishAlerts() {
         val preferences = settings.settings.first()
         if (!preferences.alertsEnabled) return
-        val now = clock.nowMillis()
+        val now = System.currentTimeMillis()
         val recent =
             dao.getEarthquakesFlow(now - 60_000, now + 1, preferences.minimumMagnitude.toDouble())
                 .first()

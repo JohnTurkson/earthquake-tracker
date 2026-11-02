@@ -6,7 +6,6 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import com.johnturkson.sandbox.data.EarthquakeApi
-import com.johnturkson.sandbox.data.EarthquakeClock
 import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakeRefreshDatabaseModel
@@ -191,7 +190,6 @@ class EarthquakeRefreshRepositoryTest {
                 database.earthquakeDao(),
                 database.monitoringDao(),
                 connection,
-                EarthquakeClock(),
                 settings,
                 EarthquakeNotifications(context),
                 Dispatchers.IO,

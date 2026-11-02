@@ -14,7 +14,6 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.workDataOf
 import app.cash.turbine.test
 import com.johnturkson.sandbox.data.EarthquakeApi
-import com.johnturkson.sandbox.data.EarthquakeClock
 import com.johnturkson.sandbox.data.EarthquakeCollectionNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeDatabaseModel
@@ -513,7 +512,6 @@ class EarthquakeStorageTest {
 
                     override fun isOnline() = online.value
                 },
-                EarthquakeClock(),
                 settings,
                 EarthquakeNotifications(context),
                 Dispatchers.IO,

@@ -140,6 +140,26 @@ offline screen behavior, refresh, or Maps authorization. The data-layer tests
 below check persistence independently; the notification integration tests also
 exercise the real refresh worker and repository with controlled network input.
 
+## Test source sets
+
+Keep unit tests and their helpers in `app/src/test/kotlin`, instrumented tests
+in `app/src/androidTest/kotlin`, and Compose screenshot tests in
+`app/src/screenshotTest/kotlin`.
+
+Helpers needed by both instrumented and screenshot tests live once in
+`app/src/sharedTest/kotlin`. This is a shared source directory, not a separate
+Gradle module or independently runnable test suite. The
+[app build script](../app/build.gradle.kts) adds it only to the `androidTest`
+and `screenshotTest` Kotlin sources; it is not compiled into the app or unit tests.
+[EarthquakeMapFixtures](../app/src/sharedTest/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
+and [EarthquakePreviewState](../app/src/sharedTest/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
+are the working examples. Keep helpers used by only one suite in that suite's
+own source directory.
+
+Declare test-only dependencies in the matching test configuration.
+`androidx.compose.ui:ui-tooling-preview` uses `screenshotTestImplementation` for
+the screenshot fixtures' `@Preview` and preview parameter providers.
+
 ## Earthquake data tests
 
 [EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeApiTest.kt)

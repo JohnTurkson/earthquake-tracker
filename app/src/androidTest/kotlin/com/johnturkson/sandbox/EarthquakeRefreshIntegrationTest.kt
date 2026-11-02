@@ -9,7 +9,6 @@ import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import com.johnturkson.sandbox.data.EarthquakeApi
-import com.johnturkson.sandbox.data.EarthquakeClock
 import com.johnturkson.sandbox.data.EarthquakeCollectionNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeGeometryNetworkModel
@@ -141,7 +140,6 @@ class EarthquakeRefreshIntegrationTest {
                     database.earthquakeDao(),
                     database.monitoringDao(),
                     connection,
-                    EarthquakeClock(),
                     settings,
                     notifications,
                     Dispatchers.IO,
