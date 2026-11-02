@@ -263,14 +263,33 @@ flowchart TB
 | Destination | Pane role | Expanded presentation |
 | --- | --- | --- |
 | Map | `mainPane` | Fills the window beneath the controls and floating panes. |
-| List | `supportingPane` | Floating pane at the start edge; can be minimized. |
+| List | `supportingPane` | Floats over the map at the bottom-start edge; can be minimized. |
 | Details | `supportingPane` | Replaces List in the same pane. Close or Back returns to the retained List. |
-| Notifications | `extraPane` | Floating pane at the end edge. Temporarily hides List or Details and restores it when closed. |
+| Notifications | `extraPane` | Floats over the map at the bottom-end edge. Temporarily hides List or Details and restores it when closed. |
 
-Expanded presentation requires expanded-or-larger width and medium-or-larger
-height, currently at least 840 dp wide and 480 dp tall. Secondary panes use
-`AdaptStrategy.Levitate` in that layout and `AdaptStrategy.Hide` in compact
-windows.
+The layout follows the app's current window size through
+`currentWindowAdaptiveInfoV2().windowSizeClass`. AndroidX classifies the available
+width and height separately. These [window size classes](https://developer.android.com/develop/ui/compose/layouts/adaptive/use-window-size-classes)
+update as the app's window changes, including during resizing, split-screen use,
+or folding.
+
+We show floating panes when the window has expanded-or-larger width and
+medium-or-larger height. The code uses AndroidX's breakpoint constants, currently
+840 dp wide and 480 dp tall. The width requirement leaves room for a pane and
+the map, while the height check keeps wide but short windows in the full-screen
+presentation.
+
+[`AdaptStrategy.Levitate`](https://developer.android.com/reference/kotlin/androidx/compose/material3/adaptive/layout/AdaptStrategy.Levitate)
+draws the active secondary pane as a floating overlay above the map. This keeps
+the map at full size behind the pane. List and Details use `Alignment.BottomStart`;
+Notifications uses `Alignment.BottomEnd`. These place the cards at the lower
+left and lower right respectively in a left-to-right layout, below the top app
+bar, and mirror in right-to-left layouts. We omit a dimming scrim so the exposed
+map remains interactive.
+
+For smaller or shorter windows, `AdaptStrategy.Hide` hides the secondary panes
+from the shared map layout, and the navigation scene presents the current
+destination full-screen.
 
 Folding or resizing changes the presentation while retaining the destination
 entries. Camera position, list scrolling, selection, and an open detail event
@@ -324,24 +343,18 @@ coverage.
 
 ## Assumptions and tradeoffs
 
-- **Saved data is the common read path.** Opening a screen shows what is already
-  stored. Updates happen through explicit refresh or monitoring, so screen
-  creation does not start additional requests.
-- **History is retained.** Refresh uses the past-day feed and keeps events that
-  disappear from later responses. This preserves viewed information, but does
-  not provide complete catalog synchronization or deletion reconciliation.
-- **Offline support covers saved earthquake information.** The app does not
-  provide a downloaded offline basemap. Report-image caches are evictable and
-  do not guarantee offline availability.
-- **Alert delivery follows a freshness window.** The one-minute event-age limit
-  avoids alerting on older events found during a later refresh, at the cost of
-  excluding late reports. Database commits and Android notification posts are
-  separate operations, so delivery is not an atomic exactly-once transaction.
-- **Background execution follows Android's limits.** A foreground notification
-  makes the monitoring session visible, but does not guarantee uninterrupted
-  runtime or exact polling intervals.
+Room is the source of truth for earthquake data. Network refreshes write updates
+to Room. ViewModels observe Room through repository Flows and expose state to
+the UI, which updates when the stored data changes.
 
 ## Known limitations and planned improvements
+
+### Data retention
+
+Add a 30-day retention policy for earthquake data received from API responses.
+Whenever a new response is saved, remove earthquake records more than 30 days
+old. The current implementation retains earthquake history without automatic
+expiration.
 
 ### Monitoring lifetime
 
