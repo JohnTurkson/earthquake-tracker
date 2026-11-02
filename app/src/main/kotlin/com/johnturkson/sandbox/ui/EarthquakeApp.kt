@@ -206,8 +206,12 @@ fun EarthquakeApp(
                             rememberViewModelStoreNavEntryDecorator(),
                             rememberResultEventBusNavEntryDecorator(),
                         ),
-                    transitionSpec = { ContentTransform(EnterTransition.None, ExitTransition.None) },
-                    popTransitionSpec = { ContentTransform(EnterTransition.None, ExitTransition.None) },
+                    transitionSpec = {
+                        ContentTransform(EnterTransition.None, ExitTransition.None)
+                    },
+                    popTransitionSpec = {
+                        ContentTransform(EnterTransition.None, ExitTransition.None)
+                    },
                     predictivePopTransitionSpec = {
                         ContentTransform(EnterTransition.None, ExitTransition.None)
                     },

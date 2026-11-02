@@ -332,8 +332,9 @@ transparent so the map remains unchanged outside those surfaces.
 
 Limit this override to the app's nonmodal, nonresizable levitated panes. Preserve
 preferred sizes, scaffold visibility transitions, entry saveable state, focus,
-and pane traversal semantics. Delegate expanded and hidden pane targets to the
-original library renderer. Keep Navigation 3's scene strategy and entry
+and pane traversal semantics. Forward the supplied bounds animation, including
+the `snap()` spec used for notification navigation. Delegate expanded and hidden
+pane targets to the original library renderer. Keep Navigation 3's scene strategy and entry
 decorators as the owners of navigation and destination lifetimes; do not copy
 their state into the pane renderer.
 

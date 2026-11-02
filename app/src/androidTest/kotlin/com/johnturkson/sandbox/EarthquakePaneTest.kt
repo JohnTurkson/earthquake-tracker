@@ -68,13 +68,13 @@ class EarthquakePaneTest {
     fun notificationStateSurvivesSwitchingBetweenFloatingAndCompactLayouts() {
         composeRule.setContent { Content() }
         composeRule.onNodeWithText("Open alerts").performClick()
-        composeRule.onNodeWithText("M 7.0+").performClick()
-        composeRule.onNodeWithText("M 7.0+").assertIsSelected()
+        composeRule.onNodeWithText("M7.0+").performClick()
+        composeRule.onNodeWithText("M7.0+").assertIsSelected()
         composeRule.runOnIdle { expanded = false }
-        composeRule.onNodeWithText("M 7.0+").assertIsSelected()
+        composeRule.onNodeWithText("M7.0+").assertIsSelected()
         composeRule.onNodeWithText("Map taps: 0").assertDoesNotExist()
         composeRule.runOnIdle { expanded = true }
-        composeRule.onNodeWithText("M 7.0+").assertIsSelected()
+        composeRule.onNodeWithText("M7.0+").assertIsSelected()
         composeRule.onNodeWithText("Map taps: 0").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Close earthquake alerts").performClick()
         composeRule.onNodeWithText("Earthquake alerts").assertDoesNotExist()
