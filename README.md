@@ -10,7 +10,7 @@ available offline with manual refresh, live monitoring, and optional alerts.
 Foldable and resizable windows adapt between full-screen views and floating
 panes while preserving selection and view state.
 
-See the [full feature inventory](features.md).
+See the [full feature inventory](docs/features.md).
 
 **Compact layouts**
 
@@ -363,8 +363,8 @@ would require us to revisit this approach.
 
 We want to benchmark the delay from requesting a refresh to starting its network
 call, separately from the network and database time. Comparing the worker path
-with a direct call to the same API client, using controlled responses, would
-help establish how much latency comes from WorkManager.
+with a direct call to the same refresh repository, using controlled responses,
+would help establish how much latency comes from WorkManager.
 
 ## Future Improvements
 
@@ -415,8 +415,27 @@ when a destination returns.
 Add [Macrobenchmark](https://developer.android.com/topic/performance/benchmarking/macrobenchmark-overview)
 tests for startup, scrolling, and navigation. Add
 [Microbenchmark](https://developer.android.com/topic/performance/benchmarking/microbenchmark-overview)
-tests for isolated code such as response decoding and mapping. Also measure
-WorkManager's added delay before a refresh starts its network call.
+tests for isolated code such as response decoding and mapping.
+
+Also measure WorkManager's added delay before a refresh starts its network call.
+Every update goes through WorkManager, including manual refreshes while the app
+is open. We want to measure how much enqueueing, persisting work, scheduling, and
+starting the worker add compared with calling the refresh repository directly.
+
+Compare both paths with equivalent connectivity checks, the same Ktor client,
+controlled responses, decoding, and Room writes. Record when the refresh is
+requested, the worker starts, the network call starts and finishes, Room saves
+the data, and the UI displays it. Measure worker completion separately from data
+availability, and separate time waiting for Android to schedule work from time
+spent executing it.
+
+Cover first and repeated requests, foreground and background execution, and
+cases where unique work is already pending or running. With `KEEP`, another
+request can reuse existing work without starting a new network call. Report
+reused requests separately from new work. Measure typical delays and slower
+runs, and check CPU and battery cost at the intended one-minute cadence. A small
+feed and a one-minute refresh interval do not establish an acceptable delay for
+a manual refresh.
 
 ### Release R8 optimization
 
@@ -425,6 +444,23 @@ for release builds, including shrinking and obfuscation. Review library rules
 and add focused keep rules where needed. Check that the optimized build can
 start workers, read Room data, and decode API responses. Run app performance
 benchmarks against a build with the same release optimizations.
+
+### Improve AI instructions and skills
+
+Make the instructions more specific so multiple AI agents can develop features
+and run independent checks in parallel. Define task ownership, separate
+worktrees, isolated test data and build outputs, and how changes are reviewed
+and integrated. Investigate isolated device-test environments so app flows can
+also be tested in parallel without sharing installed app state. Device tests
+currently share one emulator and run one at a time, while other agents can
+continue implementation and host checks.
+
+Add focused skills for extending network APIs, adding Room entities and tables,
+and introducing future database migrations. Make UI conventions more specific
+around state ownership, navigation, adaptive layouts, and shared components.
+Each skill should link to working source examples and identify the checks
+appropriate to the change, including storage, migration, and screenshot coverage
+where relevant.
 
 ### Dedicated design system
 
