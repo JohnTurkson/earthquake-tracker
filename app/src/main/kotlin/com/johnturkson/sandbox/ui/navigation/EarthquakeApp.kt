@@ -21,6 +21,7 @@ import androidx.compose.material3.adaptive.navigation3.rememberSupportingPaneSce
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -77,7 +78,7 @@ fun EarthquakeApp(
         var animateExplorerPanes by remember(adaptiveInfo) { mutableStateOf(true) }
         var clusterVisible by rememberSaveable { mutableStateOf(false) }
         var detailEarthquakeId by rememberSaveable { mutableStateOf<String?>(null) }
-        var revision by rememberSaveable { mutableStateOf(0L) }
+        var revision by rememberSaveable { mutableLongStateOf(0L) }
         var pendingMapId by rememberSaveable { mutableStateOf<String?>(null) }
         var pendingMapRevision by rememberSaveable { mutableStateOf<Long?>(null) }
         var pendingListId by rememberSaveable { mutableStateOf<String?>(null) }

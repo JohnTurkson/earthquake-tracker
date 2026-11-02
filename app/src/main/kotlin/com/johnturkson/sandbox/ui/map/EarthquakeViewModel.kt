@@ -1,6 +1,7 @@
 package com.johnturkson.sandbox.ui.map
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
@@ -82,7 +83,7 @@ constructor(
 
     private var selectionRevision: Long by
         savedStateHandle
-            .saved(serializer = MutableStateSerializer<Long>()) { mutableStateOf(0L) }
+            .saved(serializer = MutableStateSerializer<Long>()) { mutableLongStateOf(0L) }
             .getValue(this, this::selectionRevision)
 
     init {
