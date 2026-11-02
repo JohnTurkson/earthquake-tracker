@@ -51,16 +51,15 @@ constructor(
                     response.features.map { it.toDatabaseModel() }
                 } catch (error: CancellationException) {
                     throw error
-                } catch (_: JsonConvertException) {
-                    return@withContext fetchFailure(EarthquakeRefreshResult.DataError)
-                } catch (_: NoTransformationFoundException) {
-                    return@withContext fetchFailure(EarthquakeRefreshResult.DataError)
-                } catch (_: SerializationException) {
-                    return@withContext fetchFailure(EarthquakeRefreshResult.DataError)
-                } catch (_: IllegalArgumentException) {
-                    return@withContext fetchFailure(EarthquakeRefreshResult.DataError)
-                } catch (_: Exception) {
-                    return@withContext fetchFailure(EarthquakeRefreshResult.NetworkError)
+                } catch (error: Exception) {
+                    return@withContext when {
+                        !connectivity.isOnline() -> EarthquakeRefreshResult.Offline
+                        error is JsonConvertException ||
+                            error is NoTransformationFoundException ||
+                            error is SerializationException ||
+                            error is IllegalArgumentException -> EarthquakeRefreshResult.DataError
+                        else -> EarthquakeRefreshResult.NetworkError
+                    }
                 }
             val savedAt = Clock.System.now()
             try {
@@ -80,9 +79,6 @@ constructor(
             } catch (_: Exception) {}
             EarthquakeRefreshResult.Success
         }
-
-    private fun fetchFailure(result: EarthquakeRefreshResult): EarthquakeRefreshResult =
-        if (connectivity.isOnline()) result else EarthquakeRefreshResult.Offline
 
     private suspend fun publishAlerts() {
         val preferences = settings.settings.first()

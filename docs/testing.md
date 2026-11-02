@@ -450,16 +450,13 @@ changes before staging. Follow the [source control guide](source-control.md).
 `EarthquakeRefreshRepositoryTest` uses real Room and Ktor MockEngine for offline,
 fetch/decode/storage errors, commit-before-alert order, cancellation, and alert
 failure isolation. Its transaction-failure fixture verifies that both event rows
-and refresh metadata roll back. `EarthquakeWorkSchedulerTest` uses the real
-WorkManager with delayed refresh work to verify overlapping requests join the
-retained request and receive its terminal state, and cancelling monitoring's
-wait preserves the shared refresh. It also checks that a new offline refresh
-replaces the previous result and returns typed output, and that a monitoring
-tick enqueues the shared worker and receives its result. Run these tests with
+and refresh metadata roll back. `EarthquakeWorkSchedulerTest` uses real
+WorkManager with delayed refresh work to verify duplicate requests keep the
+existing request and stopping monitoring leaves it queued. It checks fresh
+offline outcomes through the same `WorkInfo` Flow used by the screen and verifies
+that a monitoring tick enqueues the shared refresh worker. Run these tests with
 device internet disabled under the shared reservation; controlled repository
 connectivity and MockEngine responses do not require live USGS requests.
-Queued-work fixtures also verify that the running callback and refreshing
-foreground title are withheld until WorkManager reports running work.
 `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
 `EarthquakePollingLoopTest` advances a coroutine test scheduler through minute
 boundaries, slow requests, offline pauses, reconnection, and cancellation;
@@ -520,8 +517,8 @@ ANDROID_SERIAL="$ANDROID_SERIAL" ./gradlew :app:connectedDebugAndroidTest \
 ```
 
 The offline WorkManager integration test asserts its network precondition and
-leaves connectivity changes to the parent reservation owner. It verifies that
-Stop removes foreground status while an ordinary alert remains. Restore recorded
+leaves connectivity changes to the parent reservation owner. It verifies the offline foreground title when notifications are permitted, and
+that Stop removes foreground status while an ordinary alert remains. Restore recorded
 network settings after manual Maps-tile and real monitoring checks, then complete
 the shared idle-home cleanup.
 

@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox
 
+import android.app.Notification
 import android.app.NotificationManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -7,6 +8,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import androidx.work.await
 import com.johnturkson.sandbox.app.EarthquakeActivity
 import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
@@ -64,17 +66,28 @@ class EarthquakeWorkIntegrationTest {
                                     EarthquakeWorkScheduler.MonitoringWork
                                 )
                                 .first { infos ->
-                                    infos.any { info ->
-                                        info.state == WorkInfo.State.RUNNING &&
-                                            info.progress.getString(
-                                                EarthquakeWorkScheduler.ResultKey
-                                            ) == "Offline"
-                                    }
+                                    infos.any { info -> info.state == WorkInfo.State.RUNNING }
                                 }
                         }
                         .filter { info -> !info.state.isFinished }
                 assertEquals(1, running.size)
                 val id = running.single().id
+                val capability = notifications.capabilities()
+                if (
+                    capability.permissionGranted &&
+                        capability.appEnabled &&
+                        capability.monitoringEnabled
+                ) {
+                    withTimeout(5_000) {
+                        while (
+                            systemNotifications.activeNotifications.none {
+                                it.id == EarthquakeNotifications.MonitoringId &&
+                                    it.notification.extras.getString(Notification.EXTRA_TITLE) ==
+                                        context.getString(R.string.monitoring_offline)
+                            }
+                        ) delay(50)
+                    }
+                }
                 val posted = notifications.postAlert(alert)
                 if (posted) {
                     withTimeout(5_000) {
@@ -113,7 +126,7 @@ class EarthquakeWorkIntegrationTest {
                 )
             }
         } finally {
-            scheduler.stopMonitoring()
+            scheduler.stopMonitoring().await()
             systemNotifications.cancel(alert.id, EarthquakeNotifications.AlertId)
         }
     }

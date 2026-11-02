@@ -83,25 +83,19 @@ constructor(@ApplicationContext private val context: Context) {
     fun foreground(
         workId: UUID,
         offline: Boolean = false,
-        refreshing: Boolean = false,
-        failed: Boolean = false,
     ): ForegroundInfo {
         val notification =
             NotificationCompat.Builder(context, MonitoringChannel)
                 .setSmallIcon(R.drawable.ic_notification_earthquake)
                 .setContentTitle(
                     context.getString(
-                        when {
-                            offline -> R.string.monitoring_offline
-                            refreshing -> R.string.refreshing_earthquakes
-                            failed -> R.string.refresh_failed
-                            else -> R.string.monitor_notification_title
-                        }
+                        if (offline) R.string.monitoring_offline
+                        else R.string.monitor_notification_title
                     )
                 )
                 .setContentText(
                     context.getString(
-                        if (offline || failed) R.string.existing_data_visible
+                        if (offline) R.string.existing_data_visible
                         else R.string.monitor_notification_detail
                     )
                 )

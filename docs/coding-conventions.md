@@ -16,22 +16,19 @@ Use `when (value)` when the branches match the same value. Use a subjectless
 when converting a chain: the first matching branch wins. Keep any fallback in
 the final `else` branch.
 
-[EarthquakeNotifications.foreground](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNotifications.kt)
-selects a notification title in priority order:
+[EarthquakeMonitoringCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMonitoringCard.kt)
+selects the refresh action's accessibility description in priority order:
 
 ```kotlin
 when {
-    offline -> R.string.monitoring_offline
-    refreshing -> R.string.refreshing_earthquakes
-    failed -> R.string.refresh_failed
-    else -> R.string.monitor_notification_title
+    state.refresh == EarthquakeMonitoringState.Refresh.Queued -> R.string.refresh_queued
+    state.isRefreshing -> R.string.refreshing_earthquakes
+    else -> R.string.refresh_earthquakes
 }
 ```
 
 [EarthquakeScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeScreen.kt)
-uses the same pattern for map padding, and
-[EarthquakeMonitoringCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMonitoringCard.kt)
-uses it for the refresh action's accessibility description.
+uses the same pattern for map padding.
 
 ## Date and time values
 

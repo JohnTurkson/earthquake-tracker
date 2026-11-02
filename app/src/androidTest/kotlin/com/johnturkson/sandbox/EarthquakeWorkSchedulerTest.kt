@@ -1,10 +1,8 @@
 package com.johnturkson.sandbox
 
-import android.app.Notification
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
@@ -24,11 +22,11 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -36,7 +34,7 @@ import org.junit.Test
 
 class EarthquakeWorkSchedulerTest {
     @Test
-    fun overlappingRequestsJoinExistingWorkAndObserveItsTerminalResult() = runBlocking {
+    fun duplicateRefreshRequestsKeepExistingQueuedWork() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val manager = WorkManager.getInstance(context)
         val scheduler = EarthquakeWorkScheduler(manager)
@@ -53,53 +51,33 @@ class EarthquakeWorkSchedulerTest {
                     request,
                 )
                 .await()
-            var runningCallbacks = 0
-            val first =
-                async(start = CoroutineStart.UNDISPATCHED) {
-                    scheduler.refreshAndAwait { runningCallbacks++ }
-                }
-            val second =
-                async(start = CoroutineStart.UNDISPATCHED) {
-                    scheduler.refreshAndAwait { runningCallbacks++ }
-                }
-            scheduler.refresh().await()
-            assertEquals(
-                listOf(request.id),
-                manager.getWorkInfosForUniqueWork(EarthquakeWorkScheduler.RefreshWork).get().map {
-                    it.id
-                },
-            )
-            assertFalse(first.isCompleted)
-            assertFalse(second.isCompleted)
-            assertEquals(0, runningCallbacks)
-            manager.cancelWorkById(request.id).await()
-            withTimeout(5_000) {
-                listOf(first.await(), second.await()).forEach { info ->
-                    assertEquals(request.id, info.id)
-                    assertEquals(WorkInfo.State.CANCELLED, info.state)
-                }
-            }
+            repeat(3) { scheduler.refresh().await() }
+            val infos = manager.getWorkInfosForUniqueWork(EarthquakeWorkScheduler.RefreshWork).get()
+            assertEquals(listOf(request.id), infos.map { it.id })
+            assertEquals(WorkInfo.State.ENQUEUED, infos.single().state)
         } finally {
             manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
         }
     }
 
     @Test
-    fun nextRefreshReplacesOldResultAndReturnsOfflineOutput() = runBlocking {
+    fun nextRefreshReplacesOldResultAndReportsOfflineThroughWorkInfo() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val network = context.getSystemService(ConnectivityManager::class.java)
-        assertFalse(
-            network
-                .getNetworkCapabilities(network.activeNetwork)
-                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true,
-            "Run with Wi-Fi and mobile data disabled under the shared emulator reservation",
-        )
+        assertOffline(context)
         val manager = WorkManager.getInstance(context)
         val scheduler = EarthquakeWorkScheduler(manager)
         manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
         try {
-            val first = withTimeout(15_000) { scheduler.refreshAndAwait() }
-            val second = withTimeout(15_000) { scheduler.refreshAndAwait() }
+            scheduler.refresh().await()
+            val first =
+                withTimeout(15_000) {
+                    scheduler.refreshWork.filterNotNull().first { it.state.isFinished }
+                }
+            scheduler.refresh().await()
+            val second =
+                withTimeout(15_000) {
+                    scheduler.refreshWork.filterNotNull().first { it.state.isFinished }
+                }
             assertNotEquals(first.id, second.id)
             listOf(first, second).forEach { info ->
                 assertEquals(WorkInfo.State.FAILED, info.state)
@@ -115,7 +93,7 @@ class EarthquakeWorkSchedulerTest {
     }
 
     @Test
-    fun stoppingMonitoringWaitLeavesSharedRefreshQueued() = runBlocking {
+    fun stoppingMonitoringLeavesSharedRefreshQueued() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val manager = WorkManager.getInstance(context)
         val scheduler = EarthquakeWorkScheduler(manager)
@@ -124,17 +102,7 @@ class EarthquakeWorkSchedulerTest {
             OneTimeWorkRequestBuilder<EarthquakeRefreshWorker>()
                 .setInitialDelay(1, TimeUnit.DAYS)
                 .build()
-        val titles = mutableListOf<String?>()
-        val worker =
-            monitoringBuilder(context, scheduler)
-                .setForegroundUpdater { _, _, foreground ->
-                    titles += foreground.notification.extras.getString(Notification.EXTRA_TITLE)
-                    CallbackToFutureAdapter.getFuture<Void> { completer ->
-                        completer.set(null)
-                        "Monitoring foreground"
-                    }
-                }
-                .build()
+        val worker = monitoringWorker(context, scheduler)
         try {
             manager
                 .enqueueUniqueWork(
@@ -147,10 +115,6 @@ class EarthquakeWorkSchedulerTest {
             scheduler.refresh().await()
             assertFalse(monitoring.isCompleted)
             monitoring.cancelAndJoin()
-            assertEquals(
-                setOf(context.getString(R.string.monitor_notification_title)),
-                titles.toSet(),
-            )
             assertEquals(WorkInfo.State.ENQUEUED, manager.getWorkInfoById(request.id).get()!!.state)
             assertEquals(
                 listOf(request.id),
@@ -164,36 +128,25 @@ class EarthquakeWorkSchedulerTest {
     }
 
     @Test
-    fun monitoringTickEnqueuesSharedRefreshAndReceivesItsOfflineResult() = runBlocking {
+    fun monitoringTickQueuesTheSharedRefreshWorker() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val network = context.getSystemService(ConnectivityManager::class.java)
-        assertFalse(
-            network
-                .getNetworkCapabilities(network.activeNetwork)
-                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true,
-            "Run with Wi-Fi and mobile data disabled under the shared emulator reservation",
-        )
+        assertOffline(context)
         val manager = WorkManager.getInstance(context)
         val scheduler = EarthquakeWorkScheduler(manager)
         manager.cancelUniqueWork(EarthquakeWorkScheduler.RefreshWork).await()
-        val observed = CompletableDeferred<Unit>()
-        val worker =
-            monitoringBuilder(context, scheduler)
-                .setProgressUpdater { _, _, data ->
-                    if (data.getString(EarthquakeWorkScheduler.ResultKey) == "Offline")
-                        observed.complete(Unit)
-                    CallbackToFutureAdapter.getFuture<Void> { completer ->
-                        completer.set(null)
-                        "Monitoring progress"
+        val monitoring =
+            async(start = CoroutineStart.UNDISPATCHED) {
+                monitoringWorker(context, scheduler).doWork()
+            }
+        try {
+            val info =
+                withTimeout(15_000) {
+                    scheduler.refreshWork.filterNotNull().first {
+                        it.state == WorkInfo.State.FAILED &&
+                            it.outputData.getString(EarthquakeWorkScheduler.ResultKey) == "Offline"
                     }
                 }
-                .build()
-        val monitoring = async(start = CoroutineStart.UNDISPATCHED) { worker.doWork() }
-        try {
-            withTimeout(15_000) { observed.await() }
-            val info = scheduler.refreshWork.first()!!
             assertEquals(WorkInfo.State.FAILED, info.state)
-            assertEquals("Offline", info.outputData.getString(EarthquakeWorkScheduler.ResultKey))
             assertFalse(monitoring.isCompleted)
         } finally {
             monitoring.cancelAndJoin()
@@ -201,10 +154,10 @@ class EarthquakeWorkSchedulerTest {
         }
     }
 
-    private fun monitoringBuilder(
+    private fun monitoringWorker(
         context: Context,
         scheduler: EarthquakeWorkScheduler,
-    ): TestListenableWorkerBuilder<EarthquakeMonitoringWorker> {
+    ): EarthquakeMonitoringWorker {
         val connection =
             object : EarthquakeConnection {
                 override val online = MutableStateFlow(true)
@@ -228,5 +181,16 @@ class EarthquakeWorkSchedulerTest {
             }
         return TestListenableWorkerBuilder<EarthquakeMonitoringWorker>(context)
             .setWorkerFactory(factory)
+            .build()
+    }
+
+    private fun assertOffline(context: Context) {
+        val network = context.getSystemService(ConnectivityManager::class.java)
+        assertFalse(
+            network
+                .getNetworkCapabilities(network.activeNetwork)
+                ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true,
+            "Run with Wi-Fi and mobile data disabled under the shared emulator reservation",
+        )
     }
 }

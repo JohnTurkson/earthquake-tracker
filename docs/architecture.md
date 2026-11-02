@@ -463,36 +463,40 @@ that system call.
 
 [`EarthquakeWorkScheduler`](../app/src/main/kotlin/com/johnturkson/sandbox/work/EarthquakeWorkScheduler.kt)
 routes manual refresh and every monitoring tick through the same unique one-time
-`EarthquakeRefreshWorker` with `KEEP`. Enqueue directly instead of checking for
-running work first; WorkManager owns deduplication. `refreshAndAwait` awaits the
-enqueue operation, then observes the unique work until it finishes. `KEEP` can
-discard a new request, so never await the newly constructed request's ID. The
-enqueue operation's completion is not the refresh result.
+`EarthquakeRefreshWorker` with `ExistingWorkPolicy.KEEP`. Enqueue directly instead
+of checking for running work first; WorkManager keeps the existing pending work.
+Do not add another mutex, running flag, or completion coordinator around it.
 
-Observe `refreshWork` for queued/running state and terminal `WorkInfo.outputData`
-for the typed result. Do not combine it with a second in-memory repository status
-or the monitoring worker's last refresh result. Room independently supplies the
-stored earthquakes and last-successful-refresh timestamp.
-
-The monitoring session is separate unique one-time work with `KEEP`. Stopping it
-cancels its polling and result observation, leaving any shared refresh already
-queued or running to finish. Neither request has a network constraint:
-manual offline work must fail instead of waiting, and a monitoring session must
-retain its foreground status while paused offline. Workers receive dependencies
-through `@HiltWorker` and the application's injected `HiltWorkerFactory`.
-`EarthquakeApplication` supplies WorkManager's on-demand configuration; remove
-only WorkManager's initializer from AndroidX Startup.
+The screen observes `getWorkInfosForUniqueWorkFlow` through `refreshWork` for
+queued/running state and reads terminal `WorkInfo.outputData` for the typed result.
+Each unique name contains a single one-time request, so use its current `WorkInfo`
+without timestamp tags or a separate ordering scheme. Room independently supplies
+stored earthquakes and the last-successful-refresh timestamp.
 
 `EarthquakeMonitoringWorker` calls `setForeground` with the `dataSync` service
-type and uses `refreshAndAwait` instead of calling the repository directly.
-Its refreshing notification is shown only when the shared refresh work is
-observed in `WorkInfo.State.RUNNING`, rather than while waiting in the queue.
-`EarthquakePollingLoop` owns cancellable minute pacing, skips catch-up
-bursts after slow requests, and wakes on reconnection. WorkManager owns
-execution and rescheduling. Do not add UI timers, restart work on recomposition,
-or re-enqueue after explicit cancellation. Observe `WorkInfo` to distinguish
-queued, running, stopped, and failed work. Android quota and service limits can
-interrupt the requested cadence; there is no app-imposed session cutoff.
+type. `EarthquakePollingLoop` owns cancellable minute pacing, skips catch-up
+bursts, and wakes on reconnection. Each tick calls `refresh().await()` to finish
+enqueueing; that operation does not wait for the refresh to finish. Later ticks
+may enqueue again while a refresh is active because `KEEP` coalesces those
+requests. The monitoring worker does not observe, await, or copy refresh results.
+
+The foreground notification describes the monitoring session: active or paused
+offline. The screen observes the separate refresh work for fetch progress and
+failures. Do not mirror refresh state into monitoring progress or notification
+state. Keep the monitoring session as separate unique one-time work with `KEEP`.
+Stopping it cancels future ticks while any shared refresh already queued or
+running finishes independently.
+
+Neither request has a network constraint: manual offline work must fail instead
+of waiting, and monitoring retains foreground status while paused offline.
+Workers receive dependencies through `@HiltWorker` and the application's injected
+`HiltWorkerFactory`. `EarthquakeApplication` supplies WorkManager's on-demand
+configuration; remove only WorkManager's initializer from AndroidX Startup.
+WorkManager owns execution and rescheduling. Do not add UI timers, restart work
+on recomposition, or re-enqueue after explicit cancellation. Observe `WorkInfo`
+to distinguish queued, running, stopped, and failed work. Android quota and
+service limits can interrupt the requested cadence; there is no app-imposed
+session cutoff.
 
 `EarthquakeNotifications` registers stable, idempotent channels: low-importance
 `earthquake_monitoring` for quiet foreground status, and high-importance
