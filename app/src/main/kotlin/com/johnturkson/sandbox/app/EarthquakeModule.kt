@@ -44,14 +44,14 @@ object EarthquakeModule {
 
     @Provides
     @Singleton
-    fun provideLocationDataStore(
+    fun provideEarthquakesDataStore(
         @ApplicationContext context: Context,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
     ): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
             corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
             scope = CoroutineScope(ioDispatcher + SupervisorJob()),
-            produceFile = { context.preferencesDataStoreFile("earthquake_location") },
+            produceFile = { context.preferencesDataStoreFile("earthquakes") },
         )
     }
 

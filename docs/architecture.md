@@ -268,7 +268,10 @@ composables or ViewModels.
 
 Use Preferences DataStore for small persisted settings. `EarthquakeModule`
 provides one singleton `DataStore<Preferences>` per file with an application
-context and a scope using the injected IO dispatcher.
+context and a scope using the injected IO dispatcher. Its
+`provideEarthquakesDataStore` provider uses `preferencesDataStoreFile("earthquakes")`
+for shared app preferences, including the last known user location. Add future
+small settings to this store through their owning repositories.
 [EarthquakeLocationRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeLocationRepository.kt)
 owns private preference keys and atomic reads/writes of latitude, longitude, and
 the location fix's epoch-millisecond timestamp. Missing, incomplete, invalid, or
