@@ -39,11 +39,6 @@ android {
     }
 
     buildFeatures { compose = true }
-
-    sourceSets.getByName("androidTest").assets.directories.add("src/test/resources")
-    sourceSets
-        .matching { it.name == "androidTest" || it.name == "screenshotTest" }
-        .configureEach { kotlin.directories.add("src/sharedTest/kotlin") }
 }
 
 dependencies {
