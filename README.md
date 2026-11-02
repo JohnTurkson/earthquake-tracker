@@ -489,6 +489,34 @@ different presentations have made the layout code more complex. Find a clearer
 way to show and hide the list while keeping the map visible, and simplify the
 code that handles the two layouts.
 
+### Permission explanations and rationale states
+
+The first location or notification permission request currently opens Android's system dialog from
+its corresponding action. Add a short explanation of why the permission is needed and what it lets
+the user do before opening that dialog.
+
+The app already checks `shouldShowRequestPermissionRationale()` and has rationale dialogs and
+settings fallbacks. Build on that handling with explicit states for an initial explanation, a
+rationale after denial, and recovery through Settings when another system prompt is unavailable. Use
+request history alongside Android's rationale signal, and let users dismiss the explanation and
+continue with features that do not require access. See
+[Android's permission guidance](https://developer.android.com/training/permissions/requesting).
+
+### Analytics and crash reporting
+
+Tests and local validation currently provide our main feedback on reliability. Integrate
+[Firebase Crashlytics](https://firebase.google.com/docs/crashlytics)
+for production crash and non-fatal error reporting, including device-specific failures that may not
+appear during local testing.
+
+Add analytics events for feature usage, including how often users enable or disable notifications.
+Use [OpenTelemetry-compatible instrumentation](https://opentelemetry.io/docs/what-is-opentelemetry/)
+and a telemetry backend to centralize feature events, logs, metrics, and traces, with spans around
+refreshes and other key operations. Propagate
+[trace context](https://opentelemetry.io/docs/concepts/context-propagation/)
+between the app and any future instrumented backend services so requests can be followed across
+both.
+
 ## Other helpful documents
 
 The [project instructions](AGENTS.md) link to formatting, coding, architecture,
