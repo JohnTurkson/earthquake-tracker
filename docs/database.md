@@ -9,7 +9,7 @@ these guides and the current conversation do not cover.
 
 Call persistent earthquake storage the Room database or database. It is the
 durable source for offline reads, with no automatic expiration or separate
-in-memory earthquake cache. Deduplicate by the USGS ID primary key; merge
+in-memory earthquake cache. Deduplicate by the source event ID primary key; merge
 newer revisions transactionally and retain known aliases when the preferred
 ID changes. For example, refreshing `[A, B]` with `[B, C]` retains `[A, B, C]`
 and updates B when its source revision is newer.
@@ -67,7 +67,7 @@ Specify filters, boundaries, null handling, and stable ordering in the DAO.
 Earthquake lists use a half-open occurrence-time range `[startTime, endTime)`,
 an optional minimum magnitude, and descending time with ID as a tie breaker.
 Magnitude filtering excludes null magnitudes; unfiltered lists include them.
-Single-event reads resolve preferred IDs and retained USGS aliases.
+Single-event reads resolve preferred IDs and retained source aliases.
 
 ## Writes and transaction reads
 
@@ -86,11 +86,11 @@ These helpers still expose Flow types. Use the snapshot only for that atomic
 decision; do not start ongoing collectors inside a write transaction. Preserve
 the transaction context and verify concurrent merges and rollback on Android.
 
-Keep the existing earthquake merge invariants: newer USGS `updated` values win,
+Keep the existing earthquake merge invariants: newer source `updated` values win,
 equal common-field revisions keep existing values, and older common values
 cannot overwrite newer ones. The source timestamp is an internal merge input,
 not a separate freshness state exposed to callers. Preserve known detail URLs
-when omitted from an incoming record. Use explicit USGS ID associations when
+when omitted from an incoming record. Use explicit source ID associations when
 merging preferred-ID changes; retain aliases without duplicate stored events.
 Insert previously unseen IDs and retain events absent from a later response.
 Refreshes must never clear the earthquake table or delete events outside the
@@ -136,7 +136,7 @@ tests; storage tests alone do not verify the connected explorer UI.
 metadata and delivered-notification history in version 3. `EarthquakeMonitoringDao`
 provides observable reads and explicit writes. Advance refresh metadata in the
 same database transaction as the event merge. `getDeliveredAlertsFlow` joins the
-retained USGS alias table to deduplicate alerts across preferred-ID changes. The
+retained source alias table to deduplicate alerts across preferred-ID changes. The
 monitoring history has no cascading link to preferred earthquake rows.
 
 Follow the [date and time conventions](date-time.md) for `Instant` entity fields

@@ -42,7 +42,7 @@ converts legacy numeric columns, preserves aliases and relationships, and retain
 unrelated legacy rows. It upgrades version 4 to version 5 after the existing
 product-removal migration. Register it on disk-backed Room builders. Room's generated schema exports remain the schema history.
 
-USGS's numeric wire timestamps use
+The feed's numeric wire timestamps use
 [EarthquakeEpochMillisecondsSerializer](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeEpochMillisecondsSerializer.kt).
 Convert at decoding/encoding boundaries; the API's wire format does not determine
 the database's storage format.

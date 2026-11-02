@@ -1,7 +1,7 @@
-# USGS Tracker
+# Earthquake Tracker
 
-USGS Tracker is an Android-only app for exploring recent earthquake activity
-using the USGS Earthquake API.
+Earthquake Tracker is an Android-only app for exploring recent earthquake activity
+using the earthquake data API.
 
 ## Product goals
 
@@ -36,7 +36,7 @@ Tap a cluster to browse all its earthquakes in a scrollable bottom sheet, then
 select an event to highlight it in blue on the map. Events at identical
 coordinates remain accessible through the cluster list.
 
-The screen observes a Room database populated from the USGS all-day GeoJSON feed.
+The screen observes a Room database populated from the all-day GeoJSON feed.
 Manual refresh and live-monitoring checks share one unique one-time WorkManager
 refresh request and preserve stored data on failure. Refresh attempts run without a
 network constraint and report a generic failure when they cannot complete,

@@ -1,8 +1,8 @@
 # Project requirements
 
 Read [README.md](README.md) before planning or changing this project. It defines
-USGS Tracker's product goals. Keep the app Android-only and use these goals to
-guide design, implementation, and testing.
+Earthquake Tracker's product goals. Keep the app Android-only and use these goals
+to guide design, implementation, and testing.
 
 # Project instructions
 

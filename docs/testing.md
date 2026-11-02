@@ -175,8 +175,8 @@ that appears duplicated.
 ## Earthquake data tests
 
 [EarthquakeApiTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeApiTest.kt)
-uses Ktor `MockEngine` and deterministic JSON fixtures to verify USGS
-typed routes, query arguments, decoding, and failures without live requests.
+uses Ktor `MockEngine` and deterministic JSON fixtures to verify typed earthquake
+routes, query arguments, decoding, and failures without live requests.
 Keep JSON inputs shared by unit and instrumented tests once in
 [`app/src/testFixtures/resources`](../app/src/testFixtures/resources).
 Both suites load them through
@@ -507,7 +507,7 @@ existing request and stopping monitoring leaves it queued. It checks fresh
 failed outcomes through the same `WorkInfo` Flow used by the screen and verifies
 that a monitoring tick enqueues the shared refresh worker. Run these tests with
 device internet disabled under the shared reservation. MockEngine fixtures
-provide controlled responses without live USGS requests.
+provide controlled responses without live earthquake feed requests.
 `EarthquakeApiTest` uses Ktor MockEngine with real feed-shaped JSON.
 `EarthquakePollingLoopTest` advances a coroutine test scheduler through minute
 boundaries, slow requests, offline pauses, reconnection, and cancellation;
@@ -561,7 +561,7 @@ minute delivery.
 
 Run the data, notification, UI and offline-worker checks with internet access
 disabled under the shared reservation. Production activity startup schedules a
-refresh; disabling internet prevents those checks from calling live USGS
+refresh; disabling internet prevents those checks from calling live earthquake feed
 endpoints. API/repository tests use MockEngine. Run native-map checks separately
 online; the complementary selections exercise the complete device suite:
 
@@ -586,7 +586,7 @@ the shared idle-home cleanup.
 
 `EarthquakeRefreshIntegrationTest` builds the actual refresh CoroutineWorker with
 WorkManager's test builder, the real refresh repository and Room database,
-Preferences DataStore, and a MockEngine USGS feed. It checks history
+Preferences DataStore, and a MockEngine earthquake feed. It checks history
 retention, preferred-ID changes, alert deduplication/permission gating, and a
 network failure that preserves rows and refresh metadata. Run it with ordinary
 notification permission granted and denied. Platform notification assertions

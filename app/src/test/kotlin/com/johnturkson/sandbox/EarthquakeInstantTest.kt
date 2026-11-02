@@ -51,7 +51,7 @@ class EarthquakeInstantTest {
     }
 
     @Test
-    fun usgsNumericTimestampsDecodeWithoutLosingMilliseconds() {
+    fun numericWireTimestampsDecodeWithoutLosingMilliseconds() {
         for (millis in listOf(-1L, 0L, 1700000000123L)) {
             val instant = Instant.fromEpochMilliseconds(millis)
             assertEquals(

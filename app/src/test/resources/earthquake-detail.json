@@ -31,7 +31,7 @@
     "products": {
       "origin": [
         {
-          "id": "urn:usgs-product:us:origin:test:1700000000001",
+          "id": "urn:earthquake-product:us:origin:test:1700000000001",
           "type": "origin",
           "code": "test",
           "source": "us",

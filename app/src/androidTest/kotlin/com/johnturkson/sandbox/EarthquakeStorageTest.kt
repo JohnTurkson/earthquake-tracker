@@ -287,7 +287,7 @@ class EarthquakeStorageTest {
     }
 
     @Test
-    fun collapsesPreviouslySeparateRowsWhenUsgsAssociatesThem() = runTest {
+    fun collapsesPreviouslySeparateRowsWhenSourceAssociatesThem() = runTest {
         val dao = database.earthquakeDao()
         dao.mergeEarthquakes(
             listOf(

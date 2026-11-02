@@ -175,8 +175,8 @@ constructor(@ApplicationContext private val context: Context) {
             Intent(context, EarthquakeActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 data =
-                    if (eventId == null) "usgstracker://monitoring".toUri()
-                    else "usgstracker://earthquake/${android.net.Uri.encode(eventId)}".toUri()
+                    if (eventId == null) "earthquaketracker://monitoring".toUri()
+                    else "earthquaketracker://earthquake/${android.net.Uri.encode(eventId)}".toUri()
                 putExtra(EventIdExtra, eventId)
             }
         return PendingIntent.getActivity(

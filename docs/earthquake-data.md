@@ -8,9 +8,9 @@ unrestricted stored history. `EarthquakeRefreshRepository` reuses this API and
 merge path for the shared one-time refresh worker. Manual refresh, startup, and
 every foreground-monitoring tick enqueue that same unique work.
 
-## USGS formats and revisions
+## Feed formats and revisions
 
-Use USGS's [GeoJSON summary feeds](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php)
+Use the [GeoJSON summary feeds](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php)
 for runtime earthquake updates. All 20 documented summary combinations are modeled:
 all events, magnitude 1.0+, 2.5+, 4.5+, and significant events for hour, day,
 week, and month windows. All-events feeds can include other seismic event
@@ -19,17 +19,17 @@ earthquake. Summary entries include a detail URL; detail responses can omit
 that property and include product metadata. The app ignores unused products;
 there are no product/content models or stored product snapshots.
 
-An earthquake record is mutable. USGS explains that
+An earthquake record is mutable. The service explains that
 [magnitude and location are revised](https://www.usgs.gov/faqs/whywhen-does-usgs-update-magnitude-earthquake)
 as observations arrive and analysts review events, including later catalog
 revisions. Compare each feature's `properties.updated`, not its occurrence time
 or the collection's generation time, when deciding which stored values to keep.
-USGS wire times are epoch milliseconds; app models use `Instant` and storage
+Feed wire times are epoch milliseconds; app models use `Instant` and storage
 uses ISO-8601 text. See the [date and time conventions](date-time.md). Coordinates are longitude, latitude, and depth in
 kilometers. Missing measurements remain null, not zero.
 
 Do not treat the preferred feature ID as an immutable identifier for a physical
-event. USGS's [indexer documentation](https://usgs.github.io/pdl/indexer.html)
+event. The [indexer documentation](https://usgs.github.io/pdl/indexer.html)
 states that the event ID comes from the preferred origin product. The
 [current PDL documentation](https://ghsc.code-pages.usgs.gov/hazdev/pdl/userguide-2.9.1/receiving.html)
 distinguishes the preferred ID from known associated event IDs. The database uses
@@ -111,7 +111,7 @@ The service supports deleted-event options, but this database does not reconcile
 deletions or event disassociations. Disappearance from a rolling feed is not
 proof of deletion. Retention limits and full-catalog synchronization are not
 implemented. Foreground monitoring requests a refresh every minute while its
-WorkManager session runs; Android can stop or delay execution. USGS documents
+WorkManager session runs; Android can stop or delay execution. The service documents
 [feed caching intervals](https://www.usgs.gov/faqs/how-quickly-earthquake-information-posted-usgs-website-and-sent-out-earthquake-notification);
 repeated requests do not guarantee newly generated data.
 

@@ -84,7 +84,7 @@ class EarthquakeRefreshIntegrationTest {
                         request.url.encodedPath,
                     )
                     requests++
-                    if (requests == 3) throw IOException("USGS unavailable")
+                    if (requests == 3) throw IOException("Earthquake feed unavailable")
                     val response =
                         EarthquakeCollectionNetworkModel(
                             "FeatureCollection",

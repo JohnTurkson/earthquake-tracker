@@ -1,6 +1,6 @@
 ---
 name: acquire-test-emulator
-description: Check USGS Tracker's shared Earthquake Project emulator on demand, coordinate agents with one ignored project lock file, and verify idle-home cleanup after tests, mockups, screenshots, or validation.
+description: Check Earthquake Tracker's shared Earthquake Project emulator on demand, coordinate agents with one ignored project lock file, and verify idle-home cleanup after tests, mockups, screenshots, or validation.
 ---
 
 # Acquire Test Emulator

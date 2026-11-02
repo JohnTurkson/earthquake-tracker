@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">USGS Tracker</string>
+    <string name="app_name">Earthquake Tracker</string>
     <string name="earthquake_map">Earthquake map</string>
     <string name="map_view">Map</string>
     <string name="list_view">List</string>
@@ -27,8 +27,8 @@
         <item quantity="other">%d earthquakes in this area</item>
     </plurals>
     <plurals name="earthquake_snapshot_count">
-        <item quantity="one">%d earthquake · USGS</item>
-        <item quantity="other">%d earthquakes · USGS</item>
+        <item quantity="one">%d earthquake</item>
+        <item quantity="other">%d earthquakes</item>
     </plurals>
     <string name="refreshing_earthquakes">Refreshing earthquakes…</string>
     <string name="existing_data_visible">Existing data remains visible</string>

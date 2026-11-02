@@ -42,6 +42,12 @@ legacy migration.
 
 ## String resources
 
+Use **Earthquake Tracker** as the app's display name through `app_name` in
+[`strings.xml`](../app/src/main/res/values/strings.xml). The
+[`AndroidManifest.xml`](../app/src/main/AndroidManifest.xml) application label
+uses that resource for launcher and system UI. Keep app text and internal names
+independent of the data provider; retain technical service URLs as required.
+
 Keep app-authored display text in Android string resources. Use numbered format
 arguments for dynamic values so translations can reorder them. Resolve resources
 with `stringResource` in composable functions and Context resource APIs such as
@@ -50,7 +56,7 @@ the UI or the owning Android component rather than adding a Context to ViewModel
 for display formatting.
 
 [EarthquakeNotifications](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNotifications.kt)
-uses a nonblank USGS title with the established magnitude-label formatting and
+uses a nonblank source title with the established magnitude-label formatting and
 otherwise formats `earthquake_fallback_title` with the event's magnitude and place,
 using `unknown_location` when the place is null:
 

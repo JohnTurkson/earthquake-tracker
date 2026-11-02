@@ -516,8 +516,8 @@ wrappers and provides the fixture seam for host navigation tests.
 
 Use the injected Ktor client for API access.
 `EarthquakeModule.provideHttpClient` configures CIO, `ContentNegotiation` with the
-provided `Json`, `Logging`, and `Resources`, with the USGS base URL. Extend the
-shared configuration rather than creating a new client in each feature.
+provided `Json`, `Logging`, and `Resources`, with the earthquake feed base URL.
+Extend the shared configuration rather than creating a new client in each feature.
 
 Keep requests and response decoding in API wrappers, data coordination in
 repositories, and presentation state in ViewModels. Keep network serialization
@@ -529,8 +529,8 @@ the same earthquake. UI components should consume only the values they need.
 is the working example for decoding a test-local serializable response with Ktor
 `MockEngine` and `runTest`. It verifies the request path, JSON decoding, and ignored
 unknown fields without a live service. Its response and URL are test fixtures,
-not a production USGS schema or endpoint. Use that approach when implementing API
-operations.
+not a production earthquake feed schema or endpoint. Use that approach when
+implementing API operations.
 
 ## Earthquake history and offline storage
 
@@ -538,7 +538,7 @@ Use the existing path for runtime earthquake data:
 
 ```text
 EarthquakeWorkScheduler -> EarthquakeRefreshWorker -> EarthquakeRefreshRepository
-EarthquakeRefreshRepository -> EarthquakeApi -> USGS
+EarthquakeRefreshRepository -> EarthquakeApi -> Earthquake feed
 EarthquakeRefreshRepository -> MainDatabase -> EarthquakeDao
 EarthquakeDao + EarthquakeMonitoringDao -> EarthquakeRepository -> EarthquakeViewModel
 ```
@@ -550,7 +550,7 @@ end in `Flow`; writes and explicit network refreshes are suspend operations.
 Rendered components remain independent of these dependencies.
 
 `EarthquakeDatabaseModel.id` is the primary key. Refreshes merge new IDs and
-update existing IDs only for newer USGS `updated` revisions, retaining stored
+update existing IDs only for newer source `updated` revisions, retaining stored
 events absent from subsequent feeds. Do not clear history on refresh or delete
 an event merely because it aged out of a rolling feed. Empty and failed
 responses preserve stored information. Read the Room database independently of
@@ -641,17 +641,18 @@ are suppressed. Request that permission only from a user action in the screen
 entry, with rationale and settings paths. Persist only the request attempt and
 user preferences, never an OS permission grant.
 
-`EarthquakeAlertPolicy` requires the USGS `earthquake` event type, event time
+`EarthquakeAlertPolicy` requires the source's `earthquake` event type, event time
 within the past 60 seconds, and the chosen minimum magnitude. A magnitude
 revision may qualify while the event is fresh;
-`EarthquakeAlertDelivery` records successful delivery by USGS event ID in Room.
+`EarthquakeAlertDelivery` records successful delivery by source event ID in Room.
 Stable notification tags update the same event rather than creating duplicates.
 The database commit and Android notification post are separate operations;
-there is no exactly-once transaction spanning both. Late USGS reports and older
+there is no exactly-once transaction spanning both. Late source reports and older
 events found after reconnection are deliberately excluded by the one-minute
-freshness policy. Notification intents have distinct event URIs and open the
-Map destination and publish the resolved selection to List; an event no longer
-in the database shows an availability message.
+freshness policy. Notification intents use the `earthquaketracker` scheme with
+distinct event URIs and open the Map destination and publish the resolved
+selection to List; an event no longer in the database shows an availability
+message.
 
 `EarthquakeMonitoringState` and `EarthquakeNotificationState` are immutable
 rendering values exposed by the relevant destination's read-only contract.

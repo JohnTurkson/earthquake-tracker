@@ -12,14 +12,16 @@ these guides and the current conversation do not cover.
 Use nested Ktor `@Resource` classes as in
 [EarthquakeResources](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeResources.kt).
 Give nested resources a parent property with a default instance. Keep route
-templates relative to the USGS host configured on the shared Hilt client in
+templates relative to the earthquake feed host configured on the shared Hilt
+client in
 [EarthquakeModule](../app/src/main/kotlin/com/johnturkson/sandbox/app/EarthquakeModule.kt).
 Use typed resource arguments for path and query parameters. Use `@SerialName`
 when Kotlin argument names differ from wire names, as with `updatedAfter` and
 `updatedafter`. Use serializable enums for the established summary feed names.
 
 Confirm the method, URL, parameters, defaults, response shapes, and status codes
-against the owning service's current documentation. For USGS, consult the
+against the owning service's current documentation. For earthquake data, consult
+the
 [summary](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php),
 [detail](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson_detail.php), and
 [catalog](https://earthquake.usgs.gov/fdsnws/event/1/) documentation as relevant.
@@ -40,7 +42,7 @@ for GeoJSON collections, features, metadata, Point geometry, and earthquake
 properties. Reuse models when response shapes match.
 Preserve nullable measurements and required identity and update fields. Ignore
 unused product metadata through the shared `Json.ignoreUnknownKeys` configuration;
-do not mirror every USGS field or introduce product maps without a feature that
+do not mirror every source field or introduce product maps without a feature that
 uses them. Preserve numeric precision and units: numeric epoch milliseconds
 decode directly to `Instant` through
 `EarthquakeEpochMillisecondsSerializer`; coordinates are longitude and latitude
@@ -79,4 +81,4 @@ service limits. Run and report the applicable checks from the testing guide.
 
 Follow the [date and time conventions](date-time.md). Keep catalog time filters
 typed as `Instant`; Ktor Resources serializes them as ISO-8601 query values.
-USGS's numeric wire representation does not determine the storage format.
+The feed's numeric wire representation does not determine the storage format.
