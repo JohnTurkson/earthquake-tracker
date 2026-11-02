@@ -19,7 +19,6 @@ ktfmt = "0.27.0"
 ktor = "3.6.0"
 lifecycle = "2.11.0"
 maps-compose = "9.0.1"
-maps-secrets = "2.0.1"
 nav3 = "1.2.0"
 room = "2.8.5"
 slf4j = "2.0.20"
@@ -83,5 +82,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
-maps-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "maps-secrets" }
 room = { id = "androidx.room", version.ref = "room" }

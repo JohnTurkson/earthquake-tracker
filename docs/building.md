@@ -57,32 +57,27 @@ tracked `gradle.properties`.
 
 Alternatively, add the same `MAPS_API_KEY` line to the repository root's
 `local.properties`. This file is already ignored by Git. Preserve its existing
-`sdk.dir` and any other settings. The Secrets plugin requires this file to exist
-even when the key is in user-level Gradle properties. Android Studio normally
-creates it for the SDK location; create an empty file if you supply that location
-through `ANDROID_HOME` instead.
+`sdk.dir` and any other settings. A local file is unnecessary for the key when a
+Gradle property supplies it; supply the SDK location separately if needed.
 
-Google's [Secrets Gradle Plugin](https://developers.google.com/maps/documentation/android-sdk/secrets-gradle-plugin)
-2.0.1 supplies the manifest placeholder and generated BuildConfig field. The
-[`secrets` configuration](../app/build.gradle.kts) selects these file sources:
+The [build script](../app/build.gradle.kts) resolves the key in this order:
 
-1. User-level `gradle.properties` in the Gradle user home directory.
-2. Repository-root `local.properties` for a key missing from the user-level file.
+1. [`providers.gradleProperty("MAPS_API_KEY")`](https://docs.gradle.org/current/kotlin-dsl/gradle/org.gradle.api.provider/-provider-factory/gradle-property.html),
+   which reads normal Gradle property sources, including user-level
+   `gradle.properties`. Command-line and environment project properties also work.
+2. `gradleLocalProperties(rootDir, providers).getProperty("MAPS_API_KEY")`, which
+   reads the repository-root `local.properties` when no Gradle property is set.
 
-There is no dummy key or checked-in defaults file. Set up your key before
-building: a missing key leaves the manifest placeholder unresolved and fails the
-build. An empty value can also fail generated code compilation. To use the local
-fallback, omit the property from the user-level file rather than leaving it empty.
+The local-file helper belongs to AGP's internal APIs. This project uses it with
+AGP 9.1.0; verify its availability and signature when upgrading AGP. Neither
+lookup requires constructing a properties-file path in the build script.
 
-Only `MAPS_API_KEY` is exported; other user-level Gradle settings and credentials
-are ignored by the Secrets plugin. It reads the selected files directly; `-P`
-and environment-variable project properties do not override its file contents.
-Gradle's [`providers.gradleProperty`](https://docs.gradle.org/current/kotlin-dsl/gradle/org.gradle.api.provider/-provider-factory/gradle-property.html)
-resolves normal Gradle property sources, but this plugin does not accept that
-provider and Gradle does not include `local.properties` in that lookup. The
-explicit paths preserve the requested file precedence without a custom parser.
-The Android Gradle Plugin merges the resulting manifest placeholder, and the
-Maps SDK reads `com.google.android.geo.API_KEY` from the packaged manifest.
+There is no dummy key or defaults file. A missing or blank resolved key fails
+Gradle configuration with a message explaining where to set `MAPS_API_KEY`.
+To use the local fallback, omit the Gradle property rather than leaving it empty.
+The resolved value supplies the manifest placeholder directly. The Maps SDK reads
+`com.google.android.geo.API_KEY` from the packaged manifest. Other properties
+are not exported, and the Secrets Gradle Plugin is not used.
 
 Keep real keys out of project-level `gradle.properties`. Sync or rebuild after
 changing a key. Compilation does not verify that Google will authorize it.
@@ -96,8 +91,8 @@ is declared.
 
 The built APK or AAB includes its Maps key. People installing the app use that
 key automatically; contributors building from source configure their own key.
-The Secrets plugin keeps the key out of Git, but does not encrypt it or prevent
-extraction from the compiled app.
+Storing the key in a private properties file keeps it out of Git, but does not
+encrypt it or prevent extraction from the compiled app.
 
 Before distributing a build, use a separate production key restricted to Maps
 SDK for Android and your application ID plus its release signing certificate's
@@ -169,8 +164,9 @@ Do not share unredacted logs containing keys.
   access is available for Gradle's automatic JDK download.
 - **Android SDK errors:** verify SDK Platform 37 and the SDK location in
   `local.properties`.
-- **Missing key or properties file:** ensure `local.properties` exists and set a
-  nonempty `MAPS_API_KEY` in either supported file. There is no dummy fallback;
+- **Missing or blank key:** set a nonempty `MAPS_API_KEY` in user-level Gradle
+  properties or the repository's ignored `local.properties`. Remove an empty
+  Gradle property to allow the local fallback. There is no dummy fallback;
   missing configuration fails the build. Building alone does not verify Maps
   authorization.
 - **Blank map or authorization failure:** check the selected Cloud project's
