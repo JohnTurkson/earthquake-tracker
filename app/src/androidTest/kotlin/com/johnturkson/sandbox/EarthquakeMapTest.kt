@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
@@ -21,6 +22,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
+import com.johnturkson.sandbox.data.EarthquakeLocation
 import com.johnturkson.sandbox.ui.EarthquakeMap
 import com.johnturkson.sandbox.ui.EarthquakeMapItem
 import com.johnturkson.sandbox.ui.EarthquakePreviewState
@@ -34,6 +36,64 @@ import org.junit.Test
 
 class EarthquakeMapTest {
     @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Test
+    fun explicitLocateCentersOnceWithoutFollowingLaterFixes() {
+        var state by mutableStateOf(EarthquakePreviewState())
+        var isLocatingUser by mutableStateOf(true)
+        composeRule.setContent {
+            EarthquakeScreen(
+                state = state,
+                onMapItemClick = {},
+                onMapClick = {},
+                isLocatingUser = isLocatingUser,
+                onUserLocated = { isLocatingUser = false },
+            )
+        }
+        val map = awaitMap()
+        composeRule.runOnIdle {
+            state = state.copy(userLocation = EarthquakeLocation(49.2827, -123.1207, 1_000L))
+        }
+        composeRule.waitUntil(10_000) { !isLocatingUser }
+        composeRule.runOnIdle {
+            assertEquals(49.2827, map.cameraPosition.target.latitude, 0.0001)
+            assertEquals(-123.1207, map.cameraPosition.target.longitude, 0.0001)
+            state = state.copy(userLocation = EarthquakeLocation(40.7128, -74.0060, 2_000L))
+        }
+        composeRule.waitForIdle()
+        composeRule.runOnIdle { assertEquals(49.2827, map.cameraPosition.target.latitude, 0.0001) }
+    }
+
+    @Test
+    fun persistedLocationInitializesCameraOnceAndRestoredCameraWins() {
+        val restorationTester = StateRestorationTester(composeRule)
+        var state by
+            mutableStateOf(
+                EarthquakePreviewState(initialMapLocation = EarthquakeLocation(49.2827, -123.1207))
+            )
+        restorationTester.setContent {
+            EarthquakeScreen(state = state, onMapItemClick = {}, onMapClick = {})
+        }
+        val map = awaitMap()
+        composeRule.runOnIdle {
+            assertEquals(49.2827, map.cameraPosition.target.latitude, 0.0001)
+            assertEquals(-123.1207, map.cameraPosition.target.longitude, 0.0001)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(34.0522, -118.2437), 7f))
+        }
+        composeRule.waitForIdle()
+        composeRule.runOnIdle {
+            state = state.copy(initialMapLocation = EarthquakeLocation(40.7128, -74.0060))
+        }
+        composeRule.waitForIdle()
+        composeRule.runOnIdle { assertEquals(34.0522, map.cameraPosition.target.latitude, 0.0001) }
+        restorationTester.emulateSavedInstanceStateRestore()
+        val restoredMap = awaitMap()
+        composeRule.runOnIdle {
+            assertEquals(34.0522, restoredMap.cameraPosition.target.latitude, 0.0001)
+            assertEquals(-118.2437, restoredMap.cameraPosition.target.longitude, 0.0001)
+            assertEquals(7f, restoredMap.cameraPosition.zoom)
+        }
+    }
 
     @Test
     fun emptyMapAppliesConfigurationAndKeepsGesturesEnabled() {

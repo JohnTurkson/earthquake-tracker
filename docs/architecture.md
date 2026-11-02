@@ -10,8 +10,9 @@ name for a type's Kotlin file. Keep technical names such as `MainDispatcher` tie
 to the platform concept they describe.
 
 The screen currently uses fixed earthquake fixtures. Product requirements in
-[the README](../README.md) describe the intended app; runtime fetching and durable
-storage have not been implemented.
+[the README](../README.md) describe the intended app; runtime earthquake fetching
+and earthquake storage have not been implemented. The last known user location
+is persisted separately in Preferences DataStore.
 
 ## UI and state ownership
 
@@ -30,8 +31,8 @@ provides an implementation without a ViewModel. Follow that interface and
 implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
 
-`EarthquakeState` exposes `navKey`, read-only `mapItems`, `selectedMapItemId`, and
-`selectedView`.
+`EarthquakeState` exposes `navKey`, read-only `mapItems`, `selectedMapItemId`,
+`selectedView`, `initialMapLocation`, and the latest measured `userLocation`.
 `EarthquakeScreen` has a Hilt entry overload and a rendering overload that accepts
 `EarthquakeState` and callbacks. Extend this read-only contract when expanding screen
 state and provide deterministic preview and test implementations.
@@ -83,11 +84,46 @@ The component accepts a hoisted `CameraPositionState`, `MapProperties`,
 through Maps Compose's saver. Camera changes are UI state and must not be copied
 into the ViewModel. The main screen fills its destination, including
 behind system bars, and passes safe-drawing padding for Google attribution.
-The default camera starts over San Francisco at zoom 10. Map defaults enable the
+The fallback camera starts over San Francisco at zoom 10. The ViewModel reads the
+last known user location once through its repository and exposes primitive
+coordinates in `initialMapLocation`. A null value means the initial read is
+pending. The UI applies the result once; its saveable initialization flag keeps
+later location readings from replacing a restored camera, a gesture, or an
+explicit list-row camera move. SDK camera objects stay in the UI.
+
+Map defaults enable the
 SDK's My Location button while hiding other optional controls and retaining
 gestures. The button appears only when the caller enables the My Location layer
 with granted location permission; enabling its UI setting does not request
 permission. Keep Google attribution visible when adding overlays.
+
+Location permission belongs to the screen entry. Use Compose's
+`rememberLauncherForActivityResult` with `ActivityResultContracts.RequestPermission`
+for `ACCESS_COARSE_LOCATION`; the earthquake map does not require precise or
+background access. Android owns the permission grant. Observe it in UI state and
+refresh it with `LifecycleResumeEffect`, rather than persisting a granted flag in
+DataStore, the ViewModel, or saved state. Save only transient UI decisions such as
+whether a request was attempted or a rationale dialog is open.
+
+[EarthquakeLocationButton](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeLocationButton.kt)
+requests access from a user action before the SDK button is available.
+[EarthquakeLocationRationale](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeLocationRationale.kt)
+explains a repeat request. When Android will no longer show the request, the
+button opens app settings. Keep rendering components independent of permission
+launchers: pass granted/settings values and action callbacks from the entry.
+`EarthquakeExplorerControls` owns placement of the app button in both window
+layouts. Denial leaves map and list exploration available.
+
+Use `LifecycleStartEffect` at the screen entry to start updates only while the
+screen is started and permission is granted, and cancel on stop or disposal.
+[EarthquakeLocationProvider](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeLocationProvider.kt)
+wraps the injected Fused Location Provider in a cold `callbackFlow` and removes
+its callback in `awaitClose`. It uses balanced power, a requested 60-second
+interval, and a 1,000-meter minimum displacement. Actual delivery depends on
+Android and available location sources. The SDK layer displays live location;
+the app's location stream updates the durable cache without following every fix
+with the camera. An explicit app Locate request centers once when a measured
+location is available; subsequent fixes leave the camera alone.
 
 Use fixed development inputs such as
 [EarthquakeMapFixtures](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
@@ -216,11 +252,23 @@ is installed in `SingletonComponent`. It provides the shared `Json`, Ktor
 shared dependencies. Do not construct databases, clients, or repositories in
 composables or ViewModels.
 
-Room and DataStore are declared dependencies with no current database, DAO,
-repository, or storage provider. Hilt should supply storage dependencies; keep
-Room operations in DAOs and coordinate data access through repositories when
-storage is implemented. Discuss conventions for the first concrete storage
-implementation before introducing it.
+Use Preferences DataStore for small persisted settings. `EarthquakeModule`
+provides one singleton `DataStore<Preferences>` per file with an application
+context and a scope using the injected IO dispatcher.
+[EarthquakeLocationRepository](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeLocationRepository.kt)
+owns private preference keys and atomic reads/writes of latitude, longitude, and
+the location fix's epoch-millisecond timestamp. Missing, incomplete, invalid, or
+unreadable coordinates produce a null last known location; the ViewModel maps
+that to `EarthquakeLocation.Default` (San Francisco). Never record that fallback
+as a measured user location. A corrupt preferences file resets to empty values.
+An older cached fix cannot overwrite a newer timestamp. Optional cache-write IO
+failures preserve existing data and allow the next location update to retry.
+
+Keep `EarthquakeLocation` independent of SDK `Location` and `LatLng` types. Convert
+device readings at the provider boundary and map camera coordinates in the UI.
+Keep data access in repositories and inject them into ViewModels. Room remains
+a declared dependency without a database or DAO; discuss its conventions before
+introducing the first earthquake database.
 
 Inject qualified dispatchers where execution context is needed.
 `EarthquakeModule` provides `@IoDispatcher`, `@MainDispatcher`, and

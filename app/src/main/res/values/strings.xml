@@ -11,6 +11,12 @@
     <string name="earthquake_event_time">%1$s · %2$s</string>
     <string name="earthquake_coordinates">Latitude %1$.2f° · Longitude %2$.2f°</string>
     <string name="clear_selection">Clear earthquake selection</string>
+    <string name="use_my_location">Use my location</string>
+    <string name="location_settings">Location settings</string>
+    <string name="location_permission_title">Show your location</string>
+    <string name="location_permission_explanation">Allow approximate location to show where you are on the map and remember your last location for your next visit. You can keep exploring earthquakes without it.</string>
+    <string name="continue_action">Continue</string>
+    <string name="not_now">Not now</string>
     <plurals name="earthquake_snapshot_count">
         <item quantity="one">%d earthquake · USGS snapshot</item>
         <item quantity="other">%d earthquakes · USGS snapshot</item>

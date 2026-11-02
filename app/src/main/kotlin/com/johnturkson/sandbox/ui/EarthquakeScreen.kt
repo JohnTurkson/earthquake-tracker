@@ -1,5 +1,12 @@
 package com.johnturkson.sandbox.ui
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.provider.Settings
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,18 +19,29 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraMoveStartedReason
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.johnturkson.sandbox.data.EarthquakeLocation
 
 @Composable
 fun EarthquakeScreen(
@@ -34,13 +52,84 @@ fun EarthquakeScreen(
             creationCallback = { factory -> factory.create(navKey) }
         ),
 ) {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    fun hasPermission(): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+    var isLocationGranted by remember { mutableStateOf(hasPermission()) }
+    var hasRequestedLocation by rememberSaveable { mutableStateOf(false) }
+    var shouldShowRationale by remember { mutableStateOf(false) }
+    var showLocationRationale by rememberSaveable { mutableStateOf(false) }
+    var isLocatingUser by rememberSaveable { mutableStateOf(false) }
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            isLocationGranted = granted
+            isLocatingUser = granted
+            shouldShowRationale =
+                activity != null &&
+                    ActivityCompat.shouldShowRequestPermissionRationale(
+                        activity,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    )
+        }
+    LifecycleResumeEffect(Unit) {
+        isLocationGranted = hasPermission()
+        shouldShowRationale =
+            activity != null &&
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                )
+        onPauseOrDispose {}
+    }
+    LifecycleStartEffect(isLocationGranted) {
+        if (isLocationGranted) viewModel.startLocationUpdates()
+        onStopOrDispose { viewModel.stopLocationUpdates() }
+    }
+    val requiresSettings = hasRequestedLocation && !shouldShowRationale
     EarthquakeScreen(
         state = viewModel,
         onMapItemClick = viewModel::selectMapItem,
         onMapClick = viewModel::clearMapSelection,
         onViewSelected = viewModel::selectView,
         modifier = modifier,
+        isLocationGranted = isLocationGranted,
+        requiresLocationSettings = requiresSettings,
+        isLocatingUser = isLocatingUser,
+        onUserLocated = { isLocatingUser = false },
+        onLocationClick = {
+            isLocatingUser = true
+            when {
+                hasPermission() -> isLocationGranted = true
+                shouldShowRationale -> showLocationRationale = true
+                requiresSettings ->
+                    context.startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            "package:${context.packageName}".toUri(),
+                        )
+                    )
+                else -> {
+                    hasRequestedLocation = true
+                    permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                }
+            }
+        },
     )
+    if (showLocationRationale && !isLocationGranted) {
+        EarthquakeLocationRationale(
+            onContinue = {
+                showLocationRationale = false
+                hasRequestedLocation = true
+                permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            },
+            onDismiss = {
+                showLocationRationale = false
+                isLocatingUser = false
+            },
+        )
+    }
 }
 
 @Composable
@@ -50,9 +139,41 @@ fun EarthquakeScreen(
     onMapClick: () -> Unit,
     modifier: Modifier = Modifier,
     onViewSelected: (EarthquakeView) -> Unit = {},
+    isLocationGranted: Boolean = false,
+    requiresLocationSettings: Boolean = false,
+    onLocationClick: () -> Unit = {},
+    isLocatingUser: Boolean = false,
+    onUserLocated: () -> Unit = {},
 ) {
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(37.7749, -122.4194), 10f)
+        val location = EarthquakeLocation.Default
+        position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 10f)
+    }
+    var hasInitializedCamera by rememberSaveable { mutableStateOf(false) }
+    val initialMapLocation = state.initialMapLocation
+    LaunchedEffect(initialMapLocation) {
+        if (initialMapLocation != null && !hasInitializedCamera) {
+            if (cameraPositionState.cameraMoveStartedReason != CameraMoveStartedReason.GESTURE) {
+                cameraPositionState.position =
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(initialMapLocation.latitude, initialMapLocation.longitude),
+                        10f,
+                    )
+            }
+            hasInitializedCamera = true
+        }
+    }
+    val userLocation = state.userLocation
+    LaunchedEffect(isLocatingUser, userLocation) {
+        if (isLocatingUser && userLocation != null) {
+            cameraPositionState.position =
+                CameraPosition.fromLatLngZoom(
+                    LatLng(userLocation.latitude, userLocation.longitude),
+                    maxOf(10f, cameraPositionState.position.zoom),
+                )
+            hasInitializedCamera = true
+            onUserLocated()
+        }
     }
     val listState = rememberLazyListState()
     val safePadding = WindowInsets.safeDrawing.asPaddingValues()
@@ -71,6 +192,8 @@ fun EarthquakeScreen(
                 selectedItemId = state.selectedMapItemId,
                 onMapClick = onMapClick,
                 cameraPositionState = cameraPositionState,
+                properties =
+                    MapProperties(minZoomPreference = 1f, isMyLocationEnabled = isLocationGranted),
                 contentPadding =
                     PaddingValues(
                         start =
@@ -92,6 +215,7 @@ fun EarthquakeScreen(
             expanded = expanded,
             onItemClick = { item ->
                 onMapItemClick(item)
+                hasInitializedCamera = true
                 cameraPositionState.position =
                     CameraPosition.fromLatLngZoom(
                         LatLng(item.latitude, item.longitude),
@@ -104,6 +228,9 @@ fun EarthquakeScreen(
             contentPadding = safePadding,
             listState = listState,
             onSelectionCardSizeChanged = { selectedCardHeight = with(density) { it.toDp() } },
+            showLocationButton = !isLocationGranted,
+            requiresLocationSettings = requiresLocationSettings,
+            onLocationClick = onLocationClick,
         )
     }
 }

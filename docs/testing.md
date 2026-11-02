@@ -94,6 +94,13 @@ are implemented.
 
 ## Map behavior and screenshot coverage
 
+[EarthquakeLocationRepositoryTest](../app/src/test/kotlin/com/johnturkson/sandbox/EarthquakeLocationRepositoryTest.kt)
+uses temporary Preferences DataStore files and coroutine test scopes to check
+missing/incomplete data, persistence after reopening, stale fixes, and invalid
+coordinates. Cancel and join the first store's scope before reopening its file;
+never run two active DataStore instances for the same file. Use a controlled
+failing `DataStore` to exercise read errors without changing device storage.
+
 [EarthquakeMapTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMapTest.kt)
 uses a plain `ComponentActivity`, immutable item fixtures, and a hoisted
 `CameraPositionState`.
@@ -101,11 +108,24 @@ It checks empty-map configuration, retained gestures, current marker callbacks
 after reordering and coordinate changes, item removal/background clicks, and the
 screen rendered from an `EarthquakePreviewState` data-class fixture with selection
 callbacks.
+It also verifies that stored initial coordinates apply once and that camera
+state survives Compose saved-state restoration without being recentered by a
+later location value. Use `StateRestorationTester` for that UI-owned state.
 `MapType.NONE` avoids relying on live geographic tiles for these behavior checks;
 it still initializes Google's native SDK and needs a compatible device.
 `EarthquakeActivityTest` separately checks real destination startup and recreation.
 
 ## Compose screenshot tests
+
+[EarthquakeLocationScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeLocationScreenshotTest.kt)
+covers the request button, app-settings button, and permission rationale using
+the real stateless components, including dark and large-text fixtures. It also
+renders the actual controls layer with Locate in compact and expanded windows
+to check placement without substituting for native-map pixels. Keep
+Android permission dialogs out of host previews. On the Resizable API 37 device,
+exercise first request, denial, rationale, grant, settings return/revocation,
+foreground-only updates, and the native SDK layer/button. Device captures
+supplement the native-map regression coverage limitation described below.
 
 Use Google's Compose Preview Screenshot Testing. The current AGP
 9.1.1 project uses the compatible `com.android.compose.screenshot` plugin and

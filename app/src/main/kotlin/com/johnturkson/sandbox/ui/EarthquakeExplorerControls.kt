@@ -36,10 +36,23 @@ fun EarthquakeExplorerControls(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     listState: LazyListState = rememberLazyListState(),
     onSelectionCardSizeChanged: (Int) -> Unit = {},
+    showLocationButton: Boolean = false,
+    requiresLocationSettings: Boolean = false,
+    onLocationClick: () -> Unit = {},
 ) {
     val selectedItem = items.find { it.id == selectedItemId }
 
     Box(modifier.fillMaxSize()) {
+        if (showLocationButton && (expanded || selectedView == EarthquakeView.Map)) {
+            EarthquakeLocationButton(
+                onClick = onLocationClick,
+                requiresSettings = requiresLocationSettings,
+                modifier =
+                    Modifier.align(Alignment.TopEnd)
+                        .padding(contentPadding)
+                        .padding(top = if (expanded) 16.dp else 84.dp, end = 16.dp),
+            )
+        }
         if (expanded) {
             Surface(
                 modifier =

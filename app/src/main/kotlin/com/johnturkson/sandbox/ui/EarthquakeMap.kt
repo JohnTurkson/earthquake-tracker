@@ -17,6 +17,7 @@ import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.johnturkson.sandbox.R
+import com.johnturkson.sandbox.data.EarthquakeLocation
 
 @Composable
 fun EarthquakeMap(
@@ -26,7 +27,8 @@ fun EarthquakeMap(
     selectedItemId: String? = null,
     onMapClick: () -> Unit = {},
     cameraPositionState: CameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(37.7749, -122.4194), 10f)
+        val location = EarthquakeLocation.Default
+        position = CameraPosition.fromLatLngZoom(LatLng(location.latitude, location.longitude), 10f)
     },
     properties: MapProperties = MapProperties(minZoomPreference = 1f),
     uiSettings: MapUiSettings =
