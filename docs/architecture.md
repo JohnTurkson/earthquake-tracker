@@ -32,7 +32,8 @@ implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
 
 `EarthquakeState` exposes `navKey`, read-only `mapItems`, `selectedMapItemId`,
-`selectedView`, `initialMapLocation`, and the latest measured `userLocation`.
+`selectedView`, `isListPanelVisible`, `initialMapLocation`, and the latest measured
+`userLocation`.
 `EarthquakeScreen` has a Hilt entry overload and a rendering overload that accepts
 `EarthquakeState` and callbacks. Extend this read-only contract when expanding screen
 state and provide deterministic preview and test implementations.
@@ -171,6 +172,10 @@ Camera restoration remains UI-owned through `rememberCameraPositionState`.
 `EarthquakeViewModel.selectedView` uses the same `SavedStateHandle.saved` and
 `MutableStateSerializer` pattern with the serializable `EarthquakeView` enum.
 It restores the Map/List choice independently of earthquake selection.
+`isListPanelVisible` uses the same saved Boolean pattern, defaulting to true.
+`updateListPanelVisibility` changes only the expanded panel's visibility; compact
+presentation and the shared selection remain independent. Restore this choice
+through activity/process recreation rather than adding a navigation entry.
 
 Inject `SavedStateHandle` into the ViewModel for state that needs restoration.
 Use the existing serialization pattern instead of maintaining an unrelated
@@ -207,10 +212,12 @@ windows use the compact presentation. Avoid hardware or fold-state checks.
 renders the ordinary Compose content around the native map. Its `expanded`
 input comes from the screen's layout decision. Compact Map shows the floating
 switcher and an optional selection card; compact List shows the same switcher
-above the full list. The expanded panel contains the list and, when selected,
-the event details in its footer. `EarthquakeList(isSupportingPane = true)` uses
-a smaller heading and a short local-time label. Its rows omit the forward arrow
-because selection updates the adjacent map rather than opening another presentation.
+above the full list. The expanded panel contains a fixed heading and Minimize
+button above the list; the selected row is highlighted without a duplicate
+selection card. `EarthquakeList(isSupportingPane = true, showTitle = false)`
+omits its own title and uses a short local-time label. Its rows omit the forward
+arrow because selection updates the adjacent map rather than opening another
+presentation.
 
 Both layouts consume the same `mapItems` and selected ID. Selecting a list row
 updates selection and centers the map on that item. Only compact list selection
@@ -220,17 +227,24 @@ in the details clears the list highlight too.
 
 Keep `rememberCameraPositionState` and `rememberLazyListState` above the layout
 branch so changing views or resizing does not discard them. These are UI-owned
-layout states; the ViewModel owns only the compact presentation and selected ID.
+layout states; the ViewModel owns the compact presentation, panel visibility,
+and selected ID.
 The list fills compact windows. Rows wrap rather than truncate event locations
 or times. Reserve the expanded panel's width plus its outer spacing in the map's
-start content padding so the camera center and attribution stay in the visible
-map area.
+start content padding while the panel is visible so the camera center and
+attribution stay in the visible map area. Minimizing removes that reserved width,
+keeps the existing native map and camera, and shows a floating Show list button
+at the start edge. Resizing to compact ignores the visibility preference;
+returning to expanded restores it. These overlay transitions are screen state,
+not Navigation 3 back-stack changes. Material surfaces and buttons render them;
+the explorer explicitly controls their visibility and placement.
 
 [EarthquakeSelectionCard](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeSelectionCard.kt)
-shows the selected event's title, available time, and coordinates. In compact
-Map, measure its rendered height in the UI and include that height in map
-content padding so native attribution remains visible at larger font sizes.
-In expanded windows, place it inside the floating list panel.
+shows the selected event's title, available time, and coordinates. Use the same
+bottom-centered component in compact Map and expanded Map with the panel
+minimized, with a maximum width of 480 dp. Measure its rendered height in the UI
+and include that height in map content padding so native attribution remains
+visible at larger font sizes. Never show it alongside the open expanded list.
 
 ## Dependency injection and storage
 

@@ -59,6 +59,16 @@ constructor(
             .getValue(this, this::selectedView)
         private set
 
+    override var isListPanelVisible: Boolean by
+        savedStateHandle
+            .saved(serializer = MutableStateSerializer<Boolean>()) { mutableStateOf(true) }
+            .getValue(this, this::isListPanelVisible)
+        private set
+
+    fun updateListPanelVisibility(visible: Boolean) {
+        isListPanelVisible = visible
+    }
+
     fun selectView(view: EarthquakeView) {
         selectedView = view
     }

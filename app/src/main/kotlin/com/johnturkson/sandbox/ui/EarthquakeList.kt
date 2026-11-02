@@ -43,29 +43,39 @@ fun EarthquakeList(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     isSupportingPane: Boolean = false,
+    showTitle: Boolean = true,
 ) {
     LazyColumn(
         modifier = modifier,
         state = listState,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        contentPadding =
+            PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = if (showTitle) 16.dp else 0.dp,
+                bottom = 16.dp,
+            ),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         item(key = "heading") {
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) {
-                Text(
-                    stringResource(R.string.recent_earthquakes),
-                    style =
-                        if (isSupportingPane) MaterialTheme.typography.titleLarge
-                        else MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+            Column(
+                Modifier.padding(horizontal = 12.dp, vertical = if (showTitle) 12.dp else 0.dp)
+            ) {
+                if (showTitle)
+                    Text(
+                        stringResource(R.string.recent_earthquakes),
+                        style =
+                            if (isSupportingPane) MaterialTheme.typography.titleLarge
+                            else MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
                 Text(
                     pluralStringResource(
                         R.plurals.earthquake_snapshot_count,
                         items.size,
                         items.size,
                     ),
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = if (showTitle) 8.dp else 0.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

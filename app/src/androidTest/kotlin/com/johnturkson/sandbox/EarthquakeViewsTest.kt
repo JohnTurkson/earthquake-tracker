@@ -29,6 +29,7 @@ class EarthquakeViewsTest {
     fun expandedPanelKeepsSelectionWithoutViewSwitching() {
         val item = EarthquakeMapItem("shima", 33.822, 136.9854, "M 6.0 - Shima, Japan")
         var selectedId by mutableStateOf<String?>(null)
+        var isListPanelVisible by mutableStateOf(true)
         var viewSwitches = 0
         composeRule.setContent {
             EarthquakeTheme {
@@ -37,6 +38,8 @@ class EarthquakeViewsTest {
                     selectedItemId = selectedId,
                     selectedView = EarthquakeView.List,
                     expanded = true,
+                    isListPanelVisible = isListPanelVisible,
+                    onListPanelVisibilityChanged = { isListPanelVisible = it },
                     onItemClick = { selectedId = it.id },
                     onClearSelection = { selectedId = null },
                     onViewSelected = { viewSwitches++ },
@@ -47,12 +50,25 @@ class EarthquakeViewsTest {
         composeRule.onNodeWithText("Map").assertDoesNotExist()
         composeRule.onNodeWithText("List").assertDoesNotExist()
         composeRule.onNodeWithText(item.title).performClick()
-        composeRule.onAllNodesWithText(item.title).assertCountEquals(2)
+        composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
+        composeRule.onNodeWithText(item.title).assertIsSelected()
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
+        composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
+        composeRule.onNodeWithText("Show list").assertIsDisplayed()
+        composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
+        composeRule.onNodeWithText("Show list").performClick()
+        composeRule.onNodeWithText(item.title).assertIsSelected()
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
         composeRule.runOnIdle {
             assertEquals(item.id, selectedId)
             assertEquals(0, viewSwitches)
         }
         composeRule.onNodeWithContentDescription("Clear earthquake selection").performClick()
+        composeRule.onNodeWithText(item.title).assertDoesNotExist()
+        composeRule.onNodeWithText("Show list").performClick()
         composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
         composeRule.runOnIdle { assertEquals(null, selectedId) }
     }

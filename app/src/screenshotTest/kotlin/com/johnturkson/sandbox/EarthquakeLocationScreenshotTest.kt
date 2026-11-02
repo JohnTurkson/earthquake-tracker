@@ -52,6 +52,25 @@ class EarthquakeLocationScreenshotTest {
     }
 
     @PreviewTest
+    @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
+    @Composable
+    fun minimizedLocationControls() {
+        EarthquakeTheme(dynamicColor = false) {
+            EarthquakeExplorerControls(
+                items = listOf(EarthquakeMapItem("fixture", 37.0, -122.0, "M 4.5 - California")),
+                selectedItemId = "fixture",
+                selectedView = EarthquakeView.Map,
+                expanded = true,
+                isListPanelVisible = false,
+                onItemClick = {},
+                onClearSelection = {},
+                onViewSelected = {},
+                showLocationButton = true,
+            )
+        }
+    }
+
+    @PreviewTest
     @Preview(locale = "en-US")
     @Composable
     fun requestLocation() {

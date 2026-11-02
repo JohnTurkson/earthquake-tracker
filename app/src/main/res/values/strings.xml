@@ -4,6 +4,8 @@
     <string name="map_view">Map</string>
     <string name="list_view">List</string>
     <string name="recent_earthquakes">Recent earthquakes</string>
+    <string name="minimize_earthquake_list">Minimize earthquake list</string>
+    <string name="show_earthquake_list">Show list</string>
     <string name="list_explanation">Select an earthquake to view it on the map. Times are local.</string>
     <string name="local_event_times">Times are local.</string>
     <string name="no_earthquakes">No earthquake information available.</string>

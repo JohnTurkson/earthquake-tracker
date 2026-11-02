@@ -8,6 +8,7 @@ interface EarthquakeState {
     val navKey: Destination.EarthquakeRoute
     val mapItems: List<EarthquakeMapItem>
     val selectedMapItemId: String?
+    val isListPanelVisible: Boolean
     val selectedView: EarthquakeView
     val initialMapLocation: EarthquakeLocation?
     val userLocation: EarthquakeLocation?

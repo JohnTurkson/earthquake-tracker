@@ -93,6 +93,7 @@ fun EarthquakeScreen(
         onMapItemClick = viewModel::selectMapItem,
         onMapClick = viewModel::clearMapSelection,
         onViewSelected = viewModel::selectView,
+        onListPanelVisibilityChanged = viewModel::updateListPanelVisibility,
         modifier = modifier,
         isLocationGranted = isLocationGranted,
         requiresLocationSettings = requiresSettings,
@@ -139,6 +140,7 @@ fun EarthquakeScreen(
     onMapClick: () -> Unit,
     modifier: Modifier = Modifier,
     onViewSelected: (EarthquakeView) -> Unit = {},
+    onListPanelVisibilityChanged: (Boolean) -> Unit = {},
     isLocationGranted: Boolean = false,
     requiresLocationSettings: Boolean = false,
     onLocationClick: () -> Unit = {},
@@ -184,6 +186,7 @@ fun EarthquakeScreen(
 
     BoxWithConstraints(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         val expanded = maxWidth >= 840.dp && maxHeight >= 480.dp
+        val showListPanel = expanded && state.isListPanelVisible
         if (expanded || state.selectedView == EarthquakeView.Map) {
             EarthquakeMap(
                 items = state.mapItems,
@@ -198,12 +201,13 @@ fun EarthquakeScreen(
                     PaddingValues(
                         start =
                             safePadding.calculateStartPadding(layoutDirection) +
-                                if (expanded) earthquakeListPaneWidth + 32.dp else 0.dp,
+                                if (showListPanel) earthquakeListPaneWidth + 32.dp else 0.dp,
                         end = safePadding.calculateEndPadding(layoutDirection),
-                        top = safePadding.calculateTopPadding() + if (expanded) 16.dp else 84.dp,
+                        top =
+                            safePadding.calculateTopPadding() + if (showListPanel) 16.dp else 84.dp,
                         bottom =
                             safePadding.calculateBottomPadding() +
-                                if (expanded) 16.dp
+                                if (showListPanel) 16.dp
                                 else if (selectedItem != null) selectedCardHeight + 32.dp else 0.dp,
                     ),
             )
@@ -213,6 +217,8 @@ fun EarthquakeScreen(
             selectedItemId = state.selectedMapItemId,
             selectedView = state.selectedView,
             expanded = expanded,
+            isListPanelVisible = state.isListPanelVisible,
+            onListPanelVisibilityChanged = onListPanelVisibilityChanged,
             onItemClick = { item ->
                 onMapItemClick(item)
                 hasInitializedCamera = true

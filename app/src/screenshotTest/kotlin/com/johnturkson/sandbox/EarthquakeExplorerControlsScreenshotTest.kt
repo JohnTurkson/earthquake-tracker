@@ -107,12 +107,48 @@ class EarthquakeExplorerControlsScreenshotTest {
         Controls(expanded = true, selectedId = item.id)
     }
 
+    @PreviewTest
+    @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
+    @Composable
+    fun minimizedPanel() {
+        Controls(expanded = true, panelVisible = false)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
+    @Composable
+    fun minimizedSelectedPanel() {
+        Controls(expanded = true, panelVisible = false, selectedId = item.id)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
+    @Composable
+    fun minimizedSelectionWithoutTime() {
+        Controls(expanded = true, panelVisible = false, selectedId = second.id)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 960, heightDp = 720, locale = "en-US")
+    @Composable
+    fun minimizedDarkPanel() {
+        Controls(expanded = true, panelVisible = false, selectedId = item.id, dark = true)
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 840, heightDp = 600, fontScale = 1.5f, locale = "en-US")
+    @Composable
+    fun minimizedLargeTextPanel() {
+        Controls(expanded = true, panelVisible = false, selectedId = item.id)
+    }
+
     @Composable
     private fun Controls(
         expanded: Boolean,
         selectedId: String? = null,
         items: List<EarthquakeMapItem> = listOf(item, second),
         dark: Boolean = false,
+        panelVisible: Boolean = true,
     ) {
         EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer)) {
@@ -121,6 +157,7 @@ class EarthquakeExplorerControlsScreenshotTest {
                     selectedItemId = selectedId,
                     selectedView = EarthquakeView.Map,
                     expanded = expanded,
+                    isListPanelVisible = panelVisible,
                     onItemClick = {},
                     onClearSelection = {},
                     onViewSelected = {},

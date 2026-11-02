@@ -120,9 +120,9 @@ it still initializes Google's native SDK and needs a compatible device.
 [EarthquakeLocationScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeLocationScreenshotTest.kt)
 covers the request button, app-settings button, and permission rationale using
 the real stateless components, including dark and large-text fixtures. It also
-renders the actual controls layer with Locate in compact and expanded windows
-to check placement without substituting for native-map pixels. Keep
-Android permission dialogs out of host previews. On the Resizable API 37 device,
+renders the actual controls layer with Locate in compact, open expanded, and
+minimized expanded windows to check placement without substituting for native-map
+pixels. Keep Android permission dialogs out of host previews. On the Resizable API 37 device,
 exercise first request, denial, rationale, grant, settings return/revocation,
 foreground-only updates, and the native SDK layer/button. Device captures
 supplement the native-map regression coverage limitation described below.
@@ -153,18 +153,23 @@ renders the actual controls layer independently of the native map. Cover the
 compact map switcher with no selection, selected events with and without time,
 dark mode, and large text. Cover the expanded floating panel with empty and
 populated items, selected and unselected events, missing time, dark mode, and
-large text. The fixture's neutral background only makes overlay bounds visible;
-it is not a substitute map or coverage of map pixels. Do not render blank native
-map previews to claim coverage of these controls.
+large text. Cover the minimized expanded state with no selection, a selected
+event with and without time, dark mode, and large text. Verify the fixed Minimize
+control, Show list button, and reuse of the bottom card. The fixture's neutral
+background only makes overlay bounds visible; it is not a substitute map or
+coverage of map pixels. Do not render blank native map previews to claim coverage
+of these controls.
 
 [EarthquakeViewsTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeViewsTest.kt)
 checks selecting an event from List, opening it on Map, retaining its highlight
 when switching back, and clearing the shared selection. It also checks the
-expanded controls' shared selection and absence of a view toggle. Use a dedicated
-Resizable API 37 emulator and Android CLI to verify the real screen across the
-840 dp width breakpoint, including selection retention, the compact view choice,
-and unobscured native-map attribution. Exercise activity recreation as well as
-switching presentations.
+expanded controls' shared selection and absence of a view toggle, plus
+minimize/restore behavior without duplicated selection details or view changes.
+Use a dedicated Resizable API 37 emulator and Android CLI to verify the real
+screen across the 840 dp width breakpoint, including selection retention,
+the compact view choice, and unobscured native-map attribution in open and
+minimized panel states.
+Exercise activity recreation as well as switching presentations.
 
 Generate references only for an intentional visual change:
 

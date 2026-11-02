@@ -18,8 +18,9 @@ using the USGS Earthquake API.
 
 Compact windows have separate full-screen Map and List views, selected with a
 floating control at the top. Expanded windows show a floating earthquake list
-over the map, with no view toggle. The panel includes details for the selected
-earthquake. Both layouts show the same earthquakes and share selection.
+over the map, with no view toggle. The panel highlights the selected earthquake.
+Minimize the panel to see the full map and the same bottom selection card used
+in compact Map; Show list restores it. Both layouts share data and selection.
 Selecting a list row centers its map location; the camera, list scroll position,
 and compact view choice survive layout changes.
 
