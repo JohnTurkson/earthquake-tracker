@@ -39,9 +39,8 @@ For guided setup with Codex, use `$build-project` in this repository. The
 
 Use the [Android CLI workflow](docs/android-cli.md) for Google's CLI installation
 on macOS, builds, emulator deployment, live UI hierarchy, screenshots and component
-images, taps and gestures, and device configuration. The
-[Google content review](docs/android-cli-review.md) records applicable agent
-capabilities and optional additions from Google's recent announcements.
+images, taps and gestures, device configuration, and current Google documentation
+and skills.
 
 ## Contributing
 

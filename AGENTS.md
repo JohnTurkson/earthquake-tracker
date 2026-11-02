@@ -63,7 +63,6 @@ before targeting controls, and verify the resulting UI. Follow the documented
 ADB fallbacks when the CLI lacks a needed operation. Keep artifacts out of Git,
 restore temporary device settings, and report unverified workflows accurately.
 
-Apply the [project-specific Google guidance](docs/android-cli-review.md#instructions-applicable-to-this-project-now)
-for current Android documentation, focused skills, preview prerequisites, and
-verification loops. Its optional workflows require a project decision before
-introducing new app, test, or external-service conventions.
+Use the workflow's guidance for current Android documentation, focused skills,
+and component previews. Agree on new app, testing, or external-service conventions
+before introducing them.
