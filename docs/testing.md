@@ -100,7 +100,7 @@ it still initializes Google's native SDK and needs a compatible device.
 ## Compose screenshot tests
 
 Use Google's Compose Preview Screenshot Testing. The current AGP
-9.1.0 project uses the compatible `com.android.compose.screenshot` plugin and
+9.1.1 project uses the compatible `com.android.compose.screenshot` plugin and
 `screenshot-validation-api` version 0.0.1-alpha16. Its experimental source-set
 flags are configured in `gradle.properties` and the app module. Newer AGP test-suite
 integration requires a separate build-version change.

@@ -11,6 +11,13 @@
 - To run the app, use an Android 8.0 / API 26 or newer device or emulator. Maps
   requires Google Play services; select a Google APIs or Google Play emulator image.
 
+The project uses AGP 9.1.1 with compile and target SDK 37. Google's
+[API-level compatibility table](https://developer.android.com/build/releases/about-agp#api-level-support)
+requires AGP 9.1.1 or newer for API 37; this pairing needs no unsupported-compile-SDK
+warning suppression. When using IntelliJ IDEA, its Android plugin must support
+the AGP 9.1 release series. IDE compatibility and command-line build compatibility
+are separate checks.
+
 Android Studio includes a Java runtime that can start Gradle. For terminal builds,
 make an existing Java runtime available through `JAVA_HOME` or `java` on `PATH`;
 Android Studio's bundled runtime can be used. Gradle then selects or downloads the
@@ -69,7 +76,7 @@ The [build script](../app/build.gradle.kts) resolves the key in this order:
    reads the repository-root `local.properties` when no Gradle property is set.
 
 The local-file helper belongs to AGP's internal APIs. This project uses it with
-AGP 9.1.0; verify its availability and signature when upgrading AGP. Neither
+AGP 9.1.1; verify its availability and signature when upgrading AGP. Neither
 lookup requires constructing a properties-file path in the build script.
 
 There is no dummy key or defaults file. A missing or blank resolved key fails
