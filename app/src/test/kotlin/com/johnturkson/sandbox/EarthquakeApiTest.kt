@@ -30,7 +30,6 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
 
 class EarthquakeApiTest {
@@ -97,7 +96,7 @@ class EarthquakeApiTest {
     }
 
     @Test
-    fun requestsDetailAndDecodesProductsAndContents() = runTest {
+    fun requestsDetailAndIgnoresUnusedProducts() = runTest {
         client { request ->
             assertEquals("/earthquakes/feed/v1.0/detail/us-test.geojson", request.url.encodedPath)
             respondFixture("earthquake-detail.json")
@@ -105,15 +104,9 @@ class EarthquakeApiTest {
             .use { client ->
                 val response = EarthquakeApi(client).getEarthquake("us-test")
                 assertNull(response.properties.detail)
-                val product = response.properties.products!!.getValue("origin").single()
-                assertEquals("UPDATE", product.status)
-                assertEquals(1700000000001L, product.updateTime)
-                assertEquals("4.2", product.properties.getValue("magnitude").jsonPrimitive.content)
-                val content = product.contents.getValue("quakeml.xml")
-                assertEquals(5000000000L, content.length)
-                assertEquals("application/xml", content.contentType)
-                assertEquals("https://earthquake.usgs.gov/test/quakeml.xml", content.url)
-                assertEquals("inline text", product.contents.getValue("").bytes)
+                assertEquals("us-test", response.id)
+                assertEquals(4.2, response.properties.magnitude)
+                assertEquals(1700000000001L, response.properties.updated)
             }
     }
 

@@ -33,27 +33,12 @@ abstract class EarthquakeDao {
     abstract fun getEarthquakeFlow(id: String): Flow<EarthquakeDatabaseModel?>
 
     @Transaction
-    @Query(
-        """
-        SELECT earthquakes.* FROM earthquakes
-        JOIN earthquake_aliases ON earthquakes.id = earthquake_aliases.earthquakeId
-        WHERE earthquake_aliases.id = :id
-        """
-    )
-    abstract fun getEarthquakeDetailFlow(id: String): Flow<EarthquakeWithDetailDatabaseModel?>
-
-    @Transaction
     open suspend fun mergeEarthquakes(earthquakes: List<EarthquakeDatabaseModel>) {
         earthquakes.forEach { mergeEarthquake(it) }
     }
 
     @Transaction
-    open suspend fun mergeEarthquake(
-        earthquake: EarthquakeDatabaseModel,
-        detail: EarthquakeDetailDatabaseModel? = null,
-    ) {
-        require(detail == null || detail.earthquakeId == earthquake.id)
-        require(detail == null || detail.updated == earthquake.updated)
+    open suspend fun mergeEarthquake(earthquake: EarthquakeDatabaseModel) {
         val incomingAliases = earthquake.aliasIds()
         val existing = getAssociatedEarthquakesFlow(incomingAliases).first()
         val newestExisting = existing.maxByOrNull { it.updated }
@@ -66,8 +51,6 @@ abstract class EarthquakeDao {
         val existingIds = existing.map { it.id }
         val aliases =
             (incomingAliases + getAliasesFlow(existingIds).first().map { it.id }).distinct()
-        val newestDetail =
-            (getDetailsFlow(existingIds).first() + listOfNotNull(detail)).maxByOrNull { it.updated }
         val merged =
             newest.copy(
                 detail =
@@ -77,9 +60,6 @@ abstract class EarthquakeDao {
             )
         upsertEarthquake(merged)
         upsertAliases(aliases.map { EarthquakeAliasDatabaseModel(it, merged.id) })
-        if (newestDetail != null) {
-            upsertDetail(newestDetail.copy(earthquakeId = merged.id))
-        }
         deleteEarthquakes(existingIds.filter { it != merged.id })
     }
 
@@ -99,17 +79,10 @@ abstract class EarthquakeDao {
         ids: List<String>
     ): Flow<List<EarthquakeAliasDatabaseModel>>
 
-    @Query("SELECT * FROM earthquake_details WHERE earthquakeId IN (:ids)")
-    protected abstract fun getDetailsFlow(
-        ids: List<String>
-    ): Flow<List<EarthquakeDetailDatabaseModel>>
-
     @Upsert protected abstract suspend fun upsertEarthquake(earthquake: EarthquakeDatabaseModel)
 
     @Upsert
     protected abstract suspend fun upsertAliases(aliases: List<EarthquakeAliasDatabaseModel>)
-
-    @Upsert protected abstract suspend fun upsertDetail(detail: EarthquakeDetailDatabaseModel)
 
     @Query("DELETE FROM earthquakes WHERE id IN (:ids)")
     protected abstract suspend fun deleteEarthquakes(ids: List<String>)

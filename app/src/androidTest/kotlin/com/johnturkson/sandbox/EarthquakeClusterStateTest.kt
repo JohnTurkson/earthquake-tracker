@@ -9,13 +9,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.google.android.gms.location.LocationServices
-import com.johnturkson.sandbox.data.EarthquakeApi
-import com.johnturkson.sandbox.data.EarthquakeClock
 import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import com.johnturkson.sandbox.data.EarthquakeNotifications
-import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.data.MainDatabase
@@ -23,14 +20,10 @@ import com.johnturkson.sandbox.ui.Destination
 import com.johnturkson.sandbox.ui.EarthquakeMapFixtures
 import com.johnturkson.sandbox.ui.EarthquakeViewModel
 import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
 import kotlin.test.assertEquals
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import org.junit.Rule
 import org.junit.Test
 
@@ -55,9 +48,7 @@ class EarthquakeClusterStateTest {
                 context,
             )
         val database = Room.inMemoryDatabaseBuilder(context, MainDatabase::class.java).build()
-        val client = HttpClient(MockEngine { error("Unexpected network request") })
-        val api = EarthquakeApi(client)
-        val repository = EarthquakeRepository(api, database.earthquakeDao(), Json, Dispatchers.IO)
+        val repository = EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
         val settings = EarthquakeSettingsRepository(store)
         val notifications = EarthquakeNotifications(context)
         val scheduler = EarthquakeWorkScheduler(WorkManager.getInstance(context))
@@ -67,19 +58,6 @@ class EarthquakeClusterStateTest {
 
                 override fun isOnline() = false
             }
-        val refresher =
-            EarthquakeRefreshRepository(
-                api,
-                database,
-                repository,
-                database.earthquakeDao(),
-                database.monitoringDao(),
-                connection,
-                EarthquakeClock(),
-                settings,
-                notifications,
-                Dispatchers.IO,
-            )
         fun create(handle: SavedStateHandle) =
             EarthquakeViewModel(
                 Destination.EarthquakeRoute,
@@ -87,7 +65,6 @@ class EarthquakeClusterStateTest {
                 locationRepository,
                 provider,
                 repository,
-                refresher,
                 settings,
                 notifications,
                 scheduler,
@@ -130,7 +107,6 @@ class EarthquakeClusterStateTest {
             }
         } finally {
             composeRule.runOnUiThread { composeRule.activity.viewModelStore.clear() }
-            client.close()
             database.close()
         }
     }

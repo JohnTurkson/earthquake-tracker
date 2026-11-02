@@ -20,7 +20,6 @@ class EarthquakeRefreshRepository
 constructor(
     private val api: EarthquakeApi,
     private val database: MainDatabase,
-    private val earthquakes: EarthquakeRepository,
     private val dao: EarthquakeDao,
     private val monitoringDao: EarthquakeMonitoringDao,
     private val connectivity: EarthquakeConnection,
@@ -35,8 +34,6 @@ constructor(
             notifications::postAlert,
             monitoringDao::recordAlert,
         )
-
-    fun getRefreshFlow() = monitoringDao.getRefreshFlow()
 
     override suspend fun refresh(): EarthquakeRefreshResult =
         withContext(ioDispatcher) {
@@ -90,8 +87,7 @@ constructor(
         if (!preferences.alertsEnabled) return
         val now = clock.nowMillis()
         val recent =
-            earthquakes
-                .getEarthquakesFlow(now - 60_000, now + 1, preferences.minimumMagnitude.toDouble())
+            dao.getEarthquakesFlow(now - 60_000, now + 1, preferences.minimumMagnitude.toDouble())
                 .first()
         alerts.deliver(recent, preferences, now)
         monitoringDao.pruneAlerts(now - 30L * 24 * 60 * 60 * 1000)

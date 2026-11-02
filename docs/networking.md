@@ -36,11 +36,12 @@ for its limit and one-based offset.
 
 Keep wire models `@Serializable`, separate from Room entities. Follow
 [EarthquakeNetworkModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeNetworkModel.kt)
-for GeoJSON collections, features, metadata, Point geometry, properties,
-products, and content metadata. Reuse models when response shapes match.
-Preserve nullable measurements, required identity and revision fields, dynamic
-product maps, and `JsonObject` product properties. Preserve numeric precision
-and units: epoch milliseconds use `Long`; coordinates are longitude and latitude
+for GeoJSON collections, features, metadata, Point geometry, and earthquake
+properties. Reuse models when response shapes match.
+Preserve nullable measurements and required identity and update fields. Ignore
+unused product metadata through the shared `Json.ignoreUnknownKeys` configuration;
+do not mirror every USGS field or introduce product maps without a feature that
+uses them. Preserve numeric precision and units: epoch milliseconds use `Long`; coordinates are longitude and latitude
 in degrees, followed by depth in kilometers. Negative depth is valid.
 
 Use the injected `HttpClient` in an API wrapper, following
@@ -51,7 +52,10 @@ the `Flow` naming rule applies to database reads. Only the catalog list query
 currently handles HTTP 204 as no data. Let other HTTP errors, decoding errors,
 and cancellation propagate. Do not turn failures into an empty successful list.
 
-Keep persistence coordination in the repository. Follow
+Keep runtime persistence coordination in `EarthquakeRefreshRepository`, called
+only by `EarthquakeRefreshWorker`. Manual refresh, startup, and foreground
+monitoring enqueue the same unique one-time work. `EarthquakeRepository` exposes
+Room reads and has no network dependency. Follow
 [EarthquakeMapping](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeMapping.kt)
 to validate and map the entire collection before writing it. Read the separate
 [database instructions](database.md) when adding persistence. Do not introduce

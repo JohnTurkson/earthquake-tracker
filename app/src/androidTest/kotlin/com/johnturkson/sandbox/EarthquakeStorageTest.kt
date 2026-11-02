@@ -1,25 +1,39 @@
 package com.johnturkson.sandbox
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.work.ListenableWorker
+import androidx.work.WorkerFactory
+import androidx.work.WorkerParameters
+import androidx.work.testing.TestListenableWorkerBuilder
+import androidx.work.workDataOf
 import app.cash.turbine.test
 import com.johnturkson.sandbox.data.EarthquakeApi
-import com.johnturkson.sandbox.data.EarthquakeCatalogResources
+import com.johnturkson.sandbox.data.EarthquakeClock
 import com.johnturkson.sandbox.data.EarthquakeCollectionNetworkModel
+import com.johnturkson.sandbox.data.EarthquakeConnection
 import com.johnturkson.sandbox.data.EarthquakeDatabaseModel
-import com.johnturkson.sandbox.data.EarthquakeDetailDatabaseModel
 import com.johnturkson.sandbox.data.EarthquakeGeometryNetworkModel
 import com.johnturkson.sandbox.data.EarthquakeNetworkModel
+import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakePropertiesNetworkModel
+import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
+import com.johnturkson.sandbox.data.EarthquakeRefreshResult
 import com.johnturkson.sandbox.data.EarthquakeRepository
+import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.data.MainDatabase
 import com.johnturkson.sandbox.data.toDatabaseModel
+import com.johnturkson.sandbox.work.EarthquakeRefreshWorker
+import com.johnturkson.sandbox.work.EarthquakeWorkScheduler
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.resources.Resources
@@ -33,14 +47,15 @@ import java.io.IOException
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -134,77 +149,33 @@ class EarthquakeStorageTest {
     }
 
     @Test
-    fun repositoryDetailFlowEmitsSummaryProductsAndPreferredIdChanges() = runTest {
-        var response = "earthquakes-summary.json"
-        client { respondFixture(response) }
-            .use { client ->
-                val repository = repository(client)
-                repository.getEarthquakeDetailFlow("alias-test").test {
-                    assertNull(awaitItem())
-                    repository.refreshEarthquakes()
-                    val summary = awaitItem()!!
-                    assertEquals("us-test", summary.earthquake.id)
-                    assertNull(summary.products)
-                    assertFalse(summary.isDetailCurrent)
-                    response = "earthquake-detail.json"
-                    repository.refreshEarthquake("us-test")
-                    val detail = awaitItem()!!
-                    assertTrue(detail.products!!.containsKey("origin"))
-                    assertTrue(detail.isDetailCurrent)
-                    database
-                        .earthquakeDao()
-                        .mergeEarthquakes(
-                            listOf(
-                                detail.earthquake.copy(
-                                    id = "new-preferred-id",
-                                    ids = ",new-preferred-id,us-test,alias-test,",
-                                    updated = detail.earthquake.updated + 1,
-                                )
-                            )
-                        )
-                    val revised = awaitItem()!!
-                    assertEquals("new-preferred-id", revised.earthquake.id)
-                    assertEquals(detail.products, revised.products)
-                    assertFalse(revised.isDetailCurrent)
-                    cancelAndIgnoreRemainingEvents()
-                }
-            }
+    fun repositoryFlowEmitsSummaryAndPreferredIdChanges() = runTest {
+        val repository = repository()
+        repository.getEarthquakeFlow("old-alias").test {
+            assertNull(awaitItem())
+            database
+                .earthquakeDao()
+                .mergeEarthquakes(listOf(earthquake(id = "old", aliases = ",old,old-alias,")))
+            assertEquals("old", awaitItem()!!.id)
+            database
+                .earthquakeDao()
+                .mergeEarthquakes(
+                    listOf(earthquake(id = "new", updated = 200, aliases = ",new,old,"))
+                )
+            assertEquals("new", awaitItem()!!.id)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
-    fun preservesDetailAcrossSummaryRefreshesAndRejectsStaleDetail() = runTest {
+    fun mergesAssociatedIdsAndPreservesAliasesWhenPreferredIdChanges() = runTest {
         val dao = database.earthquakeDao()
-        val original = earthquake(updated = 100)
-        dao.mergeEarthquake(original, EarthquakeDetailDatabaseModel("test", 100, "{}"))
-        dao.mergeEarthquakes(listOf(earthquake(updated = 200)))
-        dao.mergeEarthquake(
-            earthquake(updated = 50),
-            EarthquakeDetailDatabaseModel("test", 50, "{\"stale\":[]}"),
-        )
-        val cached = dao.getEarthquakeDetailFlow("test").first()!!
-        assertEquals(200L, cached.earthquake.updated)
-        assertEquals(100L, cached.detail!!.updated)
-        assertEquals("{}", cached.detail.productsJson)
-        dao.mergeEarthquake(
-            earthquake(updated = 200),
-            EarthquakeDetailDatabaseModel("test", 200, "{\"new\":[]}"),
-        )
-        assertEquals(200L, dao.getEarthquakeDetailFlow("test").first()!!.detail!!.updated)
-    }
-
-    @Test
-    fun mergesAssociatedIdsAndPreservesAliasesAndDetailWhenPreferredIdChanges() = runTest {
-        val dao = database.earthquakeDao()
-        dao.mergeEarthquake(
-            earthquake(id = "old", updated = 100, aliases = ",old,old-alias,"),
-            EarthquakeDetailDatabaseModel("old", 100, "{}"),
-        )
+        dao.mergeEarthquake(earthquake(id = "old", updated = 100, aliases = ",old,old-alias,"))
         dao.mergeEarthquakes(listOf(earthquake(id = "new", updated = 200, aliases = ",new,old,")))
         dao.mergeEarthquakes(listOf(earthquake(id = "old", updated = 50)))
         assertEquals(listOf("new"), dao.getEarthquakesFlow().first().map { it.id })
         for (id in listOf("old", "new", "old-alias")) {
             assertEquals("new", dao.getEarthquakeFlow(id).first()!!.id)
-            assertEquals("{}", dao.getEarthquakeDetailFlow(id).first()!!.detail!!.productsJson)
         }
     }
 
@@ -217,16 +188,11 @@ class EarthquakeStorageTest {
                 earthquake(id = "second", updated = 200),
             )
         )
-        dao.mergeEarthquake(
-            earthquake(id = "second", updated = 200),
-            EarthquakeDetailDatabaseModel("second", 200, "{}"),
-        )
         dao.mergeEarthquakes(
             listOf(earthquake(id = "first", updated = 300, aliases = ",first,second,"))
         )
         assertEquals(1, dao.getEarthquakesFlow().first().size)
         assertEquals("first", dao.getEarthquakeFlow("second").first()!!.id)
-        assertEquals(200L, dao.getEarthquakeDetailFlow("first").first()!!.detail!!.updated)
     }
 
     @Test
@@ -256,7 +222,7 @@ class EarthquakeStorageTest {
     }
 
     @Test
-    fun repositoryRefreshesSummaryAndDetailAndKeepsCacheOnNetworkFailure() = runTest {
+    fun workerRefreshesSummaryAndKeepsHistoryOnEmptyResponseAndNetworkFailure() = runTest {
         var response = "earthquakes-summary.json"
         var unavailable = false
         client {
@@ -264,42 +230,45 @@ class EarthquakeStorageTest {
             else respondFixture(response)
         }
             .use { client ->
-                val repository = repository(client)
-                repository.refreshEarthquakes()
-                assertEquals(2, repository.getEarthquakesFlow().first().size)
-                response = "earthquake-detail.json"
-                repository.refreshEarthquake("us-test")
-                val detail = repository.getEarthquakeDetailFlow("alias-test").first()!!
-                assertTrue(detail.isDetailCurrent)
-                assertTrue(detail.products!!.containsKey("origin"))
-                assertTrue(detail.earthquake.detail!!.endsWith("us-test.geojson"))
+                val repository = repository()
+                refresh(client)
+                val stored = repository.getEarthquakesFlow().first()
+                assertEquals(2, stored.size)
                 response = "earthquakes-empty.json"
-                repository.refreshEarthquakes()
-                assertEquals(2, repository.getEarthquakesFlow().first().size)
+                refresh(client)
+                assertEquals(stored, repository.getEarthquakesFlow().first())
                 unavailable = true
-                assertFailsWith<ServerResponseException> { repository.refreshEarthquakes() }
-                assertEquals(detail, repository.getEarthquakeDetailFlow("us-test").first())
+                refresh(client, EarthquakeRefreshResult.NetworkError)
+                assertEquals(stored, repository.getEarthquakesFlow().first())
             }
     }
 
     @Test
-    fun repositoryMarksPreservedDetailAsStaleAfterNewerSummaryArrives() = runTest {
-        client { respondFixture("earthquake-detail.json") }
+    fun repositoryRefreshMetadataEmitsAfterWorkerCommitAndSurvivesFailure() = runTest {
+        var unavailable = false
+        client {
+            if (unavailable) throw IOException("offline")
+            respondFixture("earthquakes-summary.json")
+        }
             .use { client ->
-                val repository = repository(client)
-                repository.refreshEarthquake("us-test")
-                val stored = repository.getEarthquakeFlow("us-test").first()!!
-                database
-                    .earthquakeDao()
-                    .mergeEarthquakes(listOf(stored.copy(updated = stored.updated + 1)))
-                val detail = repository.getEarthquakeDetailFlow("us-test").first()!!
-                assertFalse(detail.isDetailCurrent)
-                assertTrue(detail.products!!.isNotEmpty())
+                val repository = repository()
+                repository.getRefreshFlow().test {
+                    assertNull(awaitItem())
+                    refresh(client)
+                    val saved = awaitItem()!!
+                    assertTrue(saved.updatedMillis > 0)
+                    assertEquals(2, repository.getEarthquakesFlow().first().size)
+                    unavailable = true
+                    refresh(client, EarthquakeRefreshResult.NetworkError)
+                    assertEquals(saved, repository.getRefreshFlow().first())
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
     }
 
     @Test
-    fun repositoryDoesNotWritePartOfAnInvalidResponseOrEraseCacheOnNoContent() = runTest {
+    fun workerDoesNotWritePartOfAnInvalidResponse() = runTest {
         val collection = json.parseToJsonElement(fixture("earthquakes-summary.json")).jsonObject
         val features = collection.getValue("features").jsonArray
         val invalid =
@@ -318,18 +287,11 @@ class EarthquakeStorageTest {
         }
             .use { client ->
                 database.earthquakeDao().mergeEarthquakes(listOf(earthquake()))
-                assertFailsWith<IllegalArgumentException> {
-                    repository(client).refreshEarthquakes()
-                }
+                refresh(client, EarthquakeRefreshResult.DataError)
                 assertEquals(
                     listOf("test"),
                     database.earthquakeDao().getEarthquakesFlow().first().map { it.id },
                 )
-            }
-        client { respond("", HttpStatusCode.NoContent) }
-            .use { client ->
-                repository(client).refreshQuery(EarthquakeCatalogResources.Query())
-                assertEquals(1, database.earthquakeDao().getEarthquakesFlow().first().size)
             }
     }
 
@@ -376,13 +338,13 @@ class EarthquakeStorageTest {
             )
         }
             .use { client ->
-                val repository = repository(client)
+                val repository = repository()
                 repository.getEarthquakesFlow().distinctUntilChanged().test {
                     assertEquals(emptyList(), awaitItem())
-                    repository.refreshEarthquakes()
+                    refresh(client)
                     assertEquals(listOf(priorEvent.id, original.id), awaitItem().map { it.id })
                     response = collection.copy(features = listOf(revised, original, revised))
-                    repository.refreshEarthquakes()
+                    refresh(client)
                     val history = awaitItem()
                     assertEquals(listOf(priorEvent.id, revised.id), history.map { it.id })
                     for (id in listOf(original.id, revised.id, "usp000hvnu")) {
@@ -392,7 +354,7 @@ class EarthquakeStorageTest {
                         )
                     }
                     offline = true
-                    assertFailsWith<IOException> { repository.refreshEarthquakes() }
+                    refresh(client, EarthquakeRefreshResult.NetworkError)
                     assertEquals(history, repository.getEarthquakesFlow().first())
                     val newest =
                         priorEvent.copy(
@@ -405,7 +367,7 @@ class EarthquakeStorageTest {
                         )
                     offline = false
                     response = collection.copy(features = listOf(newest))
-                    repository.refreshEarthquakes()
+                    refresh(client)
                     assertEquals(
                         listOf(newest.id, priorEvent.id, revised.id),
                         awaitItem().map { it.id },
@@ -453,13 +415,13 @@ class EarthquakeStorageTest {
                 )
             }
                 .use { client ->
-                    val repository = repository(client)
+                    val repository = repository()
                     repository.getEarthquakesFlow().test {
                         assertEquals(emptyList(), awaitItem())
-                        repository.refreshEarthquakes()
+                        refresh(client)
                         assertEquals(2, awaitItem().size)
                         response = initial.copy(features = listOf(revised, added, original, added))
-                        repository.refreshEarthquakes()
+                        refresh(client)
                         val retained = awaitItem()
                         assertEquals(
                             listOf("new-event", "us-test", "us-incomplete"),
@@ -467,7 +429,7 @@ class EarthquakeStorageTest {
                         )
                         assertEquals(5.5, retained.single { it.id == "us-test" }.magnitude)
                         response = initial.copy(features = emptyList())
-                        repository.refreshEarthquakes()
+                        refresh(client)
                         assertEquals(retained, repository.getEarthquakesFlow().first())
                         cancelAndIgnoreRemainingEvents()
                     }
@@ -480,7 +442,7 @@ class EarthquakeStorageTest {
                 throw IOException("offline after restart")
             }
                 .use { client ->
-                    val repository = repository(client)
+                    val repository = repository()
                     val retained = repository.getEarthquakesFlow().first()
                     assertEquals(
                         listOf("new-event", "us-test", "us-incomplete"),
@@ -491,39 +453,8 @@ class EarthquakeStorageTest {
                         repository.getEarthquakeFlow("alias-test").first()!!.magnitude,
                     )
                     assertEquals(3, networkRequests)
-                    assertFailsWith<IOException> { repository.refreshEarthquakes() }
+                    refresh(client, EarthquakeRefreshResult.NetworkError)
                     assertEquals(retained, repository.getEarthquakesFlow().first())
-                }
-        } finally {
-            database.close()
-            context.deleteDatabase(name)
-        }
-    }
-
-    @Test
-    fun readsPersistedSummaryAndProductsAfterReopeningWithoutNetwork() = runTest {
-        val name = "earthquake-offline-test.db"
-        context.deleteDatabase(name)
-        try {
-            database.close()
-            database = Room.databaseBuilder(context, MainDatabase::class.java, name).build()
-            client { respondFixture("earthquake-detail.json") }
-                .use { client -> repository(client).refreshEarthquake("us-test") }
-            database.close()
-            database = Room.databaseBuilder(context, MainDatabase::class.java, name).build()
-            client { throw IOException("offline") }
-                .use { client ->
-                    val repository = repository(client)
-                    assertEquals("us-test", repository.getEarthquakeFlow("alias-test").first()!!.id)
-                    assertTrue(
-                        repository
-                            .getEarthquakeDetailFlow("us-test")
-                            .first()!!
-                            .products!!
-                            .containsKey("origin")
-                    )
-                    assertFailsWith<IOException> { repository.refreshEarthquake("us-test") }
-                    assertEquals(1, repository.getEarthquakesFlow().first().size)
                 }
         } finally {
             database.close()
@@ -553,12 +484,59 @@ class EarthquakeStorageTest {
             .toDatabaseModel()
     }
 
-    private fun repository(client: HttpClient): EarthquakeRepository {
-        return EarthquakeRepository(
-            EarthquakeApi(client),
-            database.earthquakeDao(),
-            json,
-            Dispatchers.IO,
+    private fun repository(): EarthquakeRepository {
+        return EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
+    }
+
+    private suspend fun refresh(
+        client: HttpClient,
+        expected: EarthquakeRefreshResult = EarthquakeRefreshResult.Success,
+    ) {
+        val settings =
+            EarthquakeSettingsRepository(
+                object : DataStore<Preferences> {
+                    override val data = flowOf(emptyPreferences())
+
+                    override suspend fun updateData(
+                        transform: suspend (Preferences) -> Preferences
+                    ): Preferences = error("Read-only settings")
+                }
+            )
+        val refresher =
+            EarthquakeRefreshRepository(
+                EarthquakeApi(client),
+                database,
+                database.earthquakeDao(),
+                database.monitoringDao(),
+                object : EarthquakeConnection {
+                    override val online = MutableStateFlow(true)
+
+                    override fun isOnline() = online.value
+                },
+                EarthquakeClock(),
+                settings,
+                EarthquakeNotifications(context),
+                Dispatchers.IO,
+            )
+        val factory =
+            object : WorkerFactory() {
+                override fun createWorker(
+                    appContext: Context,
+                    workerClassName: String,
+                    workerParameters: WorkerParameters,
+                ): ListenableWorker =
+                    EarthquakeRefreshWorker(appContext, workerParameters, refresher)
+            }
+        val result =
+            TestListenableWorkerBuilder<EarthquakeRefreshWorker>(context)
+                .setWorkerFactory(factory)
+                .build()
+                .doWork()
+        val output = workDataOf(EarthquakeWorkScheduler.ResultKey to expected.name)
+        assertEquals(
+            if (expected == EarthquakeRefreshResult.Success) ListenableWorker.Result.success(output)
+            else ListenableWorker.Result.failure(output),
+            result,
         )
     }
 

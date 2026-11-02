@@ -14,7 +14,6 @@ import com.johnturkson.sandbox.data.EarthquakeLocation
 import com.johnturkson.sandbox.data.EarthquakeLocationProvider
 import com.johnturkson.sandbox.data.EarthquakeLocationRepository
 import com.johnturkson.sandbox.data.EarthquakeNotifications
-import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.ui.EarthquakeViewModel.Factory
@@ -39,7 +38,6 @@ constructor(
     private val locationRepository: EarthquakeLocationRepository,
     private val locationProvider: EarthquakeLocationProvider,
     private val repository: EarthquakeRepository,
-    private val refreshRepository: EarthquakeRefreshRepository,
     private val settingsRepository: EarthquakeSettingsRepository,
     private val notificationManager: EarthquakeNotifications,
     private val workScheduler: EarthquakeWorkScheduler,
@@ -135,7 +133,7 @@ constructor(
             }
         }
         viewModelScope.launch {
-            refreshRepository.getRefreshFlow().collect { metadata ->
+            repository.getRefreshFlow().collect { metadata ->
                 monitoring = monitoring.copy(lastUpdatedMillis = metadata?.updatedMillis)
             }
         }

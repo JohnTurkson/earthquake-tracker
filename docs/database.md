@@ -29,8 +29,6 @@ fun getEarthquakesFlow(
 ): Flow<List<EarthquakeDatabaseModel>>
 
 fun getEarthquakeFlow(id: String): Flow<EarthquakeDatabaseModel?>
-
-fun getEarthquakeDetailFlow(id: String): Flow<EarthquakeDetail?>
 ```
 
 [EarthquakeDao](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDao.kt)
@@ -41,20 +39,21 @@ tables change. Do not wrap a one-shot query in `flowOf`, maintain a manual copy
 of Room data, or reduce a public read method to `.first()` and return a snapshot.
 Database reads never fetch network data implicitly.
 
-Keep `@Transaction` on observable relationship reads such as
-`getEarthquakeDetailFlow`, so each emitted relation is read consistently. Room
-may rerun queries after table-level invalidations; do not promise exactly one
-emission for every write or suppress meaningful state changes in tests.
+Room may rerun queries after table-level invalidations; do not promise exactly
+one emission for every write or suppress meaningful state changes in tests.
 
 ## Entities, queries, and Hilt
 
 Keep `@Entity` and `@PrimaryKey` on database representations, separate from
 network serialization annotations. Follow
 [EarthquakeDatabaseModel](../app/src/main/kotlin/com/johnturkson/sandbox/data/EarthquakeDatabaseModel.kt)
-for primary keys, indexes, foreign keys, and relationship projections. Keep
-queryable common fields in columns. The established product-detail snapshot
-stores JSON with its own source revision; decode it with the injected `Json`
-on the repository's injected `@IoDispatcher`.
+for primary keys, indexes, and alias foreign keys. Keep earthquake fields in
+columns. Product metadata and separate detail snapshots are not stored.
+
+`EarthquakeRepository` exposes only observable Room reads, including
+`getRefreshFlow()` for the last successful refresh. It has no network dependency
+or refresh methods. UI callers enqueue `EarthquakeWorkScheduler.refresh()`;
+`EarthquakeRefreshWorker` alone invokes the refresh repository to fetch and save.
 
 Register entities and DAO accessors in
 [MainDatabase](../app/src/main/kotlin/com/johnturkson/sandbox/data/MainDatabase.kt)
@@ -89,11 +88,10 @@ the transaction context and verify concurrent merges and rollback on Android.
 
 Keep the existing earthquake merge invariants: newer USGS `updated` values win,
 equal common-field revisions keep existing values, and older common values
-cannot overwrite newer ones. Compare product snapshots by their own revision,
-retain them across summary refreshes, and expose their freshness through
-`isDetailCurrent`. Preserve known detail URLs when omitted from detail responses.
-Use explicit USGS ID associations when merging preferred-ID changes; retain
-aliases and the newest product snapshot without duplicate stored events.
+cannot overwrite newer ones. The source timestamp is an internal merge input,
+not a separate freshness state exposed to callers. Preserve known detail URLs
+when omitted from an incoming record. Use explicit USGS ID associations when
+merging preferred-ID changes; retain aliases without duplicate stored events.
 Insert previously unseen IDs and retain events absent from a later response.
 Refreshes must never clear the earthquake table or delete events outside the
 requested time window. The unfiltered `getEarthquakesFlow()` reads all retained
@@ -104,16 +102,21 @@ Empty feeds and refresh failures preserve existing data. See the
 ## Schema history and verification
 
 Increment the database version for schema changes and preserve existing data.
-Use additive auto-migrations where supported by the actual schema change;
-establish new migration patterns with the user when needed. Keep generated
+Use auto-migrations where supported by the actual schema change. Remove an
+obsolete table with an explicit nested `AutoMigrationSpec` annotated with
+`@DeleteTable`, as in `MainDatabase.RemoveProductsMigration`. Delete only the
+obsolete metadata; preserve earthquake records, aliases, refresh metadata, and
+alert history. Establish other new migration patterns with the user when needed. Keep generated
 schema history under `app/schemas` in Git; never format or hand-edit it. The
-current version is 3 with additive migrations from version 1 to 2 and 2 to 3. A read-method
-rename does not change the schema or require another database version.
+current version is 4, with additive migrations from version 1 to 2 and 2 to 3,
+then removal of `earthquake_details` from version 3 to 4. Keep historical schema
+exports. A read-method rename does not change the schema or require another
+database version.
 
 Extend [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
 for behavior using real Room and Turbine on Android. Keep collectors active
 across inserts and revisions, including filter membership, null-to-value reads,
-relationship/product changes, and preferred-ID changes. Assertions on `.first()`
+refresh metadata and preferred-ID changes. Assertions on `.first()`
 alone do not establish observability. Retain offline-reopen, transaction,
 concurrency, and refresh-failure coverage when touching those paths. Use
 [EarthquakeMigrationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMigrationTest.kt)

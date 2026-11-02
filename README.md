@@ -52,7 +52,12 @@ are retained to avoid repeated alerts.
 Keep UI components independent of runtime API and storage access by passing
 presentation values through the screen's state contract.
 
-The [earthquake data layer](docs/earthquake-data.md) retains stored events, merges newer revisions by ID and known aliases, and supports offline reads after reopening the app. The explorer observes its unrestricted history queries.
+The [earthquake data layer](docs/earthquake-data.md) uses Room as its source of
+truth. The read-only repository exposes stored records and refresh metadata;
+all updates go through the shared one-time refresh worker. It retains events,
+merges newer source updates by ID and known aliases, and supports offline reads
+after reopening the app. Product metadata and separate detail-freshness models
+are not stored. The explorer observes unrestricted history queries.
 
 ## Testing
 

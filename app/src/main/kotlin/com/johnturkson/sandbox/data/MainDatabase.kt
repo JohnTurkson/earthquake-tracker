@@ -2,7 +2,9 @@ package com.johnturkson.sandbox.data
 
 import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.DeleteTable
 import androidx.room.RoomDatabase
+import androidx.room.migration.AutoMigrationSpec
 
 @Database(
     entities =
@@ -10,12 +12,16 @@ import androidx.room.RoomDatabase
             ItemDatabaseModel::class,
             EarthquakeDatabaseModel::class,
             EarthquakeAliasDatabaseModel::class,
-            EarthquakeDetailDatabaseModel::class,
             EarthquakeRefreshDatabaseModel::class,
             EarthquakeAlertDatabaseModel::class,
         ],
-    version = 3,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    version = 4,
+    autoMigrations =
+        [
+            AutoMigration(from = 1, to = 2),
+            AutoMigration(from = 2, to = 3),
+            AutoMigration(from = 3, to = 4, spec = MainDatabase.RemoveProductsMigration::class),
+        ],
 )
 abstract class MainDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
@@ -23,4 +29,6 @@ abstract class MainDatabase : RoomDatabase() {
     abstract fun earthquakeDao(): EarthquakeDao
 
     abstract fun monitoringDao(): EarthquakeMonitoringDao
+
+    @DeleteTable(tableName = "earthquake_details") class RemoveProductsMigration : AutoMigrationSpec
 }

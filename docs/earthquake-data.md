@@ -1,22 +1,23 @@
 # Earthquake data
 
-The network and Room layers support recent-earthquake lists, detail metadata,
-observable local ID lookups and queries, and explicit refreshes. Hilt provides the
-shared Ktor client, `MainDatabase`, and `EarthquakeDao`; constructor injection
+Room is the source of truth for earthquake records, retained history, local ID
+lookups, and the last successful refresh timestamp. WorkManager owns all runtime
+updates. Hilt provides the shared Ktor client, `MainDatabase`, and `EarthquakeDao`; constructor injection
 provides `EarthquakeApi` and `EarthquakeRepository`. The explorer observes the
 unrestricted stored history. `EarthquakeRefreshRepository` reuses this API and
-merge path for manual and foreground-monitoring WorkManager requests.
+merge path for the shared one-time refresh worker. Manual refresh, startup, and
+every foreground-monitoring tick enqueue that same unique work.
 
 ## USGS formats and revisions
 
 Use USGS's [GeoJSON summary feeds](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php)
-for recent lists and [GeoJSON detail](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson_detail.php)
-for event product metadata. All 20 documented summary combinations are modeled:
+for runtime earthquake updates. All 20 documented summary combinations are modeled:
 all events, magnitude 1.0+, 2.5+, 4.5+, and significant events for hour, day,
 week, and month windows. All-events feeds can include other seismic event
 types; retain `type` rather than silently treating every feature as a confirmed
 earthquake. Summary entries include a detail URL; detail responses can omit
-that property and include a dynamic `products` map instead.
+that property and include product metadata. The app ignores unused products;
+there are no product/content models or stored product snapshots.
 
 An earthquake record is mutable. USGS explains that
 [magnitude and location are revised](https://www.usgs.gov/faqs/whywhen-does-usgs-update-magnitude-earthquake)
@@ -38,31 +39,39 @@ times, or magnitudes alone do not establish that two earthquakes are the same.
 
 ## Calling the data layer
 
-Inject `EarthquakeRepository`. Refreshes write Room; read operations return only
-stored data as observable `Flow` types and work without network access. Database
-read method names end in `Flow`; writes and network operations remain suspend
-functions:
+Inject `EarthquakeRepository` for observable local reads. It has no network
+client or write methods. Inject `EarthquakeWorkScheduler` to request refreshes:
 
 ```kotlin
-repository.refreshEarthquakes(EarthquakeFeed.ALL_HOUR)
-val earthquake = repository.getEarthquakeFlow("us7000example")
 val earthquakes = repository.getEarthquakesFlow()
+val earthquake = repository.getEarthquakeFlow("us7000example")
+val refresh = repository.getRefreshFlow()
 val recent = repository.getEarthquakesFlow(
     startTime = startEpochMillis,
     endTime = endEpochMillis,
     minimumMagnitude = 2.5,
 )
-repository.refreshEarthquake("us7000example")
-val detail = repository.getEarthquakeDetailFlow("us7000example")
+workScheduler.refresh()
 ```
 
-`EarthquakeApi.getEarthquakes` returns a collection response;
-`getEarthquake` returns one Feature with products. Both use nested Ktor
-`@Resource` routes and GET requests with no body. Product types, properties,
-contents, checksums, and inline content are represented; referenced files such
-as ShakeMap images or QuakeML documents are not downloaded. Stored products are
-decoded when observing detail. `isDetailCurrent` is false if a newer summary
-arrived after the stored detail snapshot; stored products remain readable.
+`EarthquakeRefreshWorker` alone calls `EarthquakeRefreshRepository.refresh()`.
+The repository fetches the all-day summary, validates the complete response, and
+merges records and the successful-refresh timestamp in one Room transaction.
+The foreground monitoring worker requests and awaits that same unique one-time
+work through `refreshAndAwait` every minute while active. `KEEP` coalesces manual
+and monitoring requests. Stopping monitoring cancels future polling and its wait,
+leaving an already queued or running shared refresh to finish. Android can delay
+or stop work; the minute interval is a requested cadence.
+
+Observe WorkManager for queued/running state and typed success/offline/failure
+results. Observe Room independently for earthquake records and successful-refresh
+metadata. Reading a Flow does not initiate network access. No in-memory
+freshness flag or separate detail revision is exposed.
+
+`EarthquakeApi` retains typed summary, single-event, and catalog GET endpoints.
+Single-event decoding reads ordinary earthquake fields and ignores product
+metadata. Low-level API calls do not persist data. Runtime updates use the
+one-time worker, without alternate repository refresh methods.
 
 Every successful collection refresh merges into the existing database: unseen IDs
 are inserted, newer revisions update associated events, and events absent from
@@ -76,35 +85,26 @@ replace the displayed history with the latest network response. Network loss
 or a failed refresh leaves the existing database observation and stored rows
 available. Apply display filters separately without deleting history.
 
-An empty feed does not erase previously seen information. HTTP, decoding,
-validation, and storage failures propagate, and cancellation is not caught.
-The WorkManager refresh path converts these failures into typed results for the
-monitoring card while retaining existing rows and the last successful timestamp.
+An empty feed does not erase previously seen information. The refresh worker
+reports HTTP, decoding, validation, and storage failures through typed results
+while retaining existing rows and the last successful timestamp. Cancellation
+propagates.
 
 ## Refresh boundaries
 
 The past-hour feed describes events that occurred in that window. It is not a
 stream of all records modified during the last hour. Refresh a broader summary
-window or use the [FDSN event query](https://earthquake.usgs.gov/fdsnws/event/1/)
-to revisit older events with `updatedafter`:
+window or the [FDSN event query](https://earthquake.usgs.gov/fdsnws/event/1/)
+can revisit older events with `updatedafter`. The current refresh worker uses
+only the all-day summary. Adding catalog synchronization requires routing it
+through the same unique refresh worker rather than adding a repository writer.
 
-```kotlin
-repository.refreshQuery(
-    EarthquakeCatalogResources.Query(
-        startTime = "2026-01-01T00:00:00Z",
-        updatedAfter = "2026-10-31T00:00:00Z",
-        limit = 1000,
-        offset = 1,
-    )
-)
-```
-
-This operation fetches and stores one page. Offsets start at 1 and the service
+The low-level catalog API returns one page without storing it. Offsets start at 1 and the service
 limits a page to 20,000 events. The caller must choose its occurrence-time range,
 paginate, and revisit overlapping ranges as needed; the implementation does not
 claim complete incremental synchronization or advance a durable watermark.
 Without `startTime`, the service defaults to the last 30 days, even when
-`updatedAfter` is specified. Catalog HTTP 204 leaves the database unchanged.
+`updatedAfter` is specified. Catalog HTTP 204 returns null.
 
 The service supports deleted-event options, but this database does not reconcile
 deletions or event disassociations. Disappearance from a rolling feed is not

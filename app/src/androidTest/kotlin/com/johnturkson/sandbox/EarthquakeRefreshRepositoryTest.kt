@@ -12,7 +12,6 @@ import com.johnturkson.sandbox.data.EarthquakeNotifications
 import com.johnturkson.sandbox.data.EarthquakeRefreshDatabaseModel
 import com.johnturkson.sandbox.data.EarthquakeRefreshRepository
 import com.johnturkson.sandbox.data.EarthquakeRefreshResult
-import com.johnturkson.sandbox.data.EarthquakeRepository
 import com.johnturkson.sandbox.data.EarthquakeSettingsRepository
 import com.johnturkson.sandbox.data.MainDatabase
 import io.ktor.client.HttpClient
@@ -189,12 +188,6 @@ class EarthquakeRefreshRepositoryTest {
             EarthquakeRefreshRepository(
                 EarthquakeApi(client),
                 database,
-                EarthquakeRepository(
-                    EarthquakeApi(client),
-                    database.earthquakeDao(),
-                    Json,
-                    Dispatchers.IO,
-                ),
                 database.earthquakeDao(),
                 database.monitoringDao(),
                 connection,

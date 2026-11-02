@@ -133,12 +133,11 @@ class EarthquakeRefreshIntegrationTest {
                 capability.permissionGranted && capability.appEnabled && capability.alertsEnabled
             val api = EarthquakeApi(client)
             val repository =
-                EarthquakeRepository(api, database.earthquakeDao(), json, Dispatchers.IO)
+                EarthquakeRepository(database.earthquakeDao(), database.monitoringDao())
             val refresher =
                 EarthquakeRefreshRepository(
                     api,
                     database,
-                    repository,
                     database.earthquakeDao(),
                     database.monitoringDao(),
                     connection,

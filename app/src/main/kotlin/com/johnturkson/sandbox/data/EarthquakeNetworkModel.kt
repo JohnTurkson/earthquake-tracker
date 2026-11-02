@@ -2,7 +2,6 @@ package com.johnturkson.sandbox.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class EarthquakeCollectionNetworkModel(
@@ -58,33 +57,7 @@ data class EarthquakePropertiesNetworkModel(
     @SerialName("magType") val magnitudeType: String? = null,
     val type: String? = null,
     val title: String? = null,
-    val products: Map<String, List<EarthquakeProductNetworkModel>>? = null,
 )
 
 @Serializable
 data class EarthquakeGeometryNetworkModel(val type: String, val coordinates: List<Double>)
-
-@Serializable
-data class EarthquakeProductNetworkModel(
-    val id: String,
-    val type: String,
-    val code: String,
-    val source: String,
-    val updateTime: Long,
-    val status: String,
-    val properties: JsonObject,
-    val preferredWeight: Long,
-    val contents: Map<String, EarthquakeContentNetworkModel>,
-    val indexTime: Long? = null,
-    @SerialName("indexid") val indexId: Long? = null,
-)
-
-@Serializable
-data class EarthquakeContentNetworkModel(
-    val contentType: String,
-    val lastModified: Long,
-    val length: Long,
-    val url: String? = null,
-    val bytes: String? = null,
-    val sha256: String? = null,
-)

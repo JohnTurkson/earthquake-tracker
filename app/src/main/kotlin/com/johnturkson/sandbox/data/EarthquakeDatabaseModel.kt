@@ -1,11 +1,9 @@
 package com.johnturkson.sandbox.data
 
-import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import androidx.room.Relation
 
 @Entity(tableName = "earthquakes", indices = [Index("time"), Index("updated")])
 data class EarthquakeDatabaseModel(
@@ -55,36 +53,3 @@ data class EarthquakeDatabaseModel(
     indices = [Index("earthquakeId")],
 )
 data class EarthquakeAliasDatabaseModel(@PrimaryKey val id: String, val earthquakeId: String)
-
-@Entity(
-    tableName = "earthquake_details",
-    foreignKeys =
-        [
-            ForeignKey(
-                entity = EarthquakeDatabaseModel::class,
-                parentColumns = ["id"],
-                childColumns = ["earthquakeId"],
-                onDelete = ForeignKey.CASCADE,
-            )
-        ],
-)
-data class EarthquakeDetailDatabaseModel(
-    @PrimaryKey val earthquakeId: String,
-    val updated: Long,
-    val productsJson: String,
-)
-
-data class EarthquakeWithDetailDatabaseModel(
-    @Embedded val earthquake: EarthquakeDatabaseModel,
-    @Relation(parentColumn = "id", entityColumn = "earthquakeId")
-    val detail: EarthquakeDetailDatabaseModel?,
-)
-
-data class EarthquakeDetail(
-    val earthquake: EarthquakeDatabaseModel,
-    val products: Map<String, List<EarthquakeProductNetworkModel>>?,
-    val detailUpdated: Long?,
-) {
-    val isDetailCurrent: Boolean
-        get() = detailUpdated == earthquake.updated
-}

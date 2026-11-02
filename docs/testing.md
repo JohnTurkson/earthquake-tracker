@@ -150,18 +150,21 @@ The same fixtures are available as Android test assets.
 [EarthquakeStorageTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeStorageTest.kt)
 uses real Room with active Turbine collectors. Preserve coverage for new IDs,
 duplicate IDs, newer/older revisions, retained history across rolling refreshes,
-alias changes, detail freshness, filters, atomic rollback, and concurrent merges.
+alias changes, filters, atomic rollback, and concurrent merges.
 Keep a list collector active through a preferred-ID change, an offline refresh
 failure, and the next successful refresh. Verify that unrelated prior events
 remain in every populated result and known aliases resolve to one updated row.
-Close the disk-backed database and recreate the repository with a failing network
-client to verify retained summaries and details are readable offline. Database reads
+Close and reopen the disk-backed database to verify retained records remain
+readable through the read-only repository. Refresh-related storage tests execute
+`EarthquakeRefreshWorker` with controlled network input, then observe Room across
+successes and failures. Database reads
 must not initiate network requests. A database reopen tests persistent storage;
 it does not alone establish offline screen behavior or an actual device reboot.
 
 [EarthquakeMigrationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMigrationTest.kt)
 uses Room's `MigrationTestHelper` and tracked schema exports to validate the
-additive upgrade from version 1 while retaining existing rows. Generate schema
+upgrade paths and removal of obsolete product metadata while retaining
+earthquakes, aliases, refresh metadata, and alert history. Generate schema
 exports through Room; never hand-edit them.
 
 Run these tests on the shared Earthquake Project emulator under the exclusive

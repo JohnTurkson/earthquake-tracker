@@ -408,8 +408,10 @@ operations.
 Use the existing path for runtime earthquake data:
 
 ```text
-EarthquakeModule -> HttpClient -> EarthquakeApi -> EarthquakeRepository
-EarthquakeModule -> MainDatabase -> EarthquakeDao -> EarthquakeRepository
+EarthquakeWorkScheduler -> EarthquakeRefreshWorker -> EarthquakeRefreshRepository
+EarthquakeRefreshRepository -> EarthquakeApi -> USGS
+EarthquakeRefreshRepository -> MainDatabase -> EarthquakeDao
+EarthquakeDao + EarthquakeMonitoringDao -> EarthquakeRepository -> EarthquakeViewModel
 ```
 
 Follow the [network instructions](networking.md) for typed Ktor endpoints and
@@ -426,8 +428,12 @@ responses preserve stored information. Read the Room database independently of
 network access; an unrestricted `getEarthquakesFlow()` includes historical rows.
 UI time filters must not delete stored history.
 
-Keep the imported alias handling for preferred-ID changes and separately
-versioned detail snapshots. `MainDatabase` retains its original name, schema
+Keep alias handling for preferred-ID changes. Store ordinary earthquake records
+without separate product snapshots, product maps, or detail-freshness wrappers.
+`EarthquakeRepository` is read-only and exposes Room flows for records and refresh
+metadata. The one-time `EarthquakeRefreshWorker` is the only runtime caller of
+`EarthquakeRefreshRepository.refresh()`; route every update through the scheduler.
+`MainDatabase` retains its original name, schema
 history, and legacy `ItemDatabaseModel` table to preserve compatibility with
 existing installations; that table is not a feature or a pattern for new work.
 Use data-preserving migrations for later schema changes.
