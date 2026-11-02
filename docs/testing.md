@@ -390,6 +390,19 @@ already have its settled bounds. Cover compact Map and List, expanded open and
 minimized List, Close and Back, and verify Map/List switching still animates
 after returning from Notifications. Existing screenshot fixtures cover the
 settled destination appearances; timing assertions cover their transitions.
+
+
+[EarthquakePaneScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakePaneScreenshotTest.kt)
+renders the real adaptive scaffold and pane override with the notification and
+list surfaces in light, dark, and large-text configurations, plus the compact
+notification fallback. Its solid background exposes unwanted shading in the
+transparent pane margins; it is not a map fixture.
+[EarthquakePaneTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakePaneTest.kt)
+checks actual device pixels above the floating notification card, interaction
+with the underlying destination, Close and Back, and saved notification state
+across compact/expanded changes. Run it with the same minimum 900 dp device
+width required by the navigation tests.
+
 [EarthquakeDestinationStateTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeDestinationStateTest.kt)
 uses the real Map and List ViewModels with test-local Room data to check
 independent selection, saved result revisions, pending scroll restoration,

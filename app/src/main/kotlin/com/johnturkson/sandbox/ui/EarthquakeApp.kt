@@ -9,13 +9,16 @@ import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveComponentOverrideApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.AdaptStrategy
+import androidx.compose.material3.adaptive.layout.LocalAnimatedPaneOverride
 import androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.SupportingPaneSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberSupportingPaneSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +43,10 @@ import com.johnturkson.sandbox.ui.Destination.EarthquakeListRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeMapRoute
 import com.johnturkson.sandbox.ui.Destination.EarthquakeNotificationsRoute
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3AdaptiveComponentOverrideApi::class,
+)
 @Composable
 fun EarthquakeApp(
     modifier: Modifier = Modifier,
@@ -169,70 +175,75 @@ fun EarthquakeApp(
                         if (pendingListRevision == it.revision) pendingListRevision = null
                     },
                 )
-            NavDisplay(
-                backStack = backStack,
-                modifier = Modifier.fillMaxSize(),
-                onBack = {
-                    when {
-                        notificationsVisible -> {
-                            animateExplorerPanes = false
-                            notificationsVisible = false
-                        }
-                        expanded && listVisible -> {
-                            animateExplorerPanes = true
-                            panelVisible = false
-                        }
-                        !expanded && compactView == EarthquakeView.List -> {
-                            animateExplorerPanes = true
-                            compactView = EarthquakeView.Map
-                        }
-                        else -> activity?.finish()
-                    }
-                },
-                sceneStrategies = listOf(strategy),
-                entryDecorators =
-                    listOf(
-                        rememberSaveableStateHolderNavEntryDecorator(),
-                        rememberViewModelStoreNavEntryDecorator(),
-                        rememberResultEventBusNavEntryDecorator(),
-                    ),
-                transitionSpec = { ContentTransform(EnterTransition.None, ExitTransition.None) },
-                popTransitionSpec = { ContentTransform(EnterTransition.None, ExitTransition.None) },
-                predictivePopTransitionSpec = {
-                    ContentTransform(EnterTransition.None, ExitTransition.None)
-                },
-                entryProvider =
-                    entryProvider {
-                        entry<EarthquakeMapRoute>(
-                            metadata =
-                                SupportingPaneSceneStrategy.mainPane() + explorerPaneAnimation
-                        ) { navKey ->
-                            destinationContent(navKey, actions)
-                        }
-                        entry<EarthquakeListRoute>(
-                            metadata =
-                                SupportingPaneSceneStrategy.supportingPane() +
-                                    SupportingPaneSceneStrategy.preferredPaneSize(
-                                        width = earthquakeListPaneWidth + 32.dp
-                                    ) +
-                                    SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
-                                    explorerPaneAnimation
-                        ) { navKey ->
-                            destinationContent(navKey, actions)
-                        }
-                        entry<EarthquakeNotificationsRoute>(
-                            metadata =
-                                SupportingPaneSceneStrategy.extraPane() +
-                                    SupportingPaneSceneStrategy.preferredPaneSize(
-                                        width = earthquakeListPaneWidth + 32.dp
-                                    ) +
-                                    SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
-                                    immediatePaneAnimation
-                        ) { navKey ->
-                            destinationContent(navKey, actions)
+            val defaultPaneOverride = LocalAnimatedPaneOverride.current
+            val paneOverride =
+                remember(defaultPaneOverride) { EarthquakePaneOverride(defaultPaneOverride) }
+            CompositionLocalProvider(LocalAnimatedPaneOverride provides paneOverride) {
+                NavDisplay(
+                    backStack = backStack,
+                    modifier = Modifier.fillMaxSize(),
+                    onBack = {
+                        when {
+                            notificationsVisible -> {
+                                animateExplorerPanes = false
+                                notificationsVisible = false
+                            }
+                            expanded && listVisible -> {
+                                animateExplorerPanes = true
+                                panelVisible = false
+                            }
+                            !expanded && compactView == EarthquakeView.List -> {
+                                animateExplorerPanes = true
+                                compactView = EarthquakeView.Map
+                            }
+                            else -> activity?.finish()
                         }
                     },
-            )
+                    sceneStrategies = listOf(strategy),
+                    entryDecorators =
+                        listOf(
+                            rememberSaveableStateHolderNavEntryDecorator(),
+                            rememberViewModelStoreNavEntryDecorator(),
+                            rememberResultEventBusNavEntryDecorator(),
+                        ),
+                    transitionSpec = { ContentTransform(EnterTransition.None, ExitTransition.None) },
+                    popTransitionSpec = { ContentTransform(EnterTransition.None, ExitTransition.None) },
+                    predictivePopTransitionSpec = {
+                        ContentTransform(EnterTransition.None, ExitTransition.None)
+                    },
+                    entryProvider =
+                        entryProvider {
+                            entry<EarthquakeMapRoute>(
+                                metadata =
+                                    SupportingPaneSceneStrategy.mainPane() + explorerPaneAnimation
+                            ) { navKey ->
+                                destinationContent(navKey, actions)
+                            }
+                            entry<EarthquakeListRoute>(
+                                metadata =
+                                    SupportingPaneSceneStrategy.supportingPane() +
+                                        SupportingPaneSceneStrategy.preferredPaneSize(
+                                            width = earthquakeListPaneWidth + 32.dp
+                                        ) +
+                                        SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
+                                        explorerPaneAnimation
+                            ) { navKey ->
+                                destinationContent(navKey, actions)
+                            }
+                            entry<EarthquakeNotificationsRoute>(
+                                metadata =
+                                    SupportingPaneSceneStrategy.extraPane() +
+                                        SupportingPaneSceneStrategy.preferredPaneSize(
+                                            width = earthquakeListPaneWidth + 32.dp
+                                        ) +
+                                        SupportingPaneSceneStrategy.preferredPaneSize(height = 1f) +
+                                        immediatePaneAnimation
+                            ) { navKey ->
+                                destinationContent(navKey, actions)
+                            }
+                        },
+                )
+            }
             BackHandler(
                 enabled =
                     !notificationsVisible &&

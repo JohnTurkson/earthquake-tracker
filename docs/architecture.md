@@ -323,6 +323,20 @@ Map/List and expanded-list controls restore the library's default pane motion
 when Notifications is closed. Keep this transient animation choice in the host;
 it is not destination state and does not need saved-state restoration.
 
+Provide [EarthquakePaneOverride](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakePaneOverride.kt)
+through `LocalAnimatedPaneOverride` around the navigation display. The library's
+levitated pane adds a rectangular shadow to the whole container, including its
+transparent spacing. Our floating panes omit that outer shadow; their opaque,
+rounded `Surface` components own the visible 6 dp shadow. Keep the container
+transparent so the map remains unchanged outside those surfaces.
+
+Limit this override to the app's nonmodal, nonresizable levitated panes. Preserve
+preferred sizes, scaffold visibility transitions, entry saveable state, focus,
+and pane traversal semantics. Delegate expanded and hidden pane targets to the
+original library renderer. Keep Navigation 3's scene strategy and entry
+decorators as the owners of navigation and destination lifetimes; do not copy
+their state into the pane renderer.
+
 [EarthquakeListScreen](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListScreen.kt)
 uses the same entry-owned `LazyListState` for both presentations.
 [EarthquakeListPanel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeListPanel.kt)
