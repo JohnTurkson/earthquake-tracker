@@ -83,8 +83,11 @@ The component accepts a hoisted `CameraPositionState`, `MapProperties`,
 through Maps Compose's saver. Camera changes are UI state and must not be copied
 into the ViewModel. The main screen fills its destination, including
 behind system bars, and passes safe-drawing padding for Google attribution.
-Map defaults hide optional controls while retaining gestures and do not request
-location access. Keep Google attribution visible when adding overlays.
+The default camera starts over San Francisco at zoom 10. Map defaults enable the
+SDK's My Location button while hiding other optional controls and retaining
+gestures. The button appears only when the caller enables the My Location layer
+with granted location permission; enabling its UI setting does not request
+permission. Keep Google attribution visible when adding overlays.
 
 Use fixed development inputs such as
 [EarthquakeMapFixtures](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)

@@ -53,6 +53,7 @@ class EarthquakeMapTest {
         composeRule.runOnIdle {
             assertEquals(GoogleMap.MAP_TYPE_NONE, map.mapType)
             assertFalse(map.isMyLocationEnabled)
+            assertTrue(map.uiSettings.isMyLocationButtonEnabled)
             assertFalse(map.uiSettings.isCompassEnabled)
             assertFalse(map.uiSettings.isZoomControlsEnabled)
             assertFalse(map.uiSettings.isMapToolbarEnabled)

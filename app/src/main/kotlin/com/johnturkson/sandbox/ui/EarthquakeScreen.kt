@@ -57,7 +57,7 @@ fun EarthquakeScreen(
     onViewSelected: (EarthquakeView) -> Unit = {},
 ) {
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(20.0, 0.0), 1f)
+        position = CameraPosition.fromLatLngZoom(LatLng(37.7749, -122.4194), 10f)
     }
     val listState = rememberLazyListState()
     val safePadding = WindowInsets.safeDrawing.asPaddingValues()

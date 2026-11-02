@@ -26,7 +26,7 @@ fun EarthquakeMap(
     selectedItemId: String? = null,
     onMapClick: () -> Unit = {},
     cameraPositionState: CameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(20.0, 0.0), 1f)
+        position = CameraPosition.fromLatLngZoom(LatLng(37.7749, -122.4194), 10f)
     },
     properties: MapProperties = MapProperties(minZoomPreference = 1f),
     uiSettings: MapUiSettings =
@@ -34,7 +34,7 @@ fun EarthquakeMap(
             compassEnabled = false,
             indoorLevelPickerEnabled = false,
             mapToolbarEnabled = false,
-            myLocationButtonEnabled = false,
+            myLocationButtonEnabled = true,
             zoomControlsEnabled = false,
         ),
     contentPadding: PaddingValues = PaddingValues(0.dp),
