@@ -9,11 +9,10 @@ Apply these rules to code changes throughout the repository.
 
 ## Kotlin formatting
 
-[The root Gradle configuration](../build.gradle.kts) configures ktfmt with
-`kotlinLangStyle()`, a maximum width of 100, and `COMPLETE` trailing comma
-management. Use these settings for Kotlin sources and Gradle Kotlin scripts.
-[EditorConfig](../.editorconfig) supplies editor settings, including four-space
-Kotlin indentation and explicit imports.
+Use the standalone [ktfmt CLI](https://github.com/Kotlin/ktfmt) version **0.64**
+for Kotlin sources and Gradle Kotlin scripts. Do not add ktfmt Gradle or IDE
+plugins. Agents must run the formatter and its check explicitly before committing
+Kotlin or build changes; formatting is independent of Gradle's `check` tasks.
 
 Use braces for every `if` and `else` branch, with the branch body on separate
 lines. Apply this to early returns, single actions, and expressions that produce
@@ -42,20 +41,45 @@ requestedMapFocusId =
     }
 ```
 
-Check formatting from the repository root:
+Pass `--kotlinlang-style --enable-editorconfig` on every invocation.
+[EditorConfig](../.editorconfig) defines four-space block and continuation
+indentation, a maximum width of 100, and `COMPLETE` trailing comma management.
+Its native IDE settings also request explicit imports. The CLI reads the
+supported formatting properties through `--enable-editorconfig`; it does not
+expand star imports.
+
+Download the standalone JAR once into a cache outside the repository, with a Java
+runtime available on `PATH`:
 
 ```sh
-./gradlew ktfmtCheck
+export KTFMT_JAR="$HOME/.cache/ktfmt/ktfmt-0.64-with-dependencies.jar"
+mkdir -p "$(dirname "$KTFMT_JAR")"
+curl --fail --location \
+  --output "$KTFMT_JAR" \
+  https://repo.maven.apache.org/maven2/com/facebook/ktfmt/0.64/ktfmt-0.64-with-dependencies.jar
 ```
 
-The configured `check` tasks depend on this check. To apply formatting to the
-configured source files and scripts:
+Set `KTFMT_JAR` to that path in each new shell. Check all project Kotlin files
+from the repository root with ripgrep and null-delimited file arguments:
 
 ```sh
-./gradlew ktfmtFormat
+rg --files -0 -g '*.kt' -g '*.kts' |
+  xargs -0 java -jar "$KTFMT_JAR" --kotlinlang-style --enable-editorconfig \
+    --dry-run --set-exit-if-changed
 ```
 
-These tasks exclude build and cache directories through their configured source
-inputs. Preserve those exclusions and keep generated files out of formatting
-inputs. Review the diff after formatting and keep unrelated formatting changes
-out of the task.
+`--dry-run` leaves files unchanged, and `--set-exit-if-changed` makes formatting
+differences fail the check. This selection includes app sources, tests, fixtures,
+and Gradle Kotlin scripts. Ripgrep respects the repository's ignore rules and
+skips hidden directories, keeping build/cache directories out of the inputs.
+Preserve those exclusions and never pass generated files to the formatter.
+
+Apply formatting only to the files changed by the task, naming them explicitly.
+For example, after editing the root build script:
+
+```sh
+java -jar "$KTFMT_JAR" --kotlinlang-style --enable-editorconfig build.gradle.kts
+```
+
+Review the diff after formatting and keep unrelated formatting changes out of the
+task. The Gradle build does not provide `ktfmtCheck` or `ktfmtFormat` tasks.

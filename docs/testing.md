@@ -14,20 +14,25 @@ device, and Maps configuration.
 | UI, navigation, lifecycle, Android storage, or platform integration | Also run relevant device tests and manually exercise the changed behavior on the resizable API 37 emulator described below. |
 | Maps configuration or rendering | Also follow the Maps checks in [Verify the run](building.md#verify-the-run). |
 
-Run the standard checks from the repository root:
+Set up the standalone ktfmt CLI and `KTFMT_JAR` as described in the
+[formatting guide](formatting.md), then run the standard checks from the
+repository root:
 
 ```sh
-./gradlew :ktfmtCheck :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+rg --files -0 -g '*.kt' -g '*.kts' |
+  xargs -0 java -jar "$KTFMT_JAR" --kotlinlang-style --enable-editorconfig \
+    --dry-run --set-exit-if-changed
+./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
 
-`ktfmtCheck` already participates in the Gradle `check` tasks. The explicit
-command above makes the intended checks clear. Formatting and lint are separate
-from tests; compilation alone does not exercise behavior.
+Agents must run the standalone formatting check explicitly when verifying Kotlin
+or build changes. Gradle's `check` tasks do not invoke it, and the project uses no
+ktfmt Gradle or IDE plugin. Formatting and lint are separate from tests;
+compilation alone does not exercise behavior.
 
-Use the configured ktfmt integration to format files you changed before staging.
-Never format generated files or build/cache directories. The repository-wide
-`ktfmtFormat` task can also rewrite unrelated files; review its scope before
-using it and keep unrelated cleanup in a separate commit.
+Use the standalone ktfmt CLI to format files you changed before staging. Never
+format generated files or build/cache directories. Pass changed files explicitly
+when applying formatting and keep unrelated cleanup in a separate commit.
 
 ## Shared test emulator
 
