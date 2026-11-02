@@ -55,11 +55,27 @@ If you customize `GRADLE_USER_HOME`, use its `gradle.properties` instead. Keep a
 other existing properties in the file. Do not put the key in the repository's
 tracked `gradle.properties`.
 
-Gradle reads this property and substitutes it into the standard
-`com.google.android.geo.API_KEY` application metadata in the Android manifest.
-No Secrets Gradle Plugin or additional signing configuration is needed. Sync or
-rebuild the project after changing the key. The compiled app contains the key;
-this storage choice keeps it outside source control.
+Alternatively, add the same `MAPS_API_KEY` line to the repository root's
+`local.properties`. This file is already ignored by Git. Preserve its existing
+`sdk.dir` and any other settings.
+
+Gradle project properties take precedence over `local.properties`: if both define
+`MAPS_API_KEY`, the Gradle property wins. If neither defines a key, the project
+still builds with an empty value; Maps access requires a valid key at runtime.
+
+Gradle automatically reads user-level `gradle.properties`. It does not expose
+custom entries in Android's `local.properties` as Gradle project properties, so
+this project's build script explicitly reads that file as a fallback. The build
+then substitutes the result into the standard `com.google.android.geo.API_KEY`
+application metadata in the Android manifest. The Maps SDK reads that metadata;
+it does not choose where your build stores the key.
+
+Google's Secrets Gradle Plugin is an alternative for loading properties files;
+it is not installed or required here. See [Gradle project properties](https://docs.gradle.org/current/userguide/build_environment.html#sec:project_properties)
+and the [Secrets Gradle Plugin](https://developers.google.com/maps/documentation/android-sdk/secrets-gradle-plugin)
+for the distinction. No additional signing configuration is needed. Sync or
+rebuild after changing the key. The compiled app contains the key; these storage
+choices keep it outside source control.
 
 The SDK setup uses
 [Maps Compose 9.0.1](https://github.com/googlemaps/android-maps-compose/releases/tag/v9.0.1).

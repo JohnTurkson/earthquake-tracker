@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -11,6 +13,14 @@ kotlin { jvmToolchain(libs.versions.jdk.get().toInt()) }
 
 room { schemaDirectory("$projectDir/schemas") }
 
+val localMapsApiKey =
+    providers
+        .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
+        .asText
+        .map { contents ->
+            Properties().apply { load(contents.reader()) }.getProperty("MAPS_API_KEY", "")
+        }
+
 android {
     namespace = "com.johnturkson.sandbox"
 
@@ -23,7 +33,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         manifestPlaceholders["MAPS_API_KEY"] =
-            providers.gradleProperty("MAPS_API_KEY").orElse("").get()
+            providers.gradleProperty("MAPS_API_KEY").orElse(localMapsApiKey).orElse("").get()
     }
 
     buildFeatures { compose = true }

@@ -55,8 +55,9 @@ links, local key storage, and build and install commands.
 The Gradle wrapper automatically downloads the required JDK when needed; no
 separate JDK 21 installation is required.
 
-Store your key as `MAPS_API_KEY` in your machine's `~/.gradle/gradle.properties`.
-No custom debug signing is required.
+Store your key as `MAPS_API_KEY` in your machine's `~/.gradle/gradle.properties`,
+or in the repository's ignored `local.properties`. Gradle properties take
+precedence over the local file. No custom debug signing is required.
 
 For guided setup with Codex, use `$build-project` in this repository. The
 [project build skill](.agents/skills/build-project/SKILL.md) follows the same guide.
