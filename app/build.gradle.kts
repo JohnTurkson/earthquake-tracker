@@ -39,6 +39,8 @@ android {
     }
 
     buildFeatures { compose = true }
+
+    testFixtures { enable = true }
 }
 
 dependencies {
@@ -88,6 +90,8 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(libs.slf4j.nop)
+
+    testFixturesImplementation(libs.androidx.navigation3.runtime)
 
     screenshotTestImplementation(libs.screenshot.validation.api)
     screenshotTestImplementation(libs.androidx.compose.ui.tooling)

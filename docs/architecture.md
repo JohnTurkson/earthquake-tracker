@@ -26,7 +26,7 @@ Use read-only interfaces to describe the state consumers can observe.
 is annotated `@Stable`, and
 [EarthquakeViewModel](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeViewModel.kt)
 implements it.
-[EarthquakePreviewState](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
+[EarthquakePreviewState](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
 provides a test implementation without a ViewModel. Follow that interface and
 implementation pattern when expanding screen state, and honor the stability
 contract when using `@Stable`.
@@ -154,7 +154,7 @@ with the camera. An explicit app Locate request centers once when a measured
 location is available; subsequent fixes leave the camera alone.
 
 Use fixed development inputs such as
-[EarthquakeMapFixtures](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
+[EarthquakeMapFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
 to render deterministic map states without live API or storage access. Pass only
 the presentation values needed by markers: ID, coordinates, title, numeric magnitude, and an
 optional event time or snippet. Keep these values independent of network and
@@ -164,7 +164,7 @@ contract.
 `EarthquakePreviewState` is a data class implementing the read-only `EarthquakeState`
 contract. It accepts item and selection fixtures, so tests can render a populated
 screen and update selection with `copy` without Hilt, storage, or API calls.
-Keep it and `EarthquakeMapFixtures` in each suite's default test directory as
+Keep it and `EarthquakeMapFixtures` in the standard `testFixtures` source set
 described in the [testing guide](testing.md#test-source-sets), outside production sources.
 The ViewModel maps observable database rows to presentation values, preserving
 numeric magnitude for cluster summaries, and owns the restorable selection.

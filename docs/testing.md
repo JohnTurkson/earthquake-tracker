@@ -147,14 +147,22 @@ in `app/src/androidTest/kotlin`, and Compose screenshot tests in
 `app/src/screenshotTest/kotlin`.
 
 Use the default source directories without custom `sourceSets` configuration.
-Each suite owns its helpers and fixtures. When instrumented and screenshot
-tests need the same inputs, keep a copy in each suite's Kotlin directory.
-The instrumented
-[EarthquakeMapFixtures](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
-and [EarthquakePreviewState](../app/src/androidTest/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
-have equivalent screenshot-test copies under
-[`app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui`](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/ui).
-Keep test helpers outside production sources.
+Keep Kotlin helpers used by multiple suites once in `app/src/testFixtures/kotlin`.
+The [app build script](../app/build.gradle.kts) enables AGP's built-in fixture
+support with `testFixtures { enable = true }`. AGP automatically supplies these
+fixtures to the app module's unit, instrumented, and screenshot tests; they are
+excluded from the app APK. Helpers used by only one suite stay in that suite's
+own source directory.
+
+[EarthquakeMapFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakeMapFixtures.kt)
+and [EarthquakePreviewState](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/ui/EarthquakePreviewState.kt)
+serve instrumented and screenshot tests.
+[EarthquakeMonitoringFixtures](../app/src/testFixtures/kotlin/com/johnturkson/sandbox/EarthquakeMonitoringFixtures.kt)
+supplies the same event values to unit and instrumented tests.
+Fixtures compile separately from production code, so
+declare their required dependencies with `testFixturesImplementation`.
+The preview state exposes `Destination.EarthquakeRoute`, whose `NavKey` supertype
+requires `testFixturesImplementation(libs.androidx.navigation3.runtime)`.
 
 Declare test-only dependencies in the matching test configuration.
 `androidx.compose.ui:ui-tooling-preview` uses `screenshotTestImplementation` for
