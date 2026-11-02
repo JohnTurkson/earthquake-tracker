@@ -193,9 +193,11 @@ it does not alone establish offline screen behavior or an actual device reboot.
 
 [EarthquakeMigrationTest](../app/src/androidTest/kotlin/com/johnturkson/sandbox/EarthquakeMigrationTest.kt)
 uses Room's `MigrationTestHelper` and tracked schema exports to validate the
-upgrade paths and removal of obsolete product metadata while retaining
+upgrade paths and removal of obsolete item and product tables while retaining
 earthquakes, aliases, refresh metadata, and alert history. The version 4-to-5
 timestamp migration also checks ISO text storage and pre-epoch data retention.
+Exercise the complete upgrade through version 6, including the version-5-to-6
+item table removal, and reopen Room to verify retained records remain readable.
 Storage tests cover nanosecond precision and chronological half-open queries.
 Generate schema exports through Room; never hand-edit them.
 

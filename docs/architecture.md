@@ -441,10 +441,10 @@ without separate product snapshots, product maps, or detail-freshness wrappers.
 `EarthquakeRepository` is read-only and exposes Room flows for records and refresh
 metadata. The one-time `EarthquakeRefreshWorker` is the only runtime caller of
 `EarthquakeRefreshRepository.refresh()`; route every update through the scheduler.
-`MainDatabase` retains its original name, schema
-history, and legacy `ItemDatabaseModel` table to preserve compatibility with
-existing installations; that table is not a feature or a pattern for new work.
-Use data-preserving migrations for later schema changes.
+`MainDatabase` retains its original name and schema history to preserve
+compatibility with existing installations. Version 6 removes
+the unused item table through `EarthquakeOnlyMigration`; current entities and DAOs
+are earthquake-specific. Preserve earthquake data during later schema changes.
 
 See [earthquake data](earthquake-data.md) for the repository API and refresh
 limits. WorkManager scheduling and screen integration should reuse this layer.
