@@ -489,17 +489,17 @@ different presentations have made the layout code more complex. Find a clearer
 way to show and hide the list while keeping the map visible, and simplify the
 code that handles the two layouts.
 
-### Permission explanations and rationale states
+### More detailed permission rationale UI
 
-The first location or notification permission request currently opens Android's system dialog from
-its corresponding action. Add a short explanation of why the permission is needed and what it lets
-the user do before opening that dialog.
+Location and notification requests currently have basic rationale dialogs for the re-request flow,
+when Android reports that a rationale should be shown. First requests go straight to the system
+permission dialog.
 
-The app already checks `shouldShowRequestPermissionRationale()` and has rationale dialogs and
-settings fallbacks. Build on that handling with explicit states for an initial explanation, a
-rationale after denial, and recovery through Settings when another system prompt is unavailable. Use
-request history alongside Android's rationale signal, and let users dismiss the explanation and
-continue with features that do not require access. See
+Add more detailed, permission-specific UI explaining why access is needed, what it enables, and
+which features remain available if the user declines. Give the initial request, a previous denial,
+and recovery through Settings distinct messages and actions. Use
+`shouldShowRequestPermissionRationale()` alongside request history to choose the right state, and
+let users dismiss the explanation without immediately triggering another system prompt. See
 [Android's permission guidance](https://developer.android.com/training/permissions/requesting).
 
 ### Analytics and crash reporting
