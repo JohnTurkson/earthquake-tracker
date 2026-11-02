@@ -59,10 +59,11 @@ configuration; verify its hardware/image and resolve the connected serial with
 `adb -s SERIAL emu avd name`.
 
 Reserve it before installation, UI inspection, screenshots, input, configuration
-changes, or device tests. Delegate readiness polling to a read-only subagent
-while continuing implementation. When ready to test, follow the skill's atomic
-ADB reservation and owner-token protocol, then verify idle home through
-`android layout`. Use direct commands, without a local wrapper/polling script.
+changes, or device tests. Check readiness on demand; optionally delegate longer
+waits to a read-only subagent while continuing implementation. When ready to test,
+use the skill's single ignored project lock and exclusive-create command, then
+verify idle home through `android layout`. Use direct commands, without a local
+wrapper/polling script.
 After claiming, export its actual serial and run the examples below:
 
 ```sh

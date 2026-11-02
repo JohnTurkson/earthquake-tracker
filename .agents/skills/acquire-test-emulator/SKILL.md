@@ -1,6 +1,6 @@
 ---
 name: acquire-test-emulator
-description: Set up USGS Tracker's shared Earthquake Project emulator, delegate availability waiting, acquire it through ADB, and return it to verified idle home after device tests, mockups, screenshots, or validation.
+description: Check USGS Tracker's shared Earthquake Project emulator on demand, coordinate agents with one ignored project lock file, and verify idle-home cleanup after tests, mockups, screenshots, or validation.
 ---
 
 # Acquire Test Emulator
@@ -12,11 +12,32 @@ Read the [testing guide](../../../docs/testing.md#shared-test-emulator) and
 worktrees on this host. Leave other emulators stopped. Use direct CLI commands
 and agent tool calls, without creating or requiring a shell/Python helper script.
 
+## One lock across worktrees
+
+The lock is `.earthquake-emulator.lock` in the **primary checkout**, ignored by
+the project's `.gitignore`. Every parent and subagent resolves that same path,
+even when working in a linked worktree:
+
+```sh
+EMULATOR_PROJECT_ROOT="$(git worktree list --porcelain | sed -n '1s/^worktree //p')"
+EMULATOR_LOCK="$EMULATOR_PROJECT_ROOT/.earthquake-emulator.lock"
+```
+
+Git lists the primary checkout first. Confirm the resolved root is nonempty and
+exists; never fall back to a lock in the current worktree. Export/pass this exact
+path and the owner token when delegating device work. Reset shell variables in
+each new tool shell; do not assume they persist between commands.
+
+A lock contains one unique parent-chat/attempt token. An existing lock, including
+an empty or incomplete one, means **busy**. Read it with `cat "$EMULATOR_LOCK"`;
+read/permission errors never mean available. Never overwrite or append to it.
+
 ## Set up once
 
 Use Android Studio's SDK and the standard `~/.android/avd` directory. Check
 `android emulator list` first; preserve a matching existing AVD. Assign setup to
-one agent if missing; other agents continue host work and wait for setup to finish.
+one agent if missing; it must claim the project lock below before setup or start.
+Other agents continue host work and wait for setup to finish.
 Never create per-agent copies, use `--force`, or overwrite an incompatible AVD.
 
 Inspect `android emulator create --help` and `android sdk list --all`. Choose a
@@ -53,43 +74,39 @@ See Google's [Resizable setup](https://developer.android.com/studio/run/resizabl
 
 Start with `android emulator start Earthquake_Project --headless`. Discover its
 serial with `adb devices -l`, confirming `adb -s SERIAL emu avd name` reports
-`Earthquake_Project`; never assume a port. The setup agent takes the reservation
-below before first-boot interaction, skips account sign-in, completes only local
+`Earthquake_Project`; never assume a port. The setup agent retains its project
+lock through first-boot interaction, skips account sign-in, completes only local
 onboarding, and sets `adb -s SERIAL shell settings put global stay_on_while_plugged_in 7`.
 Finish with the cleanup and release steps below. Subsequent starts preserve data.
 If another agent is already starting the same AVD, wait and rediscover its serial;
 do not launch a second instance, wipe data, cold boot, or restart it to obtain access.
 
-## Wait in a subagent; keep implementing
+## Check on demand; keep implementing
 
-When device work is approaching, delegate **one read-only waiter per task** to a
-subagent. Give it this skill's path, the AVD ID and the parent task identity.
-The parent continues implementation, review, builds, local tests, lint and host
-screenshot tests. Do not block the parent on a long shell command or leave the
-emulator reserved while doing unrelated work.
+Agents check availability themselves when device work is approaching. If busy,
+continue implementation, review, builds, local tests, lint and host screenshot
+tests, then check again when useful. For a longer wait, optionally delegate one
+read-only waiter per parent task with this skill, the exact lock path and the
+parent identity. Do not reserve the emulator while doing unrelated work.
 
-The waiter performs direct Android CLI/ADB queries, using agent wait tools
-between checks (about 15 seconds, not a shell polling script). First resolve the
-dedicated AVD's current serial. If it is stopped, report that to the parent;
-coordinate one start, then resume waiting. If disconnected, offline, booting or
-a command fails, report unavailable and retry without changing the device.
+Check the project lock first. If it exists, leave the device untouched and
+resume independent work; a waiter can check again about every 15 seconds using
+agent wait tools. Do not use a blocking shell loop or a local polling script.
+When the lock is absent, resolve the dedicated AVD's serial through ADB. If it
+is stopped, the parent must acquire the project lock before starting it. If it
+is offline, booting or a query fails, treat it as unavailable and retry later.
 
 ```sh
-adb -s "$ANDROID_SERIAL" shell ls -ld /data/local/tmp/earthquake-project-reservation
 adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed
 adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk
 adb -s "$ANDROID_SERIAL" shell cmd package resolve-activity --brief \
   -a android.intent.action.MAIN -c android.intent.category.HOME
-adb -s "$ANDROID_SERIAL" shell dumpsys window
-adb -s "$ANDROID_SERIAL" shell dumpsys window policy
-adb -s "$ANDROID_SERIAL" shell dumpsys power
+adb -s "$ANDROID_SERIAL" shell dumpsys window | rg 'mCurrentFocus='
+adb -s "$ANDROID_SERIAL" shell dumpsys window policy | rg 'showing=|screenState='
+adb -s "$ANDROID_SERIAL" shell dumpsys power | rg 'mWakefulness='
 adb -s "$ANDROID_SERIAL" shell pidof com.johnturkson.sandbox
 ```
 
-A reservation directory means **busy**, even at Home. Skip further UI checks
-while reserved; inspect its owner with `adb -s SERIAL shell ls -1 DIRECTORY` only
-when useful for coordination. Only an explicit `No such file or directory`
-means absent; connection/permission errors never mean free.
 `pidof` returning no PID with exit code 1 simply means the app is not running;
 that expected absence is not a device connection failure.
 
@@ -100,37 +117,38 @@ a background app process alone neither grants nor prevents availability.
 Require two matching observations at least three seconds apart. Never press
 Home, wake/unlock, stop an app or change settings to make acquisition succeed.
 
-Notify the parent with the AVD/serial and observed readiness; **do not reserve it
-for a parent that is still implementing**. A notification is only a snapshot.
-If busy for ten minutes, report the owner/state once and continue waiting in the
-subagent while the parent works. Do not fail the whole task or create another
-emulator merely because it is occupied. If subagents are unavailable, use short
-read-only checks between independent work instead of blocking on a long wait.
+A waiter reports the AVD/serial and readiness to its parent; it never acquires
+or releases the lock. A notification is only a snapshot. If busy for ten minutes,
+report the owner/state once and continue independent work or waiting. Do not fail
+the whole task or create another emulator merely because it is occupied.
 
 ## Acquire atomically when ready to test
 
-The parent exports a unique shell-safe `EMULATOR_OWNER`, such as its chat UUID
-plus an attempt number, and records it in chat. Export `ANDROID_SERIAL` from the
-confirmed AVD identity; shell variables must be set in each new tool shell.
-Use the actual serial on every command. After the waiter reports ready, attempt
-this **single atomic command**:
+The parent sets a unique shell-safe `EMULATOR_OWNER`, such as its chat UUID plus
+an attempt number, and records it in chat. With the shared path resolved above,
+claim it using exclusive creation in a subshell:
 
 ```sh
-adb -s "$ANDROID_SERIAL" shell mkdir /data/local/tmp/earthquake-project-reservation
+(set -C; printf '%s\n' "$EMULATOR_OWNER" > "$EMULATOR_LOCK")
 ```
 
-Only confirmed success grants the reservation. **Do not use `mkdir -p`.** If
-another agent won, return to the waiter and continue independent work. If the
-result is uncertain, inspect and coordinate; do not assume ownership. After a
-successful claim, label it with a directory containing only your unique token:
-
-```sh
-adb -s "$ANDROID_SERIAL" shell mkdir "/data/local/tmp/earthquake-project-reservation/$EMULATOR_OWNER"
-```
+Both variables must be nonempty before running the claim.
+`set -C` enables shell noclobber: the create fails if the file already exists.
+Checking absence then using ordinary `>` or `touch` is not an atomic claim.
+Never use `>|`, `set +C`, or delete an existing lock to win. Only confirmed exit
+code 0 and your exact token in the file grant ownership. If another agent wins,
+keep working and retry later. An uncertain/failed write leaves the lock busy.
 
 Retain the reservation across all tool calls and any testing subagents; only
-the parent releases it. While owning it, verify your token instead of expecting
-reservation absence. Recheck boot, unlock and HOME focus, then run
+the parent releases it. Children use the parent's token rather than claiming
+again, never remove the lock, and report completion back. The parent serializes
+all its children's device operations; a shared token is not permission to run
+tests or UI actions concurrently. Do not hand ownership to a child that can
+outlive the parent without an explicit coordinated handoff.
+
+Export `ANDROID_SERIAL` from the confirmed AVD identity. Before every device
+mutation or instrumentation command, verify the lock still contains your token.
+While owning it, recheck boot, unlock and HOME focus, then run
 `android layout --device="$ANDROID_SERIAL" --full` without `--no-idle` and
 confirm a valid hierarchy. Recheck HOME focus afterward. This CLI command waits
 for UI idle; do not run instrumentation/layout inspection as a read-only waiter
@@ -163,20 +181,20 @@ android input --device="$ANDROID_SERIAL" key home
 Repeat the readiness checks and valid `android layout` idle check, observing
 stable unlocked HOME focus twice. If settings or idle home cannot be verified,
 **keep the reservation**, report incomplete cleanup and recover it before
-release. A crash leaves the directory behind intentionally; no timeout or TTL
+release. A crash leaves the file behind intentionally; no timeout or TTL
 allows another agent to steal it. Coordinate with its recorded owner and confirm
-all prior device work has ended before recovery. An unlabelled reservation is
+all prior device work and children have ended before recovery. An empty lock is
 also busy; ask for a specific recovery decision if ownership is unclear.
 
-Verify the directory contains your exact owner token, then remove only those
-empty directories, checking each command succeeds before the next:
+Only after cleanup and all child work have completed, release conditionally:
 
 ```sh
-adb -s "$ANDROID_SERIAL" shell rmdir "/data/local/tmp/earthquake-project-reservation/$EMULATOR_OWNER"
-adb -s "$ANDROID_SERIAL" shell rmdir /data/local/tmp/earthquake-project-reservation
+test "$(cat "$EMULATOR_LOCK")" = "$EMULATOR_OWNER" && rm -- "$EMULATOR_LOCK"
 ```
 
-Never use recursive deletion, remove another owner's token, or release before
-cleanup. Leave **Earthquake Project running at verified idle home** for the next
-agent. Report cleanup/release separately from the test result; no local scripts,
-lock files, session logs or run reports belong in the repository.
+A token mismatch or failed read must leave the lock untouched. This check/remove
+sequence relies on all agents honoring exclusive creation and no forced takeover;
+it is cooperative coordination, not an OS-enforced security boundary or FIFO
+queue. Leave **Earthquake Project running at verified idle home** for the next
+agent. Report cleanup/release separately from test results. Never commit the
+ignored lock, local helper scripts, session logs or run reports.

@@ -44,3 +44,4 @@ bin/
 build
 /captures
 local.properties
+/.earthquake-emulator.lock

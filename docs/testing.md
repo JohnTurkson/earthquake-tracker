@@ -40,29 +40,31 @@ unit tests, builds, lint and Compose preview screenshot tests need no reservatio
 
 Use the repository's [$acquire-test-emulator skill](../.agents/skills/acquire-test-emulator/SKILL.md)
 to create it once and verify its configuration. That skill is shared with Claude
-through the existing `.claude/skills` symlink. The workflow is **wait, claim,
+through the existing `.claude/skills` symlink. The workflow is **check, claim,
 test, clean up, release**, using Android CLI/ADB commands directly; no shell or
 Python helper script is required.
 
-Delegate one read-only waiter subagent per task as device work approaches, and
-continue implementing and running host checks. The waiter checks the shared
-reservation, boot completion, SDK 37, awake/unlocked state and launcher focus,
-using the skill's ADB queries. It reports readiness after two matching observations
-at least three seconds apart. An app's main screen is busy. Never press Home,
-stop an app or change settings while waiting to make it available.
+Check on demand as device work approaches. The skill resolves one ignored
+`.earthquake-emulator.lock` in the primary checkout for every worktree and
+subagent. If busy, continue implementation and host checks, then retry later;
+an optional read-only waiter subagent can monitor longer waits. When unclaimed,
+check boot completion, SDK 37, awake/unlocked state and launcher focus with the
+skill's ADB queries, observing readiness twice at least three seconds apart.
+An app's main screen is busy. Never navigate or change settings to make it free.
 
-When ready to test, the parent claims the device with the skill's atomic
-`adb shell mkdir /data/local/tmp/earthquake-project-reservation` command and
-labels it with its unique task/attempt token. Only one concurrent claimant can
-succeed. If another agent wins, resume waiting in the subagent and keep working;
-do not create another emulator or block all implementation. If subagents are
-unavailable, check briefly between independent work. A readiness notification is
-only a snapshot, never a reservation.
+When ready to test, the parent creates that lock with the skill's shell noclobber
+command and its unique chat/attempt token. Only one concurrent create can
+succeed. A check followed by an ordinary file write is not sufficient. If another
+agent wins, keep working and retry later; do not overwrite/delete its lock or
+create another emulator. An empty lock is also busy. A readiness observation is
+only a snapshot, never ownership.
 
 After claiming, recheck HOME focus and use `android layout`'s default UI-idle
 wait before testing. Keep the reservation throughout device work and gaps between
-tool calls, even when Home is temporarily visible. Do not start detached device
-work that outlives the reservation. Record settings before changing them.
+tool calls, even when Home is temporarily visible. Testing subagents use the
+parent's token and run their device work sequentially; only the parent releases
+the lock after all children finish. Do not start detached device work that
+outlives it. Record settings before changing them.
 
 Agents **MUST return the emulator to an unlocked, idle home screen before
 releasing it**, including when tests fail or work is interrupted. Restore
