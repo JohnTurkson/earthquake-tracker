@@ -132,17 +132,18 @@ class EarthquakeMonitorTest {
         val manager = WorkManager.getInstance(context)
         val scheduler = EarthquakeMonitor(manager)
         manager.cancelUniqueWork(EarthquakeMonitor.RefreshWork).await()
+        val previous = scheduler.refreshWork.first()
         val dispatcher = StandardTestDispatcher()
         val monitoring = async(dispatcher) { monitoringWorker(context, scheduler).doWork() }
         dispatcher.scheduler.runCurrent()
         try {
-            suspend fun nextFailure(previous: WorkInfo? = null) =
+            suspend fun nextFailure(previous: WorkInfo?) =
                 withTimeout(45.seconds) {
                     scheduler.refreshWork.filterNotNull().first {
                         it.id != previous?.id && it.state == WorkInfo.State.FAILED
                     }
                 }
-            val first = nextFailure()
+            val first = nextFailure(previous)
             dispatcher.scheduler.runCurrent()
             dispatcher.scheduler.advanceTimeBy(59_999)
             dispatcher.scheduler.runCurrent()
