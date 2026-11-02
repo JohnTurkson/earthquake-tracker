@@ -342,7 +342,7 @@ Room is the source of truth for earthquake data. Network refreshes write updates
 to Room. ViewModels observe Room through repository Flows and expose state to
 the UI, which updates when the stored data changes.
 
-## Known limitations and planned improvements
+## Future Improvements
 
 ### Data retention
 
