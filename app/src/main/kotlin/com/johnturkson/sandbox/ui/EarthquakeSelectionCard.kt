@@ -35,10 +35,6 @@ fun EarthquakeSelectionCard(
                 Modifier.weight(1f).padding(top = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    stringResource(R.string.selected_earthquake),
-                    style = MaterialTheme.typography.labelMedium,
-                )
                 Text(item.title, style = MaterialTheme.typography.titleMedium)
                 earthquakeEventTime(item)?.let {
                     Text(it, style = MaterialTheme.typography.bodyMedium)

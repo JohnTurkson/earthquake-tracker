@@ -119,7 +119,6 @@ fun EarthquakeClusterSheetContent(
                     isSelected = item.id == selectedItemId,
                     onClick = { onItemClick(item) },
                     showMapAction = false,
-                    showSelectionLabel = true,
                 )
             }
         }

@@ -80,7 +80,6 @@ class EarthquakeComponentScreenshotTest {
                     isSelected = case.selected,
                     onClick = {},
                     showMapAction = case.showMapAction,
-                    showSelectionLabel = case.showSelectionLabel,
                 )
             }
         }
@@ -135,7 +134,6 @@ data class EarthquakeListRowCase(
     val selected: Boolean,
     val hasTime: Boolean,
     val showMapAction: Boolean,
-    val showSelectionLabel: Boolean,
 )
 
 class EarthquakeListRowCaseProvider : PreviewParameterProvider<EarthquakeListRowCase> {
@@ -143,17 +141,7 @@ class EarthquakeListRowCaseProvider : PreviewParameterProvider<EarthquakeListRow
         for (selected in listOf(false, true)) {
             for (hasTime in listOf(false, true)) {
                 for (showMapAction in listOf(false, true)) {
-                    for (showSelectionLabel in
-                        if (selected) listOf(false, true) else listOf(false)) {
-                        yield(
-                            EarthquakeListRowCase(
-                                selected,
-                                hasTime,
-                                showMapAction,
-                                showSelectionLabel,
-                            )
-                        )
-                    }
+                    yield(EarthquakeListRowCase(selected, hasTime, showMapAction))
                 }
             }
         }

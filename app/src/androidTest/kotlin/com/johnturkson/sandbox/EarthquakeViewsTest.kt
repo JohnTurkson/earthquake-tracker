@@ -108,6 +108,7 @@ class EarthquakeViewsTest {
         composeRule.onNodeWithText(item.title).performClick()
         composeRule.onAllNodesWithText(item.title).assertCountEquals(1)
         composeRule.onNodeWithText(item.title).assertIsSelected()
+        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Minimize earthquake list").performClick()
         composeRule.onNodeWithText("Recent earthquakes").assertDoesNotExist()
@@ -148,13 +149,15 @@ class EarthquakeViewsTest {
 
         composeRule.onNodeWithText(item.title).performClick()
         composeRule.onNodeWithText("Map").assertIsSelected()
-        composeRule.onNodeWithText("Selected earthquake").assertIsDisplayed()
+        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
         composeRule.onNodeWithText(item.title).assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(item.id, state.selectedMapItemId) }
 
         composeRule.onNodeWithText("List").performClick()
         composeRule.onNodeWithText("List").assertIsSelected()
         composeRule.onNodeWithText(item.title).assertIsSelected()
+        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
 
         composeRule.onNodeWithText("Map").performClick()
         composeRule.onNodeWithContentDescription("Clear earthquake selection").performClick()

@@ -332,9 +332,9 @@ its members remain visible above the sheet after a window or font-size change.
 Keep this camera integration in the UI, including the initialization flag that
 prevents a pending location read from replacing an explicit cluster focus.
 Selecting a member updates the shared selected ID and centers its map location
-while keeping the sheet open. Enable `EarthquakeListRow.showSelectionLabel` in
-the sheet to identify the selected member with text as well as its highlight;
-the main explorer list retains its own presentation.
+while keeping the sheet open. Both cluster and explorer rows identify selection
+through their background highlight and selected semantics. Omit the redundant
+"Selected earthquake" text from rows and `EarthquakeSelectionCard`.
 Closing, back, or scrim dismissal removes the sheet from composition. Measure
 its content in the UI and reserve bottom map padding for it and the drag handle
 so native attribution and the selected marker remain above the sheet.
@@ -588,8 +588,8 @@ in expanded windows uses a floating right pane and temporarily hides List.
 owns notification permission launchers, rationale, settings actions, and resume
 capability checks. Map retains location lifecycle integration in its own entry.
 Camera, list scroll, and selection remain in their decorated entry scopes.
-List rows retain selected semantics and background
-highlight without repeating the selection label used by the map's detail card.
+List rows retain selected semantics and background highlight without a selection
+label.
 
 `EarthquakeRefreshRepository` reuses the shared `EarthquakeApi` and network-to-Room
 mapping, then calls the established `EarthquakeDao.mergeEarthquakes` inside a

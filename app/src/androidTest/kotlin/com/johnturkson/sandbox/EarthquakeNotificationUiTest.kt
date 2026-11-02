@@ -165,7 +165,9 @@ class EarthquakeNotificationUiTest {
         rule.runOnIdle { index = list.firstVisibleItemIndex }
         rule.onNodeWithContentDescription("Minimize earthquake list").performClick()
         rule.onNodeWithText("Live monitoring").assertIsDisplayed()
-        rule.onNodeWithText("Selected earthquake").assertIsDisplayed()
+        rule.onNodeWithText("Earthquake 1").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
+        rule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         rule.onNodeWithText("Show list").performClick()
         rule.runOnIdle { assertEquals(index, list.firstVisibleItemIndex) }
         rule.runOnIdle { expanded = false }

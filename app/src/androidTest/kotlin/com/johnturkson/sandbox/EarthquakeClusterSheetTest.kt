@@ -45,6 +45,7 @@ class EarthquakeClusterSheetTest {
         composeRule.onNodeWithText("120 earthquakes in this area").assertIsDisplayed()
         composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(items.size)
         composeRule.onNodeWithText(items.last().title).performClick().assertIsSelected()
+        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         composeRule.onNodeWithText("120 earthquakes in this area").assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(items.last().id, selected) }
         composeRule.onNodeWithContentDescription("Close earthquake cluster").performClick()
@@ -87,9 +88,13 @@ class EarthquakeClusterSheetTest {
             }
         }
         composeRule.onNodeWithContentDescription("Close earthquake cluster").assertIsDisplayed()
+        composeRule.onNodeWithText(items.first().title).assertIsSelected()
+        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         pressBack()
         composeRule.onNodeWithContentDescription("Close earthquake cluster").assertDoesNotExist()
-        composeRule.onNodeWithText("Selected earthquake").assertIsDisplayed()
+        composeRule.onNodeWithText(items.first().title).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Clear earthquake selection").assertIsDisplayed()
+        composeRule.onNodeWithText("Selected earthquake").assertDoesNotExist()
         composeRule.runOnIdle {
             assertEquals(items.first().id, state.selectedMapItemId)
             assertEquals(emptyList(), state.selectedClusterItemIds)

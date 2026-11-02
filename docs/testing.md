@@ -250,17 +250,16 @@ above the sheet, and inactive explorer controls must be absent while it is open.
 Build each component's fixture matrix from its rendering inputs. Cover distinct
 rendered branches and their interactions, including simultaneous monitoring and
 refresh states. Use representative light, dark, narrow, and large-text
-configurations. Inputs with no visual effect can share a fixture, such as a
-selection-label flag on an unselected row. Arbitrary coordinates, event counts,
-strings, and scroll offsets need representative boundaries rather than every
-possible value.
+configurations. Inputs with no visual effect can share a fixture. Arbitrary
+coordinates, event counts, strings, and scroll offsets need representative
+boundaries rather than every possible value.
 
 [EarthquakeComponentScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeComponentScreenshotTest.kt)
 isolates the list, rows, and unavailable-event snackbar. Its list provider covers
 empty, single-event, and multiple-event data with both title and supporting-pane
-flags. Its row provider covers selection, available/missing time, the map arrow,
-and the selected-only label. Render each fixture in light, dark, and narrow
-large-text configurations. The snackbar uses the same `EarthquakeEventSnackbar`
+flags. Its row provider covers selection, available/missing time, and the map
+arrow. Render each fixture in light, dark, and narrow large-text configurations.
+The snackbar uses the same `EarthquakeEventSnackbar`
 as the runtime host, with fixed `SnackbarData` and no running duration or queue.
 Host queueing, timing, and dismissal are separate from these pixel fixtures.
 
@@ -272,7 +271,7 @@ The component state inventory is:
 | Cluster badge | Available/missing magnitude, small/large count, dark, and large text. |
 | Cluster sheet content | Empty, populated, selected, missing magnitude/time, and the last scrolled member; include short windows. |
 | List | Empty/single/multiple events with each title/supporting-pane presentation; monitoring present and absent in parent fixtures. |
-| List row | Selected/unselected, available/missing time, map arrow shown/hidden, and selection label shown/hidden when selected. |
+| List row | Selected/unselected, available/missing time, and map arrow shown/hidden. |
 | Selection card | Available/missing time and wrapped text. |
 | View switcher | Map/List selected with labels and with icons only, including dark and large text. |
 | Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
