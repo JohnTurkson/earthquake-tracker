@@ -3,9 +3,6 @@ package com.johnturkson.sandbox.ui
 import kotlin.time.Instant
 
 internal object EarthquakeMapFixtures {
-    const val sourceUrl =
-        "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
-    val generatedAt = Instant.parse("2026-11-01T03:02:00Z")
     val items =
         listOf(
             EarthquakeMapItem(

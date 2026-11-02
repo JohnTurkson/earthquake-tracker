@@ -165,8 +165,12 @@ The preview state exposes `Destination.EarthquakeRoute`, whose `NavKey` supertyp
 requires `testFixturesImplementation(libs.androidx.navigation3.runtime)`.
 
 Declare test-only dependencies in the matching test configuration.
-`androidx.compose.ui:ui-tooling-preview` uses `screenshotTestImplementation` for
-the screenshot fixtures' `@Preview` and preview parameter providers.
+Screenshot tests use `screenshotTestImplementation(libs.androidx.compose.ui.tooling)`,
+which exports the preview annotations and parameter providers. They inherit the
+app's Compose BOM. Instrumented tests still declare their own Compose and Ktor
+BOMs because their separate runtime classpath needs those version constraints.
+Check both compile and runtime dependency resolution before removing a platform
+that appears duplicated.
 
 ## Earthquake data tests
 

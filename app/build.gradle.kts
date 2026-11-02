@@ -49,7 +49,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.core.ktx)
@@ -86,17 +85,12 @@ dependencies {
     implementation(libs.ktor.client.resources)
     implementation(libs.ktor.serialization.kotlinx.json)
 
-    implementation(platform(libs.coil.bom))
-    implementation(libs.coil.compose)
-
     implementation(libs.slf4j.nop)
 
     testFixturesImplementation(libs.androidx.navigation3.runtime)
 
     screenshotTestImplementation(libs.screenshot.validation.api)
     screenshotTestImplementation(libs.androidx.compose.ui.tooling)
-    screenshotTestImplementation(libs.androidx.compose.ui.tooling.preview)
-    screenshotTestImplementation(platform(libs.androidx.compose.bom))
 
     testImplementation(libs.bundles.kotlin.test)
     androidTestImplementation(libs.bundles.kotlin.test)
@@ -106,11 +100,9 @@ dependencies {
     testImplementation(libs.turbine)
 
     androidTestImplementation(libs.androidx.work.testing)
-    androidTestImplementation(platform(libs.kotlinx.coroutines.bom))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.ktor.client.mock)
     androidTestImplementation(libs.kotlinx.coroutines.test)
@@ -121,6 +113,5 @@ dependencies {
 
     ksp(libs.androidx.hilt.compiler)
     ksp(libs.hilt.android.compiler)
-    kspAndroidTest(libs.hilt.android.compiler)
     ksp(libs.room.compiler)
 }
