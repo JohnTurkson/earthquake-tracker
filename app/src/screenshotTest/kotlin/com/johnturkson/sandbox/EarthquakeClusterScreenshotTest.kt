@@ -1,8 +1,11 @@
 package com.johnturkson.sandbox
 
+import android.content.res.Configuration
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,6 +21,8 @@ import com.johnturkson.sandbox.ui.EarthquakeMapItem
 class EarthquakeClusterScreenshotTest {
     @PreviewTest
     @Preview(locale = "en-US")
+    @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
     fun pair() {
         Badge(2, null)
@@ -98,8 +103,32 @@ class EarthquakeClusterScreenshotTest {
         Sheet(maxHeight = 240)
     }
 
+    @PreviewTest
+    @Preview(widthDp = 384, locale = "en-US")
+    @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
     @Composable
-    private fun Badge(count: Int, magnitude: Double?, dark: Boolean = false) {
+    fun selectedUnknownMagnitude() {
+        Sheet(
+            items =
+                listOf(
+                    EarthquakeMapItem("unknown", 0.0, 0.0, "Earthquake with no reported magnitude")
+                ),
+            selected = "unknown",
+        )
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, locale = "en-US")
+    @Preview(widthDp = 384, locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(widthDp = 320, locale = "en-US", fontScale = 1.5f)
+    @Composable
+    fun scrolledSheet() {
+        Sheet(selected = EarthquakeMapFixtures.denseItems.last().id, firstVisibleItemIndex = 120)
+    }
+
+    @Composable
+    private fun Badge(count: Int, magnitude: Double?, dark: Boolean = isSystemInDarkTheme()) {
         EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
             Surface { Box(Modifier.padding(12.dp)) { EarthquakeClusterMarker(count, magnitude) } }
         }
@@ -109,8 +138,9 @@ class EarthquakeClusterScreenshotTest {
     private fun Sheet(
         items: List<EarthquakeMapItem> = EarthquakeMapFixtures.denseItems,
         selected: String? = null,
-        dark: Boolean = false,
+        dark: Boolean = isSystemInDarkTheme(),
         maxHeight: Int = 480,
+        firstVisibleItemIndex: Int = 0,
     ) {
         EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
             Surface {
@@ -120,6 +150,7 @@ class EarthquakeClusterScreenshotTest {
                     {},
                     {},
                     Modifier.heightIn(max = maxHeight.dp),
+                    listState = rememberLazyListState(firstVisibleItemIndex),
                 )
             }
         }

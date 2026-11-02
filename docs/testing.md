@@ -202,6 +202,41 @@ above the sheet, and inactive explorer controls must be absent while it is open.
 
 ## Compose screenshot tests
 
+Build each component's fixture matrix from its rendering inputs. Cover distinct
+rendered branches and their interactions, including simultaneous monitoring and
+refresh states. Use representative light, dark, narrow, and large-text
+configurations. Inputs with no visual effect can share a fixture, such as a
+selection-label flag on an unselected row. Arbitrary coordinates, event counts,
+strings, and scroll offsets need representative boundaries rather than every
+possible value.
+
+[EarthquakeComponentScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeComponentScreenshotTest.kt)
+isolates the list, rows, and unavailable-event snackbar. Its list provider covers
+empty, single-event, and multiple-event data with both title and supporting-pane
+flags. Its row provider covers selection, available/missing time, the map arrow,
+and the selected-only label. Render each fixture in light, dark, and narrow
+large-text configurations. The snackbar uses the same `EarthquakeEventSnackbar`
+as the runtime host, with fixed `SnackbarData` and no running duration or queue.
+Host queueing, timing, and dismissal are separate from these pixel fixtures.
+
+The component state inventory is:
+
+| Component | Required rendering cases |
+| --- | --- |
+| Map marker artwork | Selected and unselected. |
+| Cluster badge | Available/missing magnitude, small/large count, dark, and large text. |
+| Cluster sheet content | Empty, populated, selected, missing magnitude/time, and the last scrolled member; include short windows. |
+| List | Empty/single/multiple events with each title/supporting-pane presentation; monitoring present and absent in parent fixtures. |
+| List row | Selected/unselected, available/missing time, map arrow shown/hidden, and selection label shown/hidden when selected. |
+| Selection card | Available/missing time and wrapped text. |
+| View switcher | Map/List selected with labels and with icons only, including dark and large text. |
+| Explorer controls | Compact Map/List, expanded open/minimized panel, notification pane, empty/populated selection, narrow/wide/RTL placement, and Locate placement. |
+| Location button and rationale | Request/settings labels and the rationale, with light/dark and large text. |
+| Monitoring card | Each status, each refresh outcome, available/missing update time and stored data, and concurrent checking/monitoring/failure/offline with refresh work. |
+| Notification page and rationale | Checking, denied/settings permission, alerts on/off, channel availability, each magnitude threshold and monitoring status, enabled/disabled preview, settings error, and rationale. |
+| Notification bell | Its ordinary appearance and placement through the explorer fixtures. |
+| Event snackbar | Visible unavailable-event message with normal and wrapped text. |
+
 [EarthquakeClusterScreenshotTest](../app/src/screenshotTest/kotlin/com/johnturkson/sandbox/EarthquakeClusterScreenshotTest.kt)
 covers cluster badges with and without magnitude, small and large counts, dark
 mode, and large text. It renders real sheet content for populated, selected,
@@ -392,6 +427,12 @@ visual states, with narrow/large-font, dark, scrolled, expanded right-pane, and
 minimized fixtures. Review every provider-generated image as well as named
 previews. Host screenshots cover our controls, not native map pixels or Android's
 permission dialog and notification drawer.
+The monitoring provider includes concurrent refresh and session statuses, with
+no data, stored data without a timestamp, and a known update time. Preserve those
+combinations when extending the state contract. The scrolled page-action provider
+keeps enabled preview, disabled preview, and settings-error pixels visible rather
+than relying on controls below a preview's viewport. Include checking with an
+already-selected alerts toggle and the compact notification screen's placement.
 
 Also manually exercise a real foreground session, Stop, offline/reconnection,
 notification permission denial/settings return, channel settings, event taps,

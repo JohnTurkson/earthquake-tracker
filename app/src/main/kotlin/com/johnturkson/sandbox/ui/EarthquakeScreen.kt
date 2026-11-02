@@ -231,6 +231,7 @@ fun EarthquakeScreen(
             snackbarHost,
             Modifier.align(Alignment.BottomCenter)
                 .padding(WindowInsets.safeDrawing.asPaddingValues()),
+            snackbar = { EarthquakeEventSnackbar(it) },
         )
     }
     if (notificationRationale) {

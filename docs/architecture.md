@@ -169,6 +169,13 @@ numeric magnitude for cluster summaries, and owns the restorable selection.
 Opening an event from a notification closes any cluster sheet before focusing
 that event.
 
+[EarthquakeEventSnackbar](../app/src/main/kotlin/com/johnturkson/sandbox/ui/EarthquakeEventSnackbar.kt)
+renders the same Material `SnackbarData` supplied by the screen's `SnackbarHost`.
+Keep snackbar queueing, duration, dismissal, and the host state in the UI. The
+ViewModel owns the unavailable-event flag; rendering a snackbar does not create
+another owner of that feature state. Screenshot fixtures supply fixed snackbar
+data to the actual component without starting a timer.
+
 Every app UI component must have screenshot tests for all of its supported visual
 states. Add or update coverage with each UI change. Enumerate those states from
 its state contract and inputs, and render deterministic fixtures without live

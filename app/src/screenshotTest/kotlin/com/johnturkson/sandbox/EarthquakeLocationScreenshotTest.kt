@@ -1,5 +1,6 @@
 package com.johnturkson.sandbox
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -72,6 +73,7 @@ class EarthquakeLocationScreenshotTest {
 
     @PreviewTest
     @Preview(locale = "en-US")
+    @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
     @Composable
     fun requestLocation() {
         EarthquakeTheme(dynamicColor = false) {
@@ -81,6 +83,7 @@ class EarthquakeLocationScreenshotTest {
 
     @PreviewTest
     @Preview(locale = "en-US")
+    @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
     fun locationSettings() {
         EarthquakeTheme(dynamicColor = false) {
@@ -112,6 +115,12 @@ class EarthquakeLocationScreenshotTest {
 
     @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Preview(
+        widthDp = 384,
+        heightDp = 640,
+        locale = "en-US",
+        uiMode = Configuration.UI_MODE_NIGHT_YES,
+    )
     @Composable
     fun locationRationale() {
         EarthquakeTheme(dynamicColor = false) { EarthquakeLocationRationale({}, {}) }

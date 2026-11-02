@@ -1,5 +1,7 @@
 package com.johnturkson.sandbox
 
+import android.content.res.Configuration
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,6 +21,8 @@ import com.johnturkson.sandbox.ui.EarthquakeMonitoringState
 import com.johnturkson.sandbox.ui.EarthquakeNotificationPage
 import com.johnturkson.sandbox.ui.EarthquakeNotificationRationale
 import com.johnturkson.sandbox.ui.EarthquakeNotificationState
+import com.johnturkson.sandbox.ui.EarthquakePreviewState
+import com.johnturkson.sandbox.ui.EarthquakeScreen
 import com.johnturkson.sandbox.ui.EarthquakeView
 
 class EarthquakeNotificationsScreenshotTest {
@@ -93,7 +97,57 @@ class EarthquakeNotificationsScreenshotTest {
     }
 
     @PreviewTest
+    @Preview(widthDp = 360, heightDp = 800, locale = "en-US")
+    @Composable
+    fun checkingWithAlertsSelected() {
+        Page(EarthquakeNotificationState(alertsEnabled = true))
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 360, heightDp = 400, locale = "en-US")
+    @Preview(
+        widthDp = 360,
+        heightDp = 400,
+        locale = "en-US",
+        uiMode = Configuration.UI_MODE_NIGHT_YES,
+    )
+    @Preview(widthDp = 320, heightDp = 480, fontScale = 1.5f, locale = "en-US")
+    @Composable
+    fun pageActions(
+        @PreviewParameter(EarthquakeNotificationActionStateProvider::class)
+        state: EarthquakeNotificationState
+    ) {
+        Page(state, firstVisibleItemIndex = 4)
+    }
+
+    @PreviewTest
     @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Preview(
+        widthDp = 384,
+        heightDp = 640,
+        locale = "en-US",
+        uiMode = Configuration.UI_MODE_NIGHT_YES,
+    )
+    @Preview(widthDp = 320, heightDp = 720, fontScale = 1.5f, locale = "en-US")
+    @Composable
+    fun compactNotificationScreen() {
+        EarthquakeTheme(dynamicColor = false) {
+            EarthquakeScreen(
+                state = EarthquakePreviewState(mapItems = emptyList(), notificationsVisible = true),
+                onMapItemClick = {},
+                onMapClick = {},
+            )
+        }
+    }
+
+    @PreviewTest
+    @Preview(widthDp = 384, heightDp = 640, locale = "en-US")
+    @Preview(
+        widthDp = 384,
+        heightDp = 640,
+        locale = "en-US",
+        uiMode = Configuration.UI_MODE_NIGHT_YES,
+    )
     @Preview(widthDp = 320, heightDp = 800, fontScale = 1.5f, locale = "en-US")
     @Composable
     fun rationale() {
@@ -183,7 +237,11 @@ class EarthquakeNotificationsScreenshotTest {
     }
 
     @Composable
-    private fun Page(state: EarthquakeNotificationState, dark: Boolean = false) {
+    private fun Page(
+        state: EarthquakeNotificationState,
+        dark: Boolean = isSystemInDarkTheme(),
+        firstVisibleItemIndex: Int = 0,
+    ) {
         EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
             EarthquakeNotificationPage(
                 state,
@@ -196,6 +254,7 @@ class EarthquakeNotificationsScreenshotTest {
                 {},
                 {},
                 Modifier.fillMaxSize(),
+                listState = rememberLazyListState(firstVisibleItemIndex),
             )
         }
     }
@@ -289,6 +348,91 @@ class EarthquakeMonitoringStateProvider : PreviewParameterProvider<EarthquakeMon
                 refresh = EarthquakeMonitoringState.Refresh.StorageError,
                 lastUpdatedMillis = 1,
             ),
+            EarthquakeMonitoringState(status = EarthquakeMonitoringState.Status.Offline),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.Running,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                lastUpdatedMillis = 1,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.Queued,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Running,
+                refresh = EarthquakeMonitoringState.Refresh.Queued,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Running,
+                refresh = EarthquakeMonitoringState.Refresh.Running,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.Offline,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
+                hasStoredData = true,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.Offline,
+                hasStoredData = true,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
+                lastUpdatedMillis = 1,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Checking,
+                refresh = EarthquakeMonitoringState.Refresh.Offline,
+                lastUpdatedMillis = 1,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Failed,
+                hasStoredData = true,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Failed,
+                lastUpdatedMillis = 1,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Offline,
+                hasStoredData = true,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Failed,
+                refresh = EarthquakeMonitoringState.Refresh.Queued,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Offline,
+                refresh = EarthquakeMonitoringState.Refresh.Queued,
+            ),
+            EarthquakeMonitoringState(
+                refresh = EarthquakeMonitoringState.Refresh.NetworkError,
+                hasStoredData = true,
+            ),
+            EarthquakeMonitoringState(
+                refresh = EarthquakeMonitoringState.Refresh.Offline,
+                lastUpdatedMillis = 1,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Failed,
+                refresh = EarthquakeMonitoringState.Refresh.Running,
+            ),
+            EarthquakeMonitoringState(
+                status = EarthquakeMonitoringState.Status.Offline,
+                refresh = EarthquakeMonitoringState.Refresh.Running,
+            ),
         )
 }
 
@@ -322,4 +466,17 @@ class EarthquakeNotificationStateProvider : PreviewParameterProvider<EarthquakeN
 class EarthquakeMonitoringStatusProvider :
     PreviewParameterProvider<EarthquakeMonitoringState.Status> {
     override val values = EarthquakeMonitoringState.Status.entries.asSequence()
+}
+
+class EarthquakeNotificationActionStateProvider :
+    PreviewParameterProvider<EarthquakeNotificationState> {
+    private val enabled =
+        EarthquakeNotificationState(
+            isChecking = false,
+            permissionGranted = true,
+            appEnabled = true,
+            alertsEnabled = true,
+        )
+    override val values =
+        sequenceOf(enabled, enabled.copy(alertsEnabled = false), enabled.copy(settingsError = true))
 }

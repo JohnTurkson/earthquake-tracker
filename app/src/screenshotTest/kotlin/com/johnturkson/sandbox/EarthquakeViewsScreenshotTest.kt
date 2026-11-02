@@ -125,6 +125,20 @@ class EarthquakeViewsScreenshotTest {
         CompactSwitcher(EarthquakeView.Map)
     }
 
+    @PreviewTest
+    @Preview(locale = "en-US")
+    @Composable
+    fun darkIconOnlyMapSwitcher() {
+        CompactSwitcher(EarthquakeView.Map, dark = true)
+    }
+
+    @PreviewTest
+    @Preview(locale = "en-US", fontScale = 1.5f)
+    @Composable
+    fun largeTextIconOnlyListSwitcher() {
+        CompactSwitcher(EarthquakeView.List)
+    }
+
     @Composable
     private fun CompactSwitcher(selectedView: EarthquakeView, dark: Boolean = false) {
         EarthquakeTheme(darkTheme = dark, dynamicColor = false) {
@@ -169,6 +183,8 @@ class EarthquakeViewsScreenshotTest {
 
     @PreviewTest
     @Preview(locale = "en-US")
+    @Preview(locale = "en-US", uiMode = Configuration.UI_MODE_NIGHT_YES)
+    @Preview(locale = "en-US", fontScale = 1.5f)
     @Composable
     fun selectedEarthquakeWithoutTime() {
         EarthquakeTheme(dynamicColor = false) {
