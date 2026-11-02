@@ -186,7 +186,7 @@ keeping their selections synchronized.
 See the [architecture guide](docs/architecture.md) for the implementation
 conventions and source examples.
 
-## Refresh, monitoring, and alerts
+## Refresh and monitoring
 
 An individual refresh and a monitoring session are separate units of work.
 `EarthquakeMonitor` schedules both and exposes their WorkManager observations.
@@ -198,20 +198,18 @@ flowchart TB
     REQUEST["EarthquakeMonitor.refresh()"]
     WORK["Unique refresh work: KEEP<br/>EarthquakeRefreshWorker"]
     REPO["EarthquakeRefreshRepository"]
-    FETCH["Fetch and validate the all-day feed<br/>EarthquakeApi / Ktor"]
-    SAVE["Room transaction<br/>Merge events and save refresh timestamp"]
-    ALERTS["Publish eligible alerts<br/>Record successful deliveries"]
+    FETCH["Call USGS API via Ktor"]
+    SAVE["Merge data and store in Room DB"]
 
     MANUAL --> REQUEST
-    SESSION -->|Immediate request, then minute delays| REQUEST
+    SESSION -->|Fetch data every minute| REQUEST
     REQUEST --> WORK
-    WORK -->|Validated network required| REPO
+    WORK -->|Check network connection| REPO
     REPO --> FETCH
     FETCH --> SAVE
-    SAVE -->|After successful commit| ALERTS
 ```
 
-Manual refresh and monitoring ticks share the unique `earthquake_refresh`
+Manual refresh and monitoring jobs share the unique `earthquake_refresh`
 request with `ExistingWorkPolicy.KEEP`. WorkManager retains an existing pending
 or running refresh instead of starting an overlapping one.
 
@@ -228,15 +226,10 @@ one Room transaction. Newer source revisions update existing records; records
 absent from a later feed remain saved. Source aliases preserve lookup when a
 preferred event ID changes.
 
-After that transaction succeeds, the worker attempts alert delivery. A
-notification failure leaves the successful data refresh intact. Alerts are
-opt-in, default to M6+, and qualify only for earthquakes within the past minute.
-Late source reports can therefore fall outside the alert window.
-
 `EarthquakeMonitoringObserver` combines the two workers' `WorkInfo` observations
 with stored-data availability and the last successful refresh time. The in-app
-banner shows the refresh request's state. Monitoring controls and the foreground
-notification describe the separate session.
+banner shows the latest refresh request's state. Monitoring controls and the
+foreground notification describe the separate session.
 
 Android can delay or stop work, so monitoring's minute interval is a requested
 cadence. A failed offline refresh does not end the session, and reconnection
