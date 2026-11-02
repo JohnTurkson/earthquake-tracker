@@ -1,8 +1,8 @@
 # Project requirements
 
 Read [README.md](README.md) before planning or changing this project. It defines
-USGS Tracker's high-level product requirements. Keep the app Android-only and use
-these requirements to guide design, implementation, and testing.
+USGS Tracker's product goals. Keep the app Android-only and use these goals to
+guide design, implementation, and testing.
 
 # Project instructions
 
@@ -35,12 +35,13 @@ requirements, including missing screenshot coverage for UI changes.
 
 - Commit each completed, verified change at a coherent checkpoint and before
   ending a turn, including documentation, instruction files, and symlinks.
-- Integrate completed commits onto local `main` before finishing unless the user
-  requested branch-only work or integration is blocked. Report the commit SHA,
-  verification, integration status, and any remaining task changes explicitly.
+- Integrate completed commits onto the local default branch before finishing
+  unless the user requested branch-only work or integration is blocked. Report
+  the commit SHA, verification, integration status, and any remaining task changes
+  explicitly.
 - Use a named `codex/` branch when the assigned worktree has a detached HEAD.
-- Check for newer instruction changes on local `main`; reconcile applicable
-  guidance before editing in an older worktree.
+- Check for newer instruction changes on the local default branch; reconcile
+  applicable guidance before editing in an older worktree.
 - Stage only changes that belong to the current task. Preserve unrelated work.
 - Follow the [source control guide](docs/source-control.md) for commit scope,
   review, and validation.

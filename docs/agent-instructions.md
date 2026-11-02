@@ -23,11 +23,12 @@ reread the current repository instructions and their applicable linked guides.
 For sessions already open when rules change, explicitly direct them to reread
 the updated files or start a new session.
 
-Instructions must be committed and integrated onto local `main` to become the
-baseline for new worktrees. Older worktrees must also reconcile newer instruction
-changes from `main`; a clean worktree alone does not establish that its guidance
-is current. Follow the [source control guide](source-control.md) for checkpoints,
-integration, and the final status report.
+Instructions must be committed and integrated onto the local default branch to
+become the baseline for new worktrees. Older worktrees must also reconcile newer
+instruction changes from that branch; a clean worktree alone does not establish
+that its guidance is current. Follow the
+[source control guide](source-control.md) for checkpoints, integration, and the
+final status report.
 
 See the [official Codex instructions documentation](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
 

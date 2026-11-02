@@ -1,53 +1,24 @@
 # USGS Tracker
 
-USGS Tracker is an Android-only, in-pocket companion for staying informed about
-recent earthquake activity. Convenience and usability are first-class concerns:
-users should quickly understand what is happening, where it is happening, and how
-it relates to them.
+USGS Tracker is an Android-only app for exploring recent earthquake activity
+using the USGS Earthquake API.
 
-This repository starts from an existing Android template and preserves the full
-commit history of its `usgs` branch. The requirements below define the intended
-product.
+## Product goals
 
-## Data source
-
-Use the USGS Earthquake API as the source of recent earthquake data.
-
-## Map
-
-- Display earthquakes geographically on a map.
-- Provide useful context relative to the user's location when available.
-- Allow users to select an earthquake to view additional details.
-- Keep the experience useful when location access is unavailable or denied.
-
-## List
-
-- Show the same earthquake activity presented on the map.
-- Communicate the information most useful to users in each list item.
-- Allow users to select an item to view additional earthquake details.
-
-## Refresh and connectivity
-
-- Allow users to refresh earthquake information.
-- Preserve access to previously seen information when connectivity is limited or
-  unavailable.
-- Handle failed requests and unavailable fresh data appropriately, with clear
-  feedback about the information users can access.
+- View the same recent earthquakes on a map and in a list.
+- Select an earthquake in either view to see more detail.
+- Provide useful location context when available and remain usable without
+  location access.
+- Refresh earthquake data and retain previously viewed information for offline
+  use.
+- Make data availability and refresh failures clear.
+- Keep information easy to understand and navigation straightforward.
 
 ## Testing
 
-Include automated tests for important behavior and structure the app so that this
-behavior can be tested effectively. Choose test types using engineering judgment;
-there is no prescribed coverage percentage or mix of test types.
-
+Use automated tests to cover important behavior and relevant failure cases.
 Follow the [testing guide](docs/testing.md) for required checks, passing criteria,
 and reporting verification.
-
-## Design decisions
-
-Presentation, ordering, navigation, information hierarchy, and the details of the
-offline and failure experience are open design decisions. Make these choices in
-service of convenience, usability, and the product requirements above.
 
 ## Build and run
 
@@ -74,9 +45,10 @@ Discuss additions as new project patterns are introduced and update the guides
 with the agreed conventions and working examples.
 
 Follow the [source control guide](docs/source-control.md). Agents must commit as
-they go and before ending a turn, then integrate completed changes onto local
-`main` unless branch-only work was requested or integration is blocked. Human
-contributors are encouraged to keep each commit focused on one coherent change.
+they go and before ending a turn, then integrate completed changes onto the local
+default branch unless branch-only work was requested or integration is blocked.
+Human contributors are encouraged to keep each commit focused on one coherent
+change.
 
 Shared agent rules live in `AGENTS.md`. See the
 [agent instruction guide](docs/agent-instructions.md) for Codex discovery and

@@ -4,10 +4,14 @@ Agents must commit each completed, verified change at a coherent checkpoint and
 before ending a turn. This includes documentation, instruction files, deletions,
 and symlinks. Human contributors are encouraged to follow the same workflow.
 
-Completed changes must also reach local `main` before the agent finishes, unless
-the user requested branch-only work or integration is blocked. A commit in an
-isolated worktree is a checkpoint; report integration separately. Publishing or
-pushing changes still requires authorization from the user.
+Completed changes must also reach the local default branch before the agent
+finishes, unless the user requested branch-only work or integration is blocked.
+A commit in an isolated worktree is a checkpoint; report integration separately.
+Publishing or pushing changes still requires authorization from the user.
+
+Use the repository's configured default branch or the user's specified
+integration target. Confirm the target from repository configuration or current
+project context rather than assuming a branch name.
 
 ## Before editing
 
@@ -16,10 +20,10 @@ its applicable linked guides. Inspect `git status --short --branch`, the staged
 and unstaged diffs, and `git worktree list`. Record which changes already exist
 so you can distinguish your work from another contributor's.
 
-Check whether local `main` contains newer instruction changes than your checkout.
-Read those changes before proceeding and reconcile applicable guidance without
-overwriting existing work. Worktrees retain their own instruction files; changes
-in another worktree do not update them automatically.
+Check whether the local default branch contains newer instruction changes than
+your checkout. Read those changes before proceeding and reconcile applicable
+guidance without overwriting existing work. Worktrees retain their own instruction
+files; changes in another worktree do not update them automatically.
 
 Use the assigned checkout. If it has a detached HEAD, create a named `codex/`
 branch before editing so its commits remain reachable. Do not switch branches in
@@ -52,21 +56,23 @@ unfinished files, remaining work, and reason they could not be committed. Do not
 describe the task as complete. Never discard needed work merely to make the
 checkout clean.
 
-## Integrate onto local main
+## Integrate onto the default branch
 
-After committing and verifying a completed change, inspect the current `main`
+After committing and verifying a completed change, inspect the default branch's
 checkout again. Integrate the focused commits using a fast-forward when possible
-or cherry-pick them onto the latest `main`, resolving conflicts and running the
-appropriate checks on the combined result. Review overlapping instruction edits
-so one session's rewrite does not remove another session's rules.
+or cherry-pick them onto the latest integration target, resolving conflicts and
+running the appropriate checks on the combined result. Review overlapping
+instruction edits so one session's rewrite does not remove another session's
+rules.
 
 Preserve other contributors' staged, unstaged, and untracked work. If the target
 checkout is dirty or another session is changing it, coordinate the handoff or
 report the blocker; do not reset, clean, stash, or overwrite its files to force
 integration. Do not amend commits another session may already depend on.
 
-Verify the intended changes are present on `main` and inspect its final status.
-When cherry-picking changes a commit's SHA, report the SHA now on `main`.
+Verify the intended changes are present on the default branch and inspect its
+final status. When cherry-picking changes a commit's SHA, report the SHA now on
+the integration target.
 
 ## Before ending a turn
 
@@ -74,10 +80,10 @@ When cherry-picking changes a commit's SHA, report the SHA now on `main`.
   Inspect untracked files as well as staged and unstaged changes.
 - Verify no completed work from your task remains uncommitted. Preserve unrelated
   work and identify it separately in the report.
-- Report the commit SHA, checks performed, whether the changes reached local
-  `main`, and any remaining task changes. If integration is blocked or the user
-  requested branch-only work, give the branch and commit plus the exact handoff
-  or next step. Do not leave integration implicit for another session.
+- Report the commit SHA, checks performed, whether the changes reached the local
+  default branch, and any remaining task changes. If integration is blocked or
+  the user requested branch-only work, give the branch and commit plus the exact
+  handoff or next step. Do not leave integration implicit for another session.
 
 ## Hooks
 

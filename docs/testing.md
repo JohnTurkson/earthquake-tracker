@@ -74,8 +74,8 @@ failure and boundary cases. Use controlled clocks, dispatchers, and network
 responses where needed for deterministic tests. Do not weaken assertions or
 disable tests to obtain a green result.
 
-There is no required coverage percentage. Documentation and other reversible,
-low-impact changes do not need tests that merely repeat the implementation.
+Documentation and other reversible, low-impact changes do not need tests that
+merely repeat the implementation.
 
 The current suite includes template checks: an unconditional assertion, an empty
 Flow, a mock HTTP response, empty Compose content, and an activity startup and

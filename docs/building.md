@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Clone the repository, check out `main`, and open it in Android Studio.
+- Clone the repository and open it in Android Studio.
 - Use the included Gradle wrapper, which selects Gradle 9.6.1 and automatically
   downloads the required JetBrains JDK 21 if it is not already available. No
   separate JDK 21 installation is required.
