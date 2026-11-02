@@ -342,14 +342,37 @@ Room is the source of truth for earthquake data. Network refreshes write updates
 to Room. ViewModels observe Room through repository Flows and expose state to
 the UI, which updates when the stored data changes.
 
+Every runtime earthquake refresh goes through the same unique WorkManager job,
+including manual refreshes while the app is open. We use
+[`ExistingWorkPolicy.KEEP`](https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/manage-work)
+to retain an existing pending or running refresh instead of starting another
+one. This gives manual refresh and monitoring jobs one update path.
+
+WorkManager is therefore a core component of the app. We rely on its scheduling
+to start updates and its work state to report their progress. This ties the
+update orchestration to Android. Sharing that orchestration as multiplatform
+business logic would require a platform-specific scheduler with equivalent
+support for unique work, cancellation, and observable status. Data models and
+pure policies could still be shared independently.
+
+Going through WorkManager adds enqueueing, work persistence, scheduling, and
+worker startup to the request path. We have not measured the added overhead
+compared with calling the API directly. Our assumption is that it is acceptable
+for the current feed responses and a refresh interval of roughly one minute.
+A continuous data stream, more frequent updates, or strict latency requirements
+would require us to revisit this approach.
+
+We want to benchmark the delay from requesting a refresh to starting its network
+call, separately from the network and database time. Comparing the worker path
+with a direct call to the same API client, using controlled responses, would
+help establish how much latency comes from WorkManager.
+
 ## Future Improvements
 
-### Data retention
+### Clear older earthquake data
 
-Add a 30-day retention policy for earthquake data received from API responses.
-Whenever a new response is saved, remove earthquake records more than 30 days
-old. The current implementation retains earthquake history without automatic
-expiration.
+Clear earthquake records more than 30 days old when new data is saved. Clear
+older records sooner if the amount of stored data grows too large.
 
 ### Monitoring lifetime
 
@@ -387,6 +410,22 @@ Extend behavior and screenshot coverage for interacting states and transitions,
 including refresh outcomes alongside permission changes, pane replacement,
 resizing, and restoration. Verify both the visible result and the state retained
 when a destination returns.
+
+### Performance benchmarks
+
+Add [Macrobenchmark](https://developer.android.com/topic/performance/benchmarking/macrobenchmark-overview)
+tests for startup, scrolling, and navigation. Add
+[Microbenchmark](https://developer.android.com/topic/performance/benchmarking/microbenchmark-overview)
+tests for isolated code such as response decoding and mapping. Also measure
+WorkManager's added delay before a refresh starts its network call.
+
+### Release R8 optimization
+
+Enable [R8 code and resource optimization](https://developer.android.com/topic/performance/app-optimization/enable-app-optimization)
+for release builds, including shrinking and obfuscation. Review library rules
+and add focused keep rules where needed. Check that the optimized build can
+start workers, read Room data, and decode API responses. Run app performance
+benchmarks against a build with the same release optimizations.
 
 ### Dedicated design system
 
